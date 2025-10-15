@@ -1,12 +1,25 @@
+    
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>landing page</title>
+    <title>{% trans "Landing Page" %}</title>
 </head>
 <body>
-    <h1>LANDING PAGE</h1>
-    <H4>this is your custom homepage.</H4>
+    <h1>{% trans "Welcome to DarklightMETA Studio" %}</h1>
+    <h4>{% trans "This is your custom homepage." %}</h4>
+
+    <form action="{% url 'set_language' %}" method="post">
+    {% csrf_token %}
+    <label for="language">{% trans "Choose Language:" %}</label>
+    <select name="language" id="language">
+        <option value="en">English</option>
+        <option value="zh-hans">简体中文</option>
+        <option value="zh-hant">繁體中文</option>
+    </select>
+    <input type="submit" value="{% trans 'Change Language' %}">
+</form>
+
 </body>
 </html>
