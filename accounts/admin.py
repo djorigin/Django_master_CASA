@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import CustomUser, StaffProfile, PilotProfile, OperatorCertificate
+from .models import CustomUser, StaffProfile, PilotProfile, OperatorCertificate, ClientProfile
+
 
 class CustomUserAdmin(BaseUserAdmin):
     model = CustomUser
@@ -25,3 +26,4 @@ admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(StaffProfile)
 admin.site.register(PilotProfile)
 admin.site.register(OperatorCertificate)
+admin.site.register(ClientProfile)

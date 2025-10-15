@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.core.exceptions import ValidationError
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -88,3 +90,22 @@ class OperatorCertificate(models.Model):
 
     def __str__(self):
         return f"{self.company_name} - {self.reoc_number}"
+    
+
+class ClientProfile(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=100)
+    contact_number = models.CharField(max_length=20)
+    address = models.CharField(max_length=255)
+    billing_email = models.EmailField()
+    industry = models.CharField(max_length=100, blank=True)
+    account_manager = models.ForeignKey(StaffProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    photo_id = models.ImageField(upload_to='client_ids/', blank=True, null=True)
+
+    def clean(self):
+        if self.user.role != 'client':
+            raise ValidationError("Linked user must have role 'client'.")
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.company_name}"
