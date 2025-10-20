@@ -6,10 +6,9 @@ Welcome to the CASA Master Project documentation. This project manages aviation 
 
 ## Contents
 
+- [Project Information](project-info.md)
 - [Installation Guide](installation.md)
 - [User Management](user-management.md)
-- [API Documentation](api.md)
-- [Deployment](deployment.md)
 
 ## Quick Links
 
