@@ -1,6 +1,10 @@
-# Django Master CASA
+# Django Master CASA  -Dronme Ultra Images - darklightMETA Studio
 
-A Django web application for [describe your project purpose].
+Preface
+This operations manual and application (this manual) outlines the procedures, instructions and guidance for use by {ABC RPA}’s operations personnel in the execution of their duties. It also contains the necessary information to ensure the safe conduct of aviation operations. This manual is integral to the organisation’s controlling and supervising flight operations. All {ABC RPA} personnel must comply with relevant instructions and procedures contained in this manual.
+
+all references to ABC RPA equals  Drone Ultra Images - the company
+
 
 ## Features
 
