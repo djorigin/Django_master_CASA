@@ -1,0 +1,78 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans 'CASA Administration' %}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-helicopter"></i> {% trans 'CASA Admin' %}
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <div style="background: linear-gradient(135deg, #b465da 0%, #cf6cc9 50%, #ee609c 100%); color: white; padding: 2rem; border-radius: 12px; text-align: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: 300; margin: 0;">{% trans "CASA Administration Dashboard" %}</h1>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">{% trans "Manage your aviation operations efficiently" %}</p>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        {% for app in app_list %}
+        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #667eea; margin-bottom: 1rem; font-size: 1.3rem;">
+                {% if app.app_label == 'accounts' %}
+                    🚁 {{ app.name }}
+                {% elif app.app_label == 'core' %}
+                    🏠 {{ app.name }}
+                {% else %}
+                    {{ app.name }}
+                {% endif %}
+            </h2>
+            
+            {% if app.models %}
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for model in app.models %}
+                <li style="margin-bottom: 0.5rem;">
+                    {% if model.admin_url %}
+                    <a href="{{ model.admin_url }}" style="display: flex; align-items: center; padding: 0.75rem; background: #f8f9fa; border-radius: 8px; text-decoration: none; color: #333; transition: all 0.3s;" onmouseover="this.style.background='#e9ecef'; this.style.transform='translateX(4px)'" onmouseout="this.style.background='#f8f9fa'; this.style.transform='translateX(0)'">
+                        {% if model.object_name == 'CustomUser' %}👤
+                        {% elif model.object_name == 'StaffProfile' %}👨‍💼
+                        {% elif model.object_name == 'PilotProfile' %}👨‍✈️
+                        {% elif model.object_name == 'ClientProfile' %}🏢
+                        {% elif model.object_name == 'OperatorCertificate' %}📜
+                        {% else %}📄
+                        {% endif %}
+                        <span style="margin-left: 0.5rem; font-weight: 500;">{{ model.name }}</span>
+                    </a>
+                    {% else %}
+                    <span style="color: #666;">{{ model.name }}</span>
+                    {% endif %}
+                    
+                    {% if model.add_url %}
+                    <div style="margin-top: 0.25rem; margin-left: 1.5rem;">
+                        <a href="{{ model.add_url }}" style="font-size: 0.9rem; color: #667eea; text-decoration: none;">
+                            ➕ {% trans 'Add' %} {{ model.name|lower }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 3rem; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <p style="color: #666; margin: 0;">
+        <a href="/" style="color: #667eea; text-decoration: none; font-weight: 500;">
+            ← {% trans "Back to Dashboard" %}
+        </a>
+    </p>
+</div>
+{% endblock %}
