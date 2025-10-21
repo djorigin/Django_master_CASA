@@ -29,7 +29,7 @@ media/
 
 # Test files and configurations  
 test_settings.py
-pytest.ini
+# Note: pytest.ini and ci_test_settings.py are needed for CI/CD
 .pytest_cache/
 htmlcov/
 .coverage

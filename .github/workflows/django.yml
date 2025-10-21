@@ -56,15 +56,17 @@ jobs:
 
     - name: Run Django system checks
       run: |
-        python manage.py check --settings=darklightMETA_studio.test_settings
+        - name: Django Security Check
+      run: |
+        python manage.py check --deploy --settings=darklightMETA_studio.ci_test_settings
 
     - name: Run migrations (dry-run)
       run: |
-        python manage.py makemigrations --check --dry-run --settings=darklightMETA_studio.test_settings
+        python manage.py makemigrations --check --dry-run --settings=darklightMETA_studio.ci_test_settings
 
     - name: Run tests with coverage
       run: |
-        coverage run --source='.' manage.py test accounts.tests --settings=darklightMETA_studio.test_settings
+        coverage run --source='.' manage.py test accounts.tests --settings=darklightMETA_studio.ci_test_settings
         coverage report --show-missing
         coverage xml
 
@@ -78,13 +80,13 @@ jobs:
 
     - name: Run pytest
       run: |
-        pytest accounts/tests.py --cov=accounts --cov-report=xml --cov-report=html --settings=darklightMETA_studio.test_settings
+        pytest accounts/tests.py --cov=accounts --cov-report=xml --cov-report=html --settings=darklightMETA_studio.ci_test_settings
 
     - name: Test with PostgreSQL
       env:
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/casa_test
       run: |
-        python manage.py test accounts.tests --settings=darklightMETA_studio.test_settings
+        python manage.py test accounts.tests --settings=darklightMETA_studio.ci_test_settings
 
   lint:
     runs-on: ubuntu-latest
