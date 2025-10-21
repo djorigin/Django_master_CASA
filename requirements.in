@@ -1,0 +1,14 @@
+# Core Django requirements
+Django>=5.2.7
+djangorestframework
+django-cors-headers
+
+# Database
+psycopg2-binary
+pillow
+
+# Production server
+gunicorn
+
+# Configuration
+python-decouple

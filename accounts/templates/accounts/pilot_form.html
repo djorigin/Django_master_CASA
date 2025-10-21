@@ -1,0 +1,302 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ action }} Pilot - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-user-astronaut"></i>
+                {{ action }} Pilot Profile
+            </h2>
+            <a href="{% url 'accounts:pilot_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Pilots
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- User and Role Selection -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.user.id_for_label }}">
+                            <i class="fas fa-user"></i> User *
+                        </label>
+                        {{ form.user }}
+                        {% if form.user.errors %}
+                            <div class="text-danger">
+                                {% for error in form.user.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Select a user with 'Pilot' role</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.role.id_for_label }}">
+                            <i class="fas fa-user-tag"></i> Pilot Role *
+                        </label>
+                        {{ form.role }}
+                        {% if form.role.errors %}
+                            <div class="text-danger">
+                                {% for error in form.role.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- License Information -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-certificate"></i> License Information
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.arn.id_for_label }}">
+                            <i class="fas fa-id-card"></i> ARN Number *
+                        </label>
+                        {{ form.arn }}
+                        {% if form.arn.errors %}
+                            <div class="text-danger">
+                                {% for error in form.arn.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.repl_number.id_for_label }}">
+                            <i class="fas fa-license"></i> REPL Number
+                        </label>
+                        {{ form.repl_number }}
+                        {% if form.repl_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.repl_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.repl_expiry.id_for_label }}">
+                            <i class="fas fa-calendar-times"></i> REPL Expiry Date
+                        </label>
+                        {{ form.repl_expiry }}
+                        {% if form.repl_expiry.errors %}
+                            <div class="text-danger">
+                                {% for error in form.repl_expiry.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.medical_clearance_date.id_for_label }}">
+                            <i class="fas fa-user-md"></i> Medical Clearance Date
+                        </label>
+                        {{ form.medical_clearance_date }}
+                        {% if form.medical_clearance_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.medical_clearance_date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-address-card"></i> Contact Information
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contact_number.id_for_label }}">
+                            <i class="fas fa-phone"></i> Contact Number *
+                        </label>
+                        {{ form.contact_number }}
+                        {% if form.contact_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.contact_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.home_base_location.id_for_label }}">
+                            <i class="fas fa-map-marker-alt"></i> Home Base Location
+                        </label>
+                        {{ form.home_base_location }}
+                        {% if form.home_base_location.errors %}
+                            <div class="text-danger">
+                                {% for error in form.home_base_location.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.address.id_for_label }}">
+                    <i class="fas fa-home"></i> Address *
+                </label>
+                {{ form.address }}
+                {% if form.address.errors %}
+                    <div class="text-danger">
+                        {% for error in form.address.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Emergency Contact -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-phone-alt"></i> Emergency Contact
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.emergency_contact_name.id_for_label }}">
+                            <i class="fas fa-user"></i> Emergency Contact Name
+                        </label>
+                        {{ form.emergency_contact_name }}
+                        {% if form.emergency_contact_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.emergency_contact_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.emergency_contact_phone.id_for_label }}">
+                            <i class="fas fa-phone"></i> Emergency Contact Phone
+                        </label>
+                        {{ form.emergency_contact_phone }}
+                        {% if form.emergency_contact_phone.errors %}
+                            <div class="text-danger">
+                                {% for error in form.emergency_contact_phone.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-info-circle"></i> Additional Information
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.availability_status.id_for_label }}">
+                            <i class="fas fa-signal"></i> Availability Status *
+                        </label>
+                        {{ form.availability_status }}
+                        {% if form.availability_status.errors %}
+                            <div class="text-danger">
+                                {% for error in form.availability_status.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.photo_id.id_for_label }}">
+                            <i class="fas fa-camera"></i> Photo ID
+                        </label>
+                        {{ form.photo_id }}
+                        {% if form.photo_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.photo_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.certifications.id_for_label }}">
+                    <i class="fas fa-award"></i> Certifications
+                </label>
+                {{ form.certifications }}
+                {% if form.certifications.errors %}
+                    <div class="text-danger">
+                        {% for error in form.certifications.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.notes.id_for_label }}">
+                    <i class="fas fa-sticky-note"></i> Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger">
+                        {% for error in form.notes.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Pilot Profile
+                </button>
+                <a href="{% url 'accounts:pilot_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                {% if pilot and action == "Edit" %}
+                <a href="{% url 'accounts:pilot_detail' pilot.pk %}" class="btn btn-warning">
+                    <i class="fas fa-eye"></i> View Details
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

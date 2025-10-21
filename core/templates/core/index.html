@@ -1,0 +1,493 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Drone Ultra Images Dashboard" %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/master_css.css' %}" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            width: 300px;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-icon {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .header-icon:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Greeting Section */
+        .greeting-section {
+            background: linear-gradient(135deg, #b465da 0%, #cf6cc9 50%, #ee609c 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .greeting-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .greeting-title {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Quick Actions */
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-tile {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .action-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        /* Color schemes for action tiles */
+        .action-blue { background: #2196F3; }
+        .action-red { background: #F44336; }
+        .action-green { background: #4CAF50; }
+        .action-purple { background: #9C27B0; }
+        .action-orange { background: #FF9800; }
+        .action-teal { background: #009688; }
+        .action-pink { background: #E91E63; }
+        .action-indigo { background: #3F51B5; }
+        .action-cyan { background: #00BCD4; }
+        .action-amber { background: #FFC107; }
+
+        /* Two Column Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .approvals-list {
+            list-style: none;
+        }
+
+        .approval-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .approval-item:last-child {
+            border-bottom: none;
+        }
+
+        .approval-info {
+            flex: 1;
+        }
+
+        .approval-type {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .approval-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .approval-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+
+        .language-selector select {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            border-radius: 6px;
+            margin-right: 0.5rem;
+        }
+
+        .language-selector button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            
+            .header-top {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-top">
+            <div class="logo">
+                <i class="fas fa-helicopter"></i> Drone Ultra Images Dashboard
+            </div>
+            <div class="header-actions">
+                <input type="text" class="search-box" placeholder="{% trans 'Search for actions' %}">
+                <div class="header-icons">
+                    <button class="header-icon" title="{% trans 'Notifications' %}">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="header-icon" title="{% trans 'Messages' %}">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                    <button class="header-icon" title="{% trans 'Profile' %}">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <button class="header-icon" title="{% trans 'Settings' %}">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Greeting Section -->
+    <section class="greeting-section">
+        <h1 class="greeting-title">{% trans "Good afternoon!" %}</h1>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Quick Actions -->
+        <section class="section">
+            <h2 class="section-title">{% trans "Quick Actions" %}</h2>
+            <div class="quick-actions">
+                <a href="{% url 'accounts:staff_list' %}" class="action-tile">
+                    <div class="action-icon action-blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="action-title">{% trans "Manage Staff" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-red">
+                        <i class="fas fa-helicopter"></i>
+                    </div>
+                    <div class="action-title">{% trans "Flight Operations" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-green">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="action-title">{% trans "Reports" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-purple">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="action-title">{% trans "Schedule" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-orange">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="action-title">{% trans "Inspections" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-teal">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="action-title">{% trans "Analytics" %}</div>
+                </a>
+                
+                <a href="{% url 'accounts:pilot_list' %}" class="action-tile">
+                    <div class="action-icon action-pink">
+                        <i class="fas fa-user-astronaut"></i>
+                    </div>
+                    <div class="action-title">{% trans "Pilots" %}</div>
+                </a>
+                
+                <a href="{% url 'accounts:client_list' %}" class="action-tile">
+                    <div class="action-icon action-indigo">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="action-title">{% trans "Clients" %}</div>
+                </a>
+                
+                <a href="{% url 'accounts:dashboard' %}" class="action-tile">
+                    <div class="action-icon action-cyan">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div class="action-title">{% trans "User Management" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-teal">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="action-title">{% trans "Maintenance" %}</div>
+                </a>
+                
+                <a href="{% url 'admin:index' %}" class="action-tile">
+                    <div class="action-icon action-amber">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="action-title">{% trans "Admin Panel" %}</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Approvals Section -->
+            <section class="content-card">
+                <h2 class="section-title">{% trans "Approvals" %}</h2>
+                <ul class="approvals-list">
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "Job Requisition" %}</div>
+                            <div class="approval-details">{% trans "Remote Pilot Position" %}</div>
+                        </div>
+                        <span class="approval-status status-pending">{% trans "Pending" %}</span>
+                    </li>
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "Purchase Request" %}</div>
+                            <div class="approval-details">{% trans "New Drone Equipment" %}</div>
+                        </div>
+                        <span class="approval-status status-approved">{% trans "Approved" %}</span>
+                    </li>
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "Contract" %}</div>
+                            <div class="approval-details">{% trans "Client Service Agreement" %}</div>
+                        </div>
+                        <span class="approval-status status-pending">{% trans "Pending" %}</span>
+                    </li>
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "Training Plan" %}</div>
+                            <div class="approval-details">{% trans "Safety Training Program" %}</div>
+                        </div>
+                        <span class="approval-status status-pending">{% trans "Pending" %}</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- For You Today Section -->
+            <section class="content-card">
+                <h2 class="section-title">{% trans "For You Today" %}</h2>
+                <ul class="approvals-list">
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "Weather Alert" %}</div>
+                            <div class="approval-details">{% trans "Strong winds expected" %}</div>
+                        </div>
+                    </li>
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "License Expiry" %}</div>
+                            <div class="approval-details">{% trans "2 pilots need renewal" %}</div>
+                        </div>
+                    </li>
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "Maintenance Due" %}</div>
+                            <div class="approval-details">{% trans "3 drones scheduled" %}</div>
+                        </div>
+                    </li>
+                    <li class="approval-item">
+                        <div class="approval-info">
+                            <div class="approval-type">{% trans "New Client" %}</div>
+                            <div class="approval-details">{% trans "Meeting at 3 PM" %}</div>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <form action="{% url 'set_language' %}" method="post">
+            {% csrf_token %}
+            <select name="language" id="language">
+                <option value="en">English</option>
+                <option value="zh-hans">简体中文</option>
+                <option value="zh-hant">繁體中文</option>
+            </select>
+            <button type="submit">{% trans 'Change' %}</button>
+        </form>
+    </div>
+</body>
+</html>

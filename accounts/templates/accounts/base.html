@@ -1,0 +1,136 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Accounts Management - CASA Aviation{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/master_css.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="nav-header">
+        <div class="nav-brand">
+            <i class="fas fa-plane"></i>
+            <span>CASA Aviation Management</span>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <a href="{% url 'core:index' %}">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:dashboard' %}">
+                    <i class="fas fa-users"></i>
+                    <span>Accounts</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:user_list' %}">
+                    <i class="fas fa-user"></i>
+                    <span>Users</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:staff_list' %}">
+                    <i class="fas fa-id-badge"></i>
+                    <span>Staff</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:pilot_list' %}">
+                    <i class="fas fa-plane"></i>
+                    <span>Pilots</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:client_list' %}">
+                    <i class="fas fa-handshake"></i>
+                    <span>Clients</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:certificate_list' %}">
+                    <i class="fas fa-certificate"></i>
+                    <span>Certificates</span>
+                </a>
+            </div>
+            {% if user.is_authenticated %}
+            <div class="nav-item">
+                <a href="/admin/logout/">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout ({{ user.get_full_name|default:user.email }})</span>
+                </a>
+            </div>
+            {% else %}
+            <div class="nav-item">
+                <a href="/admin/login/">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
+            </div>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Add active class to current navigation item
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                const link = item.querySelector('a');
+                if (link && link.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // Form validation feedback
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.style.borderColor = '#dc3545';
+                        isValid = false;
+                    } else {
+                        field.style.borderColor = '#28a745';
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields.');
+                }
+            });
+        });
+
+        // Auto-hide success messages
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

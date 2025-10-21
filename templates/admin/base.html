@@ -1,0 +1,253 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Override Django admin styles to match dashboard */
+    
+    /* Header styling */
+    #header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-bottom: none !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+    }
+    
+    #header a, #header a:visited {
+        color: white !important;
+    }
+    
+    #header a:hover {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Branding */
+    #branding h1, #branding h1 a:link, #branding h1 a:visited {
+        color: white !important;
+        font-weight: 300 !important;
+        font-size: 1.8rem !important;
+    }
+    
+    #branding h1 a:hover {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    
+    /* User tools */
+    #user-tools {
+        background: rgba(255,255,255,0.1) !important;
+        border-radius: 20px !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    #user-tools a {
+        color: white !important;
+        text-decoration: none !important;
+    }
+    
+    #user-tools a:hover {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Content area */
+    #content {
+        background: #f5f5f5 !important;
+    }
+    
+    /* Module styling */
+    .module {
+        background: white !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        border: none !important;
+        margin-bottom: 1.5rem !important;
+        overflow: hidden !important;
+    }
+    
+    .module h2, .module caption {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        font-weight: 500 !important;
+        padding: 1rem !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Table styling */
+    .module table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    
+    .module th {
+        background: #f8f9fa !important;
+        color: #333 !important;
+        font-weight: 600 !important;
+        padding: 1rem !important;
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+    
+    .module td {
+        padding: 1rem !important;
+        border-bottom: 1px solid #eee !important;
+    }
+    
+    .module tr:hover {
+        background: #f8f9fa !important;
+    }
+    
+    /* Buttons */
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        color: white !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        transition: all 0.3s !important;
+    }
+    
+    .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, a.button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        color: white !important;
+    }
+    
+    .button.default, input[type=submit].default, .submit-row input.default {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+    }
+    
+    /* Delete button */
+    .deletelink, .deletelink-box {
+        background: linear-gradient(135deg, #F44336 0%, #d32f2f 100%) !important;
+    }
+    
+    /* Links */
+    a:link, a:visited {
+        color: #667eea !important;
+    }
+    
+    a:hover {
+        color: #764ba2 !important;
+    }
+    
+    /* Form fields */
+    input[type="text"], input[type="password"], input[type="email"], input[type="url"], 
+    input[type="number"], input[type="tel"], textarea, select {
+        border: 2px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 0.75rem !important;
+        transition: border-color 0.3s !important;
+    }
+    
+    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, 
+    input[type="url"]:focus, input[type="number"]:focus, input[type="tel"]:focus, 
+    textarea:focus, select:focus {
+        border-color: #667eea !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    }
+    
+    /* Breadcrumbs */
+    .breadcrumbs {
+        background: white !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        margin: 1rem 0 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        border: none !important;
+    }
+    
+    .breadcrumbs a {
+        color: #667eea !important;
+        text-decoration: none !important;
+    }
+    
+    .breadcrumbs a:hover {
+        color: #764ba2 !important;
+        text-decoration: underline !important;
+    }
+    
+    /* Sidebar */
+    #nav-sidebar {
+        background: white !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        margin-right: 1rem !important;
+    }
+    
+    #nav-sidebar .module h2 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    /* Change list */
+    .results {
+        background: white !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Messages */
+    .messagelist {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    .messagelist .success {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+        color: white !important;
+    }
+    
+    .messagelist .warning {
+        background: linear-gradient(135deg, #FF9800 0%, #f57c00 100%) !important;
+        color: white !important;
+    }
+    
+    .messagelist .error {
+        background: linear-gradient(135deg, #F44336 0%, #d32f2f 100%) !important;
+        color: white !important;
+    }
+    
+    /* Dashboard icons */
+    .app-accounts .addlink::before,
+    .app-core .addlink::before {
+        content: "🚁 " !important;
+    }
+    
+    /* Custom styling for specific models */
+    .model-customuser .addlink::before { content: "👤 " !important; }
+    .model-staffprofile .addlink::before { content: "👨‍💼 " !important; }
+    .model-pilotprofile .addlink::before { content: "👨‍✈️ " !important; }
+    .model-clientprofile .addlink::before { content: "🏢 " !important; }
+    .model-operatorcertificate .addlink::before { content: "📜 " !important; }
+    
+    /* Login page styling */
+    .login {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+    
+    .login #container {
+        background: rgba(255,255,255,0.95) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+    }
+    
+    .login #header {
+        background: transparent !important;
+        border-bottom: 2px solid #667eea !important;
+    }
+    
+    .login #branding h1 {
+        color: #667eea !important;
+    }
+</style>
+{% endblock %}

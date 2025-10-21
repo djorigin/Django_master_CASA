@@ -1,5 +1,16 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.utils import timezone
+from .utils import profile_photo_upload_path
+
+# Validators
+phone_validator = RegexValidator(
+    regex=r'^\+?1?\d{9,15}$',
+    message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+)
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -18,7 +29,8 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = (
-        ('staff', 'Staff'),
+        ('admin', 'Administrator'),
+        ('staff', 'Staff Member'),
         ('client', 'Client'),
         ('pilot', 'Pilot'),
     )
@@ -38,53 +50,207 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def get_full_name(self):
+        """Return the user's full name."""
+        return f"{self.first_name} {self.last_name}".strip()
+    
+    def get_short_name(self):
+        """Return the user's short name."""
+        return self.first_name
+    
+    @property
+    def full_name(self):
+        """Property for easy access to full name."""
+        return self.get_full_name()
 
 class StaffProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    department = models.CharField(max_length=100)
+    DEPARTMENT_CHOICES = [
+        ('operations', 'Operations'),
+        ('admin', 'Administration'),
+        ('hr', 'Human Resources'),
+        ('finance', 'Finance'),
+        ('technical', 'Technical'),
+        ('sales', 'Sales & Marketing'),
+    ]
+    
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='staff_profile')
+    department = models.CharField(max_length=100, choices=DEPARTMENT_CHOICES)
     position_title = models.CharField(max_length=100)
-    contact_number = models.CharField(max_length=20)
-    address = models.CharField(max_length=255)
-    photo_id = models.ImageField(upload_to='staff_ids/', blank=True, null=True)
+    contact_number = models.CharField(max_length=20, validators=[phone_validator])
+    address = models.TextField(max_length=500)  # Changed to TextField for better formatting
+    photo_id = models.ImageField(upload_to='staff_ids/%Y/%m/', blank=True, null=True)
+    employee_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    hire_date = models.DateField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "Staff Profile"
+        verbose_name_plural = "Staff Profiles"
+        ordering = ['user__last_name', 'user__first_name']
+
+    def clean(self):
+        if self.user.role != 'staff':
+            raise ValidationError("Linked user must have role 'staff'.")
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.position_title}"
 
 class PilotProfile(models.Model):
-    ROLE_CHOICES = (
+    ROLE_CHOICES = [
         ('chief_remote_pilot', 'Chief Remote Pilot'),
         ('remote_pilot', 'Remote Pilot'),
-    )
-
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    arn = models.CharField(max_length=20, unique=True)
-    repl_number = models.CharField(max_length=20, blank=True, null=True)
-    repl_expiry = models.DateField(blank=True, null=True)
-    medical_clearance_date = models.DateField(blank=True, null=True)
-    certifications = models.TextField(blank=True)
-    availability_status = models.CharField(max_length=20, choices=[
+    ]
+    
+    AVAILABILITY_CHOICES = [
         ('available', 'Available'),
         ('on_mission', 'On Mission'),
         ('unavailable', 'Unavailable'),
-    ], default='available')
+        ('maintenance', 'Equipment Maintenance'),
+        ('training', 'In Training'),
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pilot_profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    arn = models.CharField('ARN Number', max_length=20, unique=True, help_text="Aviation Reference Number")
+    repl_number = models.CharField('REPL Number', max_length=20, blank=True, null=True, help_text="Remote Pilot License Number")
+    repl_expiry = models.DateField('REPL Expiry Date', blank=True, null=True)
+    medical_clearance_date = models.DateField(blank=True, null=True)
+    certifications = models.TextField(blank=True, help_text="List additional certifications")
+    availability_status = models.CharField(max_length=20, choices=AVAILABILITY_CHOICES, default='available')
     home_base_location = models.CharField(max_length=100, blank=True)
     emergency_contact_name = models.CharField(max_length=100, blank=True)
-    emergency_contact_phone = models.CharField(max_length=20, blank=True)
-    contact_number = models.CharField(max_length=20)
-    address = models.CharField(max_length=255)
-    photo_id = models.ImageField(upload_to='pilot_ids/', blank=True, null=True)
+    emergency_contact_phone = models.CharField(max_length=20, blank=True, validators=[phone_validator])
+    contact_number = models.CharField(max_length=20, validators=[phone_validator])
+    address = models.TextField(max_length=500)
+    photo_id = models.ImageField(upload_to='pilot_ids/%Y/%m/', blank=True, null=True)
     notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Pilot Profile"
+        verbose_name_plural = "Pilot Profiles"
+        ordering = ['role', 'user__last_name', 'user__first_name']
+
+    def clean(self):
+        if self.user.role != 'pilot':
+            raise ValidationError("Linked user must have role 'pilot'.")
+        
+        # Check if REPL is expired
+        if self.repl_expiry and self.repl_expiry < timezone.now().date():
+            raise ValidationError("REPL license has expired.")
+
+    @property
+    def is_repl_expired(self):
+        """Check if REPL license is expired."""
+        if self.repl_expiry:
+            return self.repl_expiry < timezone.now().date()
+        return None
+        
+    @property
+    def is_available(self):
+        """Check if pilot is available for missions."""
+        return self.availability_status == 'available' and not self.is_repl_expired
 
     def __str__(self):
-        return f"{self.user.get_full_name()} ({self.role})"
+        return f"{self.user.get_full_name()} ({self.get_role_display()})"
 
 class OperatorCertificate(models.Model):
-    reoc_number = models.CharField(max_length=50, unique=True)
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('expired', 'Expired'),
+        ('suspended', 'Suspended'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    reoc_number = models.CharField('REOC Number', max_length=50, unique=True, help_text="Remote Operator Certificate Number")
     company_name = models.CharField(max_length=100)
     contact_email = models.EmailField()
     issue_date = models.DateField()
     expiry_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    casa_operator_number = models.CharField('CASA Operator Number', max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Operator Certificate"
+        verbose_name_plural = "Operator Certificates"
+        ordering = ['-issue_date']
+
+    def clean(self):
+        if self.expiry_date <= self.issue_date:
+            raise ValidationError("Expiry date must be after issue date.")
+
+    @property
+    def is_expired(self):
+        """Check if certificate is expired."""
+        return self.expiry_date < timezone.now().date()
+        
+    @property
+    def days_until_expiry(self):
+        """Calculate days until certificate expires."""
+        today = timezone.now().date()
+        if self.expiry_date > today:
+            return (self.expiry_date - today).days
+        return 0
 
     def __str__(self):
         return f"{self.company_name} - {self.reoc_number}"
+    
+
+class ClientProfile(models.Model):
+    INDUSTRY_CHOICES = [
+        ('agriculture', 'Agriculture'),
+        ('construction', 'Construction'),
+        ('energy', 'Energy & Utilities'),
+        ('entertainment', 'Entertainment & Media'),
+        ('environmental', 'Environmental'),
+        ('insurance', 'Insurance'),
+        ('mining', 'Mining'),
+        ('real_estate', 'Real Estate'),
+        ('security', 'Security & Surveillance'),
+        ('surveying', 'Surveying & Mapping'),
+        ('other', 'Other'),
+    ]
+    
+    CLIENT_STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('prospect', 'Prospect'),
+        ('suspended', 'Suspended'),
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='client_profile')
+    company_name = models.CharField(max_length=100)
+    abn = models.CharField('ABN', max_length=20, blank=True, null=True, help_text="Australian Business Number")
+    contact_number = models.CharField(max_length=20, validators=[phone_validator])
+    address = models.TextField(max_length=500)
+    billing_email = models.EmailField()
+    industry = models.CharField(max_length=100, choices=INDUSTRY_CHOICES, blank=True)
+    account_manager = models.ForeignKey(StaffProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_clients')
+    status = models.CharField(max_length=20, choices=CLIENT_STATUS_CHOICES, default='prospect')
+    credit_limit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    payment_terms = models.PositiveIntegerField(default=30, help_text="Payment terms in days")
+    notes = models.TextField(blank=True)
+    photo_id = models.ImageField(upload_to='client_ids/%Y/%m/', blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Client Profile"
+        verbose_name_plural = "Client Profiles"
+        ordering = ['company_name', 'user__last_name']
+
+    def clean(self):
+        if self.user.role != 'client':
+            raise ValidationError("Linked user must have role 'client'.")
+
+    @property
+    def is_active(self):
+        """Check if client is active."""
+        return self.status == 'active'
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.company_name}"

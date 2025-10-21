@@ -1,0 +1,235 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ client.user.get_full_name }} - Client Profile{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-handshake"></i>
+                {{ client.company_name }} - Client Profile
+            </h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{% url 'accounts:client_edit' client.pk %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+                <a href="{% url 'accounts:client_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Clients
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Company Overview -->
+                <div class="company-overview">
+                    {% if client.photo_id %}
+                        <img src="{{ client.photo_id.url }}" alt="{{ client.company_name }}" 
+                             class="company-photo">
+                    {% else %}
+                        <div class="company-photo-placeholder">
+                            {{ client.company_name.0 }}
+                        </div>
+                    {% endif %}
+                    <h3>{{ client.company_name }}</h3>
+                    <p class="contact-person">{{ client.user.get_full_name }}</p>
+                    <div class="status-badges">
+                        <span class="badge badge-status-{{ client.status }}">
+                            {{ client.get_status_display }}
+                        </span>
+                        {% if client.industry %}
+                        <span class="badge badge-industry-{{ client.industry }}">
+                            {{ client.get_industry_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-section">
+                    <h4><i class="fas fa-cogs"></i> Quick Actions</h4>
+                    <div class="action-list">
+                        <a href="{% url 'accounts:client_edit' client.pk %}" class="action-btn btn-warning">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit Profile</span>
+                        </a>
+                        <a href="{% url 'accounts:user_detail' client.user.pk %}" class="action-btn btn-primary">
+                            <i class="fas fa-user"></i>
+                            <span>View User Account</span>
+                        </a>
+                        <a href="mailto:{{ client.user.email }}" class="action-btn btn-secondary">
+                            <i class="fas fa-envelope"></i>
+                            <span>Send Email</span>
+                        </a>
+                        <a href="mailto:{{ client.billing_email }}" class="action-btn btn-secondary">
+                            <i class="fas fa-receipt"></i>
+                            <span>Billing Email</span>
+                        </a>
+                        <a href="tel:{{ client.contact_number }}" class="action-btn btn-secondary">
+                            <i class="fas fa-phone"></i>
+                            <span>Call</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Company Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-building"></i> Company Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Company Name</label>
+                            <span>{{ client.company_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>ABN</label>
+                            <span>{{ client.abn|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Industry</label>
+                            <span>
+                                {% if client.industry %}
+                                    <span class="badge badge-industry-{{ client.industry }}">
+                                        {{ client.get_industry_display }}
+                                    </span>
+                                {% else %}
+                                    Not specified
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span>
+                                <span class="badge badge-status-{{ client.status }}">
+                                    {{ client.get_status_display }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-address-card"></i> Contact Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Contact Person</label>
+                            <span>{{ client.user.get_full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Primary Email</label>
+                            <span>{{ client.user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Contact Number</label>
+                            <span>{{ client.contact_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Billing Email</label>
+                            <span>{{ client.billing_email }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Address Information</h4>
+                    <div class="address-content">
+                        <p>{{ client.address|linebreaks }}</p>
+                    </div>
+                </div>
+
+                <!-- Account Management -->
+                <div class="info-section">
+                    <h4><i class="fas fa-user-cog"></i> Account Management</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Account Manager</label>
+                            <span>
+                                {% if client.account_manager %}
+                                    {{ client.account_manager.user.get_full_name }}
+                                    <br><small class="text-muted">{{ client.account_manager.get_department_display }}</small>
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Client Since</label>
+                            <span>{{ client.created_at|date:"F d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-dollar-sign"></i> Financial Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Credit Limit</label>
+                            <span>
+                                {% if client.credit_limit %}
+                                    ${{ client.credit_limit|floatformat:2 }} AUD
+                                {% else %}
+                                    $0.00 AUD
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Payment Terms</label>
+                            <span>{{ client.payment_terms }} days</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                {% if client.notes %}
+                <div class="info-section">
+                    <h4><i class="fas fa-sticky-note"></i> Notes</h4>
+                    <div class="notes-content">
+                        <p>{{ client.notes|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Account Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-user-circle"></i> Account Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>User Role</label>
+                            <span>
+                                <span class="badge badge-client">
+                                    {{ client.user.get_role_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Account Status</label>
+                            <span>
+                                {% if client.user.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Date Joined</label>
+                            <span>{{ client.user.date_joined|date:"F d, Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Last Updated</label>
+                            <span>{{ client.updated_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

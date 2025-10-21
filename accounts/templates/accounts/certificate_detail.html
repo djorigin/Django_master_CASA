@@ -1,0 +1,186 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ certificate.reoc_number }} - Certificate Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-certificate"></i>
+                Certificate {{ certificate.reoc_number }}
+            </h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{% url 'accounts:certificate_edit' certificate.pk %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Certificate
+                </a>
+                <a href="{% url 'accounts:certificate_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Certificates
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Certificate Status Overview -->
+                <div class="status-overview">
+                    <div class="certificate-badge">
+                        <i class="fas fa-certificate certificate-icon"></i>
+                        <h3>{{ certificate.reoc_number }}</h3>
+                        <p class="company-name">{{ certificate.company_name }}</p>
+                    </div>
+                    
+                    <div class="status-info">
+                        <div class="status-item">
+                            <label>Status</label>
+                            <span class="badge badge-cert-status-{{ certificate.status }}">
+                                {{ certificate.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        {% if certificate.is_expired %}
+                        <div class="status-item">
+                            <label>Certificate</label>
+                            <span class="badge badge-danger">Expired</span>
+                        </div>
+                        {% else %}
+                        <div class="status-item">
+                            <label>Days to Expiry</label>
+                            <span class="expiry-countdown {% if certificate.days_until_expiry <= 30 %}text-danger{% elif certificate.days_until_expiry <= 90 %}text-warning{% else %}text-success{% endif %}">
+                                {{ certificate.days_until_expiry }} days
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-section">
+                    <h4><i class="fas fa-cogs"></i> Quick Actions</h4>
+                    <div class="action-list">
+                        <a href="{% url 'accounts:certificate_edit' certificate.pk %}" class="action-btn btn-warning">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit Certificate</span>
+                        </a>
+                        <a href="mailto:{{ certificate.contact_email }}" class="action-btn btn-secondary">
+                            <i class="fas fa-envelope"></i>
+                            <span>Send Email</span>
+                        </a>
+                        {% if certificate.days_until_expiry <= 90 and not certificate.is_expired %}
+                        <a href="mailto:{{ certificate.contact_email }}?subject=Certificate Renewal Reminder - {{ certificate.reoc_number }}" class="action-btn btn-primary">
+                            <i class="fas fa-bell"></i>
+                            <span>Renewal Reminder</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Certificate Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-certificate"></i> Certificate Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>REOC Number</label>
+                            <span>{{ certificate.reoc_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>CASA Operator Number</label>
+                            <span>{{ certificate.casa_operator_number|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span>
+                                <span class="badge badge-cert-status-{{ certificate.status }}">
+                                    {{ certificate.get_status_display }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-building"></i> Company Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Company Name</label>
+                            <span>{{ certificate.company_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Contact Email</label>
+                            <span>
+                                <a href="mailto:{{ certificate.contact_email }}">{{ certificate.contact_email }}</a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate Validity -->
+                <div class="info-section">
+                    <h4><i class="fas fa-calendar-alt"></i> Certificate Validity</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Issue Date</label>
+                            <span>{{ certificate.issue_date|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Expiry Date</label>
+                            <span class="{% if certificate.is_expired %}text-danger{% elif certificate.days_until_expiry <= 30 %}text-warning{% endif %}">
+                                {{ certificate.expiry_date|date:"F d, Y" }}
+                                {% if certificate.is_expired %}
+                                    <small class="text-danger">(Expired)</small>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Certificate Duration</label>
+                            <span>
+                                {% if certificate.issue_date and certificate.expiry_date %}
+                                    {% with duration=certificate.expiry_date|timeuntil:certificate.issue_date %}
+                                        {{ duration|floatformat:0 }} days validity period
+                                    {% endwith %}
+                                {% else %}
+                                    Not calculated
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Current Status</label>
+                            <span>
+                                {% if certificate.is_expired %}
+                                    <span class="text-danger"><strong>Certificate Expired</strong></span>
+                                {% elif certificate.days_until_expiry <= 30 %}
+                                    <span class="text-danger"><strong>Expiring Soon ({{ certificate.days_until_expiry }} days)</strong></span>
+                                {% elif certificate.days_until_expiry <= 90 %}
+                                    <span class="text-warning"><strong>Renewal Due ({{ certificate.days_until_expiry }} days)</strong></span>
+                                {% else %}
+                                    <span class="text-success"><strong>Valid ({{ certificate.days_until_expiry }} days remaining)</strong></span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-info-circle"></i> System Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Created</label>
+                            <span>{{ certificate.created_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Last Updated</label>
+                            <span>{{ certificate.updated_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
