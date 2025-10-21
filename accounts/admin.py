@@ -7,6 +7,7 @@ from .models import (
     ClientProfile,
     CompanyContactDetails,
     CustomUser,
+    KeyPersonnel,
     OperatorCertificate,
     PilotProfile,
     StaffProfile,
@@ -353,6 +354,105 @@ class CompanyContactDetailsAdmin(admin.ModelAdmin):
             )
         except Exception:
             return super().changelist_view(request, extra_context)
+
+
+@admin.register(KeyPersonnel)
+class KeyPersonnelAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Key Personnel (Singleton model).
+    Manages CASA required key positions.
+    """
+
+    fieldsets = (
+        (
+            _("Chief Remote Pilot"),
+            {
+                "fields": (
+                    "chief_remote_pilot",
+                    "chief_remote_pilot_approved_date",
+                ),
+                "description": "Select Chief Remote Pilot from existing pilot profiles - must be CASA approved",
+            },
+        ),
+        (
+            _("Maintenance Controller"),
+            {
+                "fields": (
+                    "maintenance_controller",
+                    "maintenance_controller_approved_date",
+                ),
+                "description": "Select Maintenance Controller from existing staff profiles",
+            },
+        ),
+        (
+            _("Chief Executive Officer"),
+            {
+                "fields": (
+                    "ceo",
+                    "ceo_approved_date",
+                ),
+                "description": "Select CEO from existing staff profiles",
+            },
+        ),
+        (
+            _("Metadata"),
+            {
+                "fields": (
+                    "created_at",
+                    "last_updated",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    readonly_fields = ("created_at", "last_updated")
+
+    def has_add_permission(self, request):
+        """
+        Prevent adding new instances if one already exists.
+        """
+        if KeyPersonnel.objects.exists():
+            return False
+        return super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        """
+        Prevent deletion of key personnel records.
+        """
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        """
+        Redirect to the edit form if instance exists, otherwise show add form.
+        """
+        try:
+            instance = KeyPersonnel.load()
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+
+            return HttpResponseRedirect(
+                reverse("admin:accounts_keypersonnel_change", args=[instance.pk])
+            )
+        except Exception:
+            return super().changelist_view(request, extra_context)
+
+    def get_queryset(self, request):
+        """
+        Ensure only one instance is shown in admin.
+        """
+        return super().get_queryset(request)
+
+    def save_model(self, request, obj, form, change):
+        """
+        Save model with custom singleton handling.
+        """
+        super().save_model(request, obj, form, change)
+
+    class Media:
+        css = {
+            'all': ('admin/css/forms.css',)
+        }
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
