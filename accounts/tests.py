@@ -250,7 +250,7 @@ class UserViewTests(BaseTestCase):
 
         # Should redirect to login
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.endswith('/login/') or '/login/' in response.url)
+        self.assertTrue(response.url.endswith("/login/") or "/login/" in response.url)
 
     def test_user_list_view_authenticated(self):
         """Test user list view with authenticated user."""
@@ -370,7 +370,9 @@ class SecurityTests(BaseTestCase):
             response = self.client.get(url)
             # Should redirect to login
             self.assertEqual(response.status_code, 302)
-            self.assertTrue(response.url.endswith('/login/') or '/login/' in response.url)
+            self.assertTrue(
+                response.url.endswith("/login/") or "/login/" in response.url
+            )
 
 
 # ============================================================================
