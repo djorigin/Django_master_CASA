@@ -30,7 +30,7 @@ def accounts_dashboard(request):
     """Main accounts dashboard with statistics"""
     # Get key personnel information
     personnel = KeyPersonnel.load()
-    
+
     context = {
         "total_users": CustomUser.objects.count(),
         "active_staff": StaffProfile.objects.filter(is_active=True).count(),
@@ -467,14 +467,12 @@ def keypersonnel_detail(request):
 def keypersonnel_edit(request):
     """Edit key personnel information - singleton pattern"""
     personnel = KeyPersonnel.load()  # Load or create singleton instance
-    
+
     if request.method == "POST":
         form = KeyPersonnelForm(request.POST, instance=personnel)
         if form.is_valid():
             form.save()
-            messages.success(
-                request, "Key Personnel information updated successfully."
-            )
+            messages.success(request, "Key Personnel information updated successfully.")
             return redirect("accounts:keypersonnel_detail")
     else:
         form = KeyPersonnelForm(instance=personnel)
