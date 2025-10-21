@@ -62,14 +62,12 @@ jobs:
         coverage xml
 
     - name: Upload coverage reports to Codecov
-      if: ${{ secrets.CODECOV_TOKEN }}
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Django Security Check
       env:
