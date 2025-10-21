@@ -43,4 +43,7 @@ urlpatterns = [
         crud_views.certificate_edit,
         name="certificate_edit",
     ),
+    # Key Personnel (Singleton)
+    path("keypersonnel/", crud_views.keypersonnel_detail, name="keypersonnel_detail"),
+    path("keypersonnel/edit/", crud_views.keypersonnel_edit, name="keypersonnel_edit"),
 ]

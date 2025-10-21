@@ -1,0 +1,243 @@
+{% extends "accounts/base.html" %}
+{% load company_tags %}
+
+{% block title %}{{ action }} Key Personnel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>{{ action }} Key Personnel</h2>
+                    <p class="text-muted">Assign CASA Required Key Positions</p>
+                </div>
+                <a href="{% url 'accounts:keypersonnel_detail' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Key Personnel
+                </a>
+            </div>
+
+            <!-- Current Status Alert -->
+            {% if vacant_positions %}
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Vacant Positions:</strong> {{ vacant_positions|join:", " }}
+                <br><small>All key positions must be filled for CASA compliance.</small>
+            </div>
+            {% endif %}
+
+            <!-- Form -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-users"></i> Key Personnel Assignments
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
+                                
+                                <!-- Chief Remote Pilot Section -->
+                                <div class="form-section mb-4">
+                                    <h6 class="section-title">
+                                        <i class="fas fa-user-tie text-primary"></i> Chief Remote Pilot
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="form-group mb-3">
+                                                <label for="{{ form.chief_remote_pilot.id_for_label }}" class="form-label">
+                                                    Select Chief Remote Pilot *
+                                                </label>
+                                                {{ form.chief_remote_pilot }}
+                                                {% if form.chief_remote_pilot.help_text %}
+                                                    <div class="form-text">{{ form.chief_remote_pilot.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.chief_remote_pilot.errors %}
+                                                    <div class="text-danger">{{ form.chief_remote_pilot.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group mb-3">
+                                                <label for="{{ form.chief_remote_pilot_approved_date.id_for_label }}" class="form-label">
+                                                    CASA Approval Date
+                                                </label>
+                                                {{ form.chief_remote_pilot_approved_date }}
+                                                {% if form.chief_remote_pilot_approved_date.errors %}
+                                                    <div class="text-danger">{{ form.chief_remote_pilot_approved_date.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Maintenance Controller Section -->
+                                <div class="form-section mb-4">
+                                    <h6 class="section-title">
+                                        <i class="fas fa-tools text-success"></i> Maintenance Controller
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="form-group mb-3">
+                                                <label for="{{ form.maintenance_controller.id_for_label }}" class="form-label">
+                                                    Select Maintenance Controller *
+                                                </label>
+                                                {{ form.maintenance_controller }}
+                                                {% if form.maintenance_controller.help_text %}
+                                                    <div class="form-text">{{ form.maintenance_controller.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.maintenance_controller.errors %}
+                                                    <div class="text-danger">{{ form.maintenance_controller.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group mb-3">
+                                                <label for="{{ form.maintenance_controller_approved_date.id_for_label }}" class="form-label">
+                                                    CASA Approval Date
+                                                </label>
+                                                {{ form.maintenance_controller_approved_date }}
+                                                {% if form.maintenance_controller_approved_date.errors %}
+                                                    <div class="text-danger">{{ form.maintenance_controller_approved_date.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- CEO Section -->
+                                <div class="form-section mb-4">
+                                    <h6 class="section-title">
+                                        <i class="fas fa-crown text-info"></i> Chief Executive Officer
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="form-group mb-3">
+                                                <label for="{{ form.ceo.id_for_label }}" class="form-label">
+                                                    Select CEO *
+                                                </label>
+                                                {{ form.ceo }}
+                                                {% if form.ceo.help_text %}
+                                                    <div class="form-text">{{ form.ceo.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.ceo.errors %}
+                                                    <div class="text-danger">{{ form.ceo.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group mb-3">
+                                                <label for="{{ form.ceo_approved_date.id_for_label }}" class="form-label">
+                                                    CASA Approval Date
+                                                </label>
+                                                {{ form.ceo_approved_date }}
+                                                {% if form.ceo_approved_date.errors %}
+                                                    <div class="text-danger">{{ form.ceo_approved_date.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Non-field errors -->
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Form Actions -->
+                                <div class="form-actions d-flex justify-content-between">
+                                    <a href="{% url 'accounts:keypersonnel_detail' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Key Personnel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Side Information Panel -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-info-circle"></i> CASA Requirements
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <h6>Key Personnel Rules</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-check-circle text-success"></i> All positions must be filled</li>
+                                <li><i class="fas fa-check-circle text-success"></i> Appointees must be CASA approved</li>
+                                <li><i class="fas fa-check-circle text-success"></i> Operations cannot proceed with vacant positions</li>
+                                <li><i class="fas fa-info-circle text-info"></i> Same person cannot hold multiple key positions</li>
+                            </ul>
+
+                            <hr>
+
+                            <h6>Data Security</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-shield-alt text-success"></i> Uses existing vetted profiles</li>
+                                <li><i class="fas fa-database text-info"></i> No data duplication</li>
+                                <li><i class="fas fa-link text-primary"></i> Linked to pilot and staff records</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-external-link-alt"></i> Quick Links
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'accounts:pilot_list' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-user-tie"></i> Manage Pilots
+                                </a>
+                                <a href="{% url 'accounts:staff_list' %}" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-users"></i> Manage Staff
+                                </a>
+                                <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

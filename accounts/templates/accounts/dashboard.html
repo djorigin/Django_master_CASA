@@ -101,6 +101,49 @@
             </div>
         </div>
 
+        <!-- Key Personnel CASA Compliance Section -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-{% if casa_compliance %}success{% else %}warning{% endif %}">
+                    <div class="card-header bg-{% if casa_compliance %}success{% else %}warning{% endif %} text-white">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-users-cog"></i> Key Personnel - CASA Section 1.2
+                            {% if casa_compliance %}
+                                <span class="badge badge-light ms-2">COMPLIANT</span>
+                            {% else %}
+                                <span class="badge badge-light ms-2">{{ vacant_positions_count }} VACANT</span>
+                            {% endif %}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {% if casa_compliance %}
+                            <p class="text-success mb-2">
+                                <i class="fas fa-check-circle"></i> All required key personnel positions are filled and CASA compliant.
+                            </p>
+                        {% else %}
+                            <p class="text-warning mb-2">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                {{ vacant_positions_count }} key position{% if vacant_positions_count != 1 %}s{% endif %} vacant. 
+                                Operations must not be conducted where key positions are vacant unless approved by CASA.
+                            </p>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-md-8">
+                                <small class="text-muted">
+                                    Each key personnel position must be filled by an individual appointed by the organisation and approved by CASA.
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="{% url 'accounts:keypersonnel_detail' %}" class="btn btn-{% if casa_compliance %}outline-success{% else %}warning{% endif %} btn-sm">
+                                    <i class="fas fa-users"></i> Manage Key Personnel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="certificates-info">
