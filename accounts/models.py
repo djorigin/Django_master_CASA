@@ -3,6 +3,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -408,6 +409,7 @@ class CompanyContactDetails(models.Model):
     def save(self, *args, **kwargs):
         """
         Ensure only one instance exists (Singleton pattern).
+        Invalidate cache when data changes.
         """
         if CompanyContactDetails.objects.exists() and not self.pk:
             raise ValidationError(
@@ -415,6 +417,17 @@ class CompanyContactDetails(models.Model):
                 "Please edit the existing record."
             )
         super().save(*args, **kwargs)
+
+        # Invalidate all cached company details when data changes
+        cache.delete_many(
+            [
+                "company_details",
+                "company_display_name",
+                "company_legal_name",
+                "company_arn",
+                "company_full_info",
+            ]
+        )
 
     @classmethod
     def get_instance(cls):

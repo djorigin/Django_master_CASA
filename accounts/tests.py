@@ -558,3 +558,111 @@ class CompanyContactDetailsModelTests(BaseTestCase):
         )
 
         self.assertEqual(details.updated_by, self.admin_user)
+
+
+# ============================================================================
+# Template Tags and Context Processors Tests
+# ============================================================================
+
+
+class CompanyTemplateTagsTests(BaseTestCase):
+    """Test cases for company template tags and context processors."""
+
+    def setUp(self):
+        super().setUp()
+        # Create company details for testing
+        self.company_details = CompanyContactDetails.objects.create(
+            legal_entity_name="Test Aviation Pty Ltd",
+            trading_name="Test Aviation",
+            registered_office_address="123 Test Street",
+            arn="TEST123456",
+            abn="88888888888",
+            operational_hq_address="456 Test Avenue",
+            operational_hq_phone="+61388888888",
+            operational_hq_email="test@aviation.com.au",
+        )
+
+    def test_context_processor_company_details(self):
+        """Test that context processor adds company data to context."""
+        from django.test import RequestFactory
+
+        from accounts.context_processors import company_details
+
+        factory = RequestFactory()
+        request = factory.get("/")
+
+        context_data = company_details(request)
+
+        self.assertIn("company", context_data)
+        company_data = context_data["company"]
+
+        self.assertEqual(company_data["legal_name"], "Test Aviation Pty Ltd")
+        self.assertEqual(company_data["trading_name"], "Test Aviation")
+        self.assertEqual(company_data["display_name"], "Test Aviation")
+        self.assertEqual(company_data["arn"], "TEST123456")
+
+    def test_company_name_template_tag(self):
+        """Test company_name template tag."""
+        from django.template import Context, Template
+
+        template = Template("{% load company_tags %}{% company_name %}")
+        rendered = template.render(Context({}))
+
+        self.assertEqual(rendered.strip(), "Test Aviation")
+
+    def test_company_arn_template_tag(self):
+        """Test company_arn template tag."""
+        from django.template import Context, Template
+
+        template = Template("{% load company_tags %}{% company_arn %}")
+        rendered = template.render(Context({}))
+
+        self.assertEqual(rendered.strip(), "TEST123456")
+
+    def test_replace_casa_filter(self):
+        """Test replace_casa template filter."""
+        from django.template import Context, Template
+
+        template = Template(
+            '{% load company_tags %}{{ "Welcome to CASA"|replace_casa }}'
+        )
+        rendered = template.render(Context({}))
+
+        self.assertEqual(rendered.strip(), "Welcome to Test Aviation")
+
+    def test_cache_invalidation_on_save(self):
+        """Test that save method calls cache invalidation."""
+        from unittest.mock import patch
+
+        from django.core.cache import cache
+
+        # Mock cache.delete_many to verify it's called
+        with patch.object(cache, "delete_many") as mock_delete_many:
+            # Update company details (this should call cache.delete_many)
+            self.company_details.trading_name = "Updated Aviation"
+            self.company_details.save()
+
+            # Verify cache.delete_many was called with correct keys
+            mock_delete_many.assert_called_once_with(
+                [
+                    "company_details",
+                    "company_display_name",
+                    "company_legal_name",
+                    "company_arn",
+                    "company_full_info",
+                ]
+            )
+
+    def test_fallback_when_no_company_exists(self):
+        """Test fallback behavior when no company details exist."""
+        # Delete company details
+        CompanyContactDetails.objects.all().delete()
+
+        from django.template import Context, Template
+
+        template = Template("{% load company_tags %}{% company_name %}")
+        rendered = template.render(Context({}))
+
+        # get_instance() creates default with "Your Company Name", not "CASA"
+        # This is the expected behavior - it creates a default instance
+        self.assertEqual(rendered.strip(), "Your Company Name")

@@ -1,0 +1,19 @@
+<!-- Company Information Block -->
+<div class="company-info">
+    <h3>{{ display_name }}</h3>
+    {% if legal_name != display_name %}
+        <p><small>{{ legal_name }}</small></p>
+    {% endif %}
+    {% if arn %}
+        <p><strong>ARN:</strong> {{ arn }}</p>
+    {% endif %}
+    {% if abn %}
+        <p><strong>ABN:</strong> {{ abn }}</p>
+    {% endif %}
+    {% if email %}
+        <p><strong>Email:</strong> <a href="mailto:{{ email }}">{{ email }}</a></p>
+    {% endif %}
+    {% if phone %}
+        <p><strong>Phone:</strong> <a href="tel:{{ phone }}">{{ phone }}</a></p>
+    {% endif %}
+</div>
