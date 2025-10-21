@@ -26,3 +26,26 @@ media/
 
 # Environment variables
 .env
+
+# Test files and configurations
+test_settings.py
+pytest.ini
+test_requirements.txt
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# GitHub Actions and CI/CD
+.github/workflows/*.log
+deploy_key
+*-report.json
+safety-report.json
+bandit-report.json
+
+# Code quality tools
+.mypy_cache/
+.flake8_cache/
