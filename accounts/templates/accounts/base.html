@@ -1,11 +1,12 @@
 {% load i18n %}
 {% load static %}
+{% load company_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Accounts Management - CASA Aviation{% endblock %}</title>
+    <title>{% block title %}Accounts Management - {% company_name %} Aviation{% endblock %}</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{% static 'css/master_css.css' %}" rel="stylesheet">
 </head>
@@ -14,7 +15,7 @@
     <header class="nav-header">
         <div class="nav-brand">
             <i class="fas fa-plane"></i>
-            <span>CASA Aviation Management</span>
+            <span>{% company_name %} Aviation Management</span>
         </div>
         <nav class="nav-menu">
             <div class="nav-item">

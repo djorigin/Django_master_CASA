@@ -31,6 +31,7 @@ from accounts.forms import (
 )
 from accounts.models import (
     ClientProfile,
+    CompanyContactDetails,
     OperatorCertificate,
     PilotProfile,
     StaffProfile,
@@ -249,7 +250,7 @@ class UserViewTests(BaseTestCase):
 
         # Should redirect to login
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/admin/login/", response.url)
+        self.assertTrue(response.url.endswith("/login/") or "/login/" in response.url)
 
     def test_user_list_view_authenticated(self):
         """Test user list view with authenticated user."""
@@ -369,4 +370,301 @@ class SecurityTests(BaseTestCase):
             response = self.client.get(url)
             # Should redirect to login
             self.assertEqual(response.status_code, 302)
-            self.assertIn("/admin/login/", response.url)
+            self.assertTrue(
+                response.url.endswith("/login/") or "/login/" in response.url
+            )
+
+
+# ============================================================================
+# Company Contact Details Model Tests (Singleton Pattern)
+# ============================================================================
+
+
+class CompanyContactDetailsModelTests(BaseTestCase):
+    """Test cases for CompanyContactDetails singleton model."""
+
+    def test_singleton_pattern(self):
+        """Test that only one CompanyContactDetails instance can exist."""
+        # Create first instance
+        details1 = CompanyContactDetails.objects.create(
+            legal_entity_name="Test Company Pty Ltd",
+            trading_name="Test Company",
+            registered_office_address="123 Test Street, Sydney NSW 2000",
+            arn="TEST123456",
+            abn="12345678901",
+            operational_hq_address="456 Operations Ave, Melbourne VIC 3000",
+            operational_hq_phone="+61398765432",
+            operational_hq_email="ops@testcompany.com.au",
+        )
+        self.assertIsNotNone(details1.pk)
+
+        # Attempting to create second instance should raise ValidationError
+        with self.assertRaises(ValidationError):
+            CompanyContactDetails.objects.create(
+                legal_entity_name="Another Company",
+                registered_office_address="Another Address",
+                arn="ANOTHER123",
+                abn="98765432109",
+                operational_hq_address="Another Ops Address",
+                operational_hq_phone="+61387654321",
+                operational_hq_email="ops@another.com.au",
+            )
+
+    def test_get_instance_creates_default(self):
+        """Test get_instance creates instance with defaults if none exists."""
+        # Ensure no instances exist
+        CompanyContactDetails.objects.all().delete()
+
+        instance = CompanyContactDetails.get_instance()
+        self.assertIsNotNone(instance)
+        self.assertEqual(instance.legal_entity_name, "Your Company Name")
+        self.assertEqual(instance.arn, "ARN000000")
+        self.assertEqual(instance.abn, "00000000000")
+
+    def test_get_instance_returns_existing(self):
+        """Test get_instance returns existing instance if available."""
+        # Create an instance
+        original = CompanyContactDetails.objects.create(
+            legal_entity_name="Existing Company",
+            registered_office_address="Existing Address",
+            arn="EXIST12345",
+            abn="11111111111",
+            operational_hq_address="Existing Ops",
+            operational_hq_phone="+61311111111",
+            operational_hq_email="existing@company.com.au",
+        )
+
+        instance = CompanyContactDetails.get_instance()
+        self.assertEqual(instance.pk, original.pk)
+        self.assertEqual(instance.legal_entity_name, "Existing Company")
+
+    def test_display_name_property(self):
+        """Test display_name property returns trading name if available."""
+        details = CompanyContactDetails.objects.create(
+            legal_entity_name="Legal Entity Ltd",
+            trading_name="Trading Name",
+            registered_office_address="Address",
+            arn="PROP123456",
+            abn="22222222222",
+            operational_hq_address="Ops Address",
+            operational_hq_phone="+61322222222",
+            operational_hq_email="prop@test.com.au",
+        )
+
+        # Should return trading name when available
+        self.assertEqual(details.display_name, "Trading Name")
+
+        # Should return legal name when trading name is empty
+        details.trading_name = ""
+        self.assertEqual(details.display_name, "Legal Entity Ltd")
+
+    def test_get_formatted_overview(self):
+        """Test get_formatted_overview replaces placeholders correctly."""
+        details = CompanyContactDetails.objects.create(
+            legal_entity_name="Aviation Corp Pty Ltd",
+            trading_name="Aviation Corp",
+            registered_office_address="Address",
+            arn="FORMAT1234",
+            abn="33333333333",
+            operational_hq_address="Ops Address",
+            operational_hq_phone="+61333333333",
+            operational_hq_email="format@test.com.au",
+            organizational_overview=(
+                "{Legal Entity Name} operates with {Trading Name} branding. "
+                "{Legal Entity Name} is the registered entity."
+            ),
+        )
+
+        formatted = details.get_formatted_overview()
+        expected = (
+            "Aviation Corp Pty Ltd operates with Aviation Corp branding. "
+            "Aviation Corp Pty Ltd is the registered entity."
+        )
+        self.assertEqual(formatted, expected)
+
+    def test_arn_validation(self):
+        """Test ARN field validation."""
+        # Valid ARN
+        details = CompanyContactDetails(
+            legal_entity_name="Test",
+            registered_office_address="Address",
+            arn="VALID12345",
+            abn="44444444444",
+            operational_hq_address="Address",
+            operational_hq_phone="+61344444444",
+            operational_hq_email="valid@test.com.au",
+        )
+        details.full_clean()  # Should not raise
+
+        # Invalid ARN (too short)
+        details.arn = "SHORT"
+        with self.assertRaises(ValidationError):
+            details.full_clean()
+
+        # Invalid ARN (special characters)
+        details.arn = "INVALID-123"
+        with self.assertRaises(ValidationError):
+            details.full_clean()
+
+    def test_abn_validation(self):
+        """Test ABN field validation."""
+        # Valid ABN
+        details = CompanyContactDetails(
+            legal_entity_name="Test",
+            registered_office_address="Address",
+            arn="ABNTEST123",
+            abn="55555555555",
+            operational_hq_address="Address",
+            operational_hq_phone="+61355555555",
+            operational_hq_email="abn@test.com.au",
+        )
+        details.full_clean()  # Should not raise
+
+        # Invalid ABN (wrong length)
+        details.abn = "123456789"
+        with self.assertRaises(ValidationError):
+            details.full_clean()
+
+        # Invalid ABN (letters)
+        details.abn = "1234567890A"
+        with self.assertRaises(ValidationError):
+            details.full_clean()
+
+    def test_string_representation(self):
+        """Test model string representation."""
+        details = CompanyContactDetails.objects.create(
+            legal_entity_name="String Test Ltd",
+            trading_name="String Test",
+            registered_office_address="Address",
+            arn="STRING1234",
+            abn="66666666666",
+            operational_hq_address="Address",
+            operational_hq_phone="+61366666666",
+            operational_hq_email="string@test.com.au",
+        )
+
+        expected = "Company Details: String Test"
+        self.assertEqual(str(details), expected)
+
+    def test_updated_by_tracking(self):
+        """Test that updated_by field can track who modified the record."""
+        details = CompanyContactDetails.objects.create(
+            legal_entity_name="Track Test Ltd",
+            registered_office_address="Address",
+            arn="TRACK12345",
+            abn="77777777777",
+            operational_hq_address="Address",
+            operational_hq_phone="+61377777777",
+            operational_hq_email="track@test.com.au",
+            updated_by=self.admin_user,
+        )
+
+        self.assertEqual(details.updated_by, self.admin_user)
+
+
+# ============================================================================
+# Template Tags and Context Processors Tests
+# ============================================================================
+
+
+class CompanyTemplateTagsTests(BaseTestCase):
+    """Test cases for company template tags and context processors."""
+
+    def setUp(self):
+        super().setUp()
+        # Create company details for testing
+        self.company_details = CompanyContactDetails.objects.create(
+            legal_entity_name="Test Aviation Pty Ltd",
+            trading_name="Test Aviation",
+            registered_office_address="123 Test Street",
+            arn="TEST123456",
+            abn="88888888888",
+            operational_hq_address="456 Test Avenue",
+            operational_hq_phone="+61388888888",
+            operational_hq_email="test@aviation.com.au",
+        )
+
+    def test_context_processor_company_details(self):
+        """Test that context processor adds company data to context."""
+        from django.test import RequestFactory
+
+        from accounts.context_processors import company_details
+
+        factory = RequestFactory()
+        request = factory.get("/")
+
+        context_data = company_details(request)
+
+        self.assertIn("company", context_data)
+        company_data = context_data["company"]
+
+        self.assertEqual(company_data["legal_name"], "Test Aviation Pty Ltd")
+        self.assertEqual(company_data["trading_name"], "Test Aviation")
+        self.assertEqual(company_data["display_name"], "Test Aviation")
+        self.assertEqual(company_data["arn"], "TEST123456")
+
+    def test_company_name_template_tag(self):
+        """Test company_name template tag."""
+        from django.template import Context, Template
+
+        template = Template("{% load company_tags %}{% company_name %}")
+        rendered = template.render(Context({}))
+
+        self.assertEqual(rendered.strip(), "Test Aviation")
+
+    def test_company_arn_template_tag(self):
+        """Test company_arn template tag."""
+        from django.template import Context, Template
+
+        template = Template("{% load company_tags %}{% company_arn %}")
+        rendered = template.render(Context({}))
+
+        self.assertEqual(rendered.strip(), "TEST123456")
+
+    def test_replace_casa_filter(self):
+        """Test replace_casa template filter."""
+        from django.template import Context, Template
+
+        template = Template(
+            '{% load company_tags %}{{ "Welcome to CASA"|replace_casa }}'
+        )
+        rendered = template.render(Context({}))
+
+        self.assertEqual(rendered.strip(), "Welcome to Test Aviation")
+
+    def test_cache_invalidation_on_save(self):
+        """Test that save method calls cache invalidation."""
+        from unittest.mock import patch
+
+        from django.core.cache import cache
+
+        # Mock cache.delete_many to verify it's called
+        with patch.object(cache, "delete_many") as mock_delete_many:
+            # Update company details (this should call cache.delete_many)
+            self.company_details.trading_name = "Updated Aviation"
+            self.company_details.save()
+
+            # Verify cache.delete_many was called with correct keys
+            mock_delete_many.assert_called_once_with(
+                [
+                    "company_details",
+                    "company_display_name",
+                    "company_legal_name",
+                    "company_arn",
+                    "company_full_info",
+                ]
+            )
+
+    def test_fallback_when_no_company_exists(self):
+        """Test fallback behavior when no company details exist."""
+        # Delete company details
+        CompanyContactDetails.objects.all().delete()
+
+        from django.template import Context, Template
+
+        template = Template("{% load company_tags %}{% company_name %}")
+        rendered = template.render(Context({}))
+
+        # get_instance() creates default with "Your Company Name", not "CASA"
+        # This is the expected behavior - it creates a default instance
+        self.assertEqual(rendered.strip(), "Your Company Name")

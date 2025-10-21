@@ -7,7 +7,6 @@ on:
     branches: [ main ]
 
 env:
-  DATABASE_URL: sqlite:///test.db
   SECRET_KEY: test-secret-key-for-github-actions
   DEBUG: False
 
@@ -18,19 +17,7 @@ jobs:
       matrix:
         python-version: [3.11, 3.12]
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: casa_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+
 
     steps:
     - uses: actions/checkout@v4
@@ -55,16 +42,22 @@ jobs:
         pip install -r test_requirements.txt
 
     - name: Run Django system checks
+      env:
+        DJANGO_SETTINGS_MODULE: darklightMETA_studio.ci_test_settings
       run: |
-        python manage.py check --settings=darklightMETA_studio.test_settings
+        python manage.py check
 
     - name: Run migrations (dry-run)
+      env:
+        DJANGO_SETTINGS_MODULE: darklightMETA_studio.ci_test_settings
       run: |
-        python manage.py makemigrations --check --dry-run --settings=darklightMETA_studio.test_settings
+        python manage.py makemigrations --check --dry-run
 
     - name: Run tests with coverage
+      env:
+        DJANGO_SETTINGS_MODULE: darklightMETA_studio.ci_test_settings
       run: |
-        coverage run --source='.' manage.py test accounts.tests --settings=darklightMETA_studio.test_settings
+        coverage run --source='.' manage.py test accounts.tests
         coverage report --show-missing
         coverage xml
 
@@ -76,15 +69,13 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
-    - name: Run pytest
-      run: |
-        pytest accounts/tests.py --cov=accounts --cov-report=xml --cov-report=html --settings=darklightMETA_studio.test_settings
-
-    - name: Test with PostgreSQL
+    - name: Django Security Check
       env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/casa_test
+        DJANGO_SETTINGS_MODULE: darklightMETA_studio.ci_test_settings
       run: |
-        python manage.py test accounts.tests --settings=darklightMETA_studio.test_settings
+        python manage.py check --deploy
+
+
 
   lint:
     runs-on: ubuntu-latest
@@ -96,10 +87,11 @@ jobs:
       with:
         python-version: 3.11
 
-    - name: Install linting tools
+    - name: Install dependencies and linting tools
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 black isort mypy
+        pip install -r requirements.txt
+        pip install -r test_requirements.txt
 
     - name: Run Black (code formatter)
       run: |

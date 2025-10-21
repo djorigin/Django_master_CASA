@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .models import (
     ClientProfile,
+    CompanyContactDetails,
     CustomUser,
     OperatorCertificate,
     PilotProfile,
@@ -251,6 +252,107 @@ class OperatorCertificateAdmin(admin.ModelAdmin):
             )
 
     is_expired.short_description = _("Certificate Status")
+
+
+@admin.register(CompanyContactDetails)
+class CompanyContactDetailsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Company Contact Details (Singleton model).
+    """
+
+    fieldsets = (
+        (
+            _("Legal Information"),
+            {
+                "fields": (
+                    "legal_entity_name",
+                    "trading_name",
+                    "arn",
+                    "abn",
+                ),
+                "description": "Official legal and registration information",
+            },
+        ),
+        (
+            _("Addresses"),
+            {
+                "fields": (
+                    "registered_office_address",
+                    "operational_hq_address",
+                ),
+                "description": "Physical addresses for legal and operational purposes",
+            },
+        ),
+        (
+            _("Contact Information"),
+            {
+                "fields": (
+                    "operational_hq_phone",
+                    "operational_hq_email",
+                ),
+                "description": "Primary contact details for operations",
+            },
+        ),
+        (
+            _("Organizational Overview"),
+            {
+                "fields": ("organizational_overview",),
+                "description": "Company description and operational capabilities",
+            },
+        ),
+        (
+            _("Metadata"),
+            {
+                "fields": (
+                    "updated_by",
+                    "created_at",
+                    "updated_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    readonly_fields = ("created_at", "updated_at")
+
+    def has_add_permission(self, request):
+        """
+        Prevent adding new instances if one already exists.
+        """
+        if CompanyContactDetails.objects.exists():
+            return False
+        return super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        """
+        Prevent deletion of company contact details.
+        """
+        return False
+
+    def save_model(self, request, obj, form, change):
+        """
+        Automatically set the updated_by field to current user.
+        """
+        if hasattr(obj, "updated_by"):
+            obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def changelist_view(self, request, extra_context=None):
+        """
+        Redirect to the edit form if instance exists, otherwise show add form.
+        """
+        try:
+            instance = CompanyContactDetails.get_instance()
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+
+            return HttpResponseRedirect(
+                reverse(
+                    "admin:accounts_companycontactdetails_change", args=[instance.pk]
+                )
+            )
+        except Exception:
+            return super().changelist_view(request, extra_context)
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
