@@ -46,4 +46,7 @@ urlpatterns = [
     # Key Personnel (Singleton)
     path("keypersonnel/", crud_views.keypersonnel_detail, name="keypersonnel_detail"),
     path("keypersonnel/edit/", crud_views.keypersonnel_edit, name="keypersonnel_edit"),
+    # Authentication
+    path("logout/", views.logout_view, name="logout"),
+    path("login/", views.custom_login_view, name="login"),
 ]

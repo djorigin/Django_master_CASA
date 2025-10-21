@@ -68,14 +68,14 @@
             </div>
             {% if user.is_authenticated %}
             <div class="nav-item">
-                <a href="/admin/logout/">
+                <a href="{% url 'accounts:logout' %}">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout ({{ user.get_full_name|default:user.email }})</span>
                 </a>
             </div>
             {% else %}
             <div class="nav-item">
-                <a href="/admin/login/">
+                <a href="{% url 'accounts:login' %}">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Login</span>
                 </a>
