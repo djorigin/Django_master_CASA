@@ -1,0 +1,269 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ action }} Client - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-handshake"></i>
+                {{ action }} Client Profile
+            </h2>
+            <a href="{% url 'accounts:client_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Clients
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- User Selection -->
+            <div class="form-group">
+                <label class="form-label" for="{{ form.user.id_for_label }}">
+                    <i class="fas fa-user"></i> User *
+                </label>
+                {{ form.user }}
+                {% if form.user.errors %}
+                    <div class="text-danger">
+                        {% for error in form.user.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text text-muted">Select a user with 'Client' role</small>
+            </div>
+
+            <!-- Company Information -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-building"></i> Company Information
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.company_name.id_for_label }}">
+                            <i class="fas fa-building"></i> Company Name *
+                        </label>
+                        {{ form.company_name }}
+                        {% if form.company_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.company_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.abn.id_for_label }}">
+                            <i class="fas fa-id-card"></i> ABN
+                        </label>
+                        {{ form.abn }}
+                        {% if form.abn.errors %}
+                            <div class="text-danger">
+                                {% for error in form.abn.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.industry.id_for_label }}">
+                            <i class="fas fa-industry"></i> Industry
+                        </label>
+                        {{ form.industry }}
+                        {% if form.industry.errors %}
+                            <div class="text-danger">
+                                {% for error in form.industry.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.status.id_for_label }}">
+                            <i class="fas fa-signal"></i> Client Status *
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger">
+                                {% for error in form.status.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-address-card"></i> Contact Information
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contact_number.id_for_label }}">
+                            <i class="fas fa-phone"></i> Contact Number *
+                        </label>
+                        {{ form.contact_number }}
+                        {% if form.contact_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.contact_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.billing_email.id_for_label }}">
+                            <i class="fas fa-envelope"></i> Billing Email *
+                        </label>
+                        {{ form.billing_email }}
+                        {% if form.billing_email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.billing_email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.address.id_for_label }}">
+                    <i class="fas fa-map-marker-alt"></i> Address *
+                </label>
+                {{ form.address }}
+                {% if form.address.errors %}
+                    <div class="text-danger">
+                        {% for error in form.address.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Account Management -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-user-tie"></i> Account Management
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.account_manager.id_for_label }}">
+                            <i class="fas fa-user-tie"></i> Account Manager
+                        </label>
+                        {{ form.account_manager }}
+                        {% if form.account_manager.errors %}
+                            <div class="text-danger">
+                                {% for error in form.account_manager.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.photo_id.id_for_label }}">
+                            <i class="fas fa-camera"></i> Photo ID
+                        </label>
+                        {{ form.photo_id }}
+                        {% if form.photo_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.photo_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Information -->
+            <h5 style="margin-top: 2rem; margin-bottom: 1rem; color: #667eea;">
+                <i class="fas fa-dollar-sign"></i> Financial Information
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.credit_limit.id_for_label }}">
+                            <i class="fas fa-credit-card"></i> Credit Limit (AUD)
+                        </label>
+                        {{ form.credit_limit }}
+                        {% if form.credit_limit.errors %}
+                            <div class="text-danger">
+                                {% for error in form.credit_limit.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.payment_terms.id_for_label }}">
+                            <i class="fas fa-calendar-alt"></i> Payment Terms (Days)
+                        </label>
+                        {{ form.payment_terms }}
+                        {% if form.payment_terms.errors %}
+                            <div class="text-danger">
+                                {% for error in form.payment_terms.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.notes.id_for_label }}">
+                    <i class="fas fa-sticky-note"></i> Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger">
+                        {% for error in form.notes.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Client Profile
+                </button>
+                <a href="{% url 'accounts:client_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                {% if client and action == "Edit" %}
+                <a href="{% url 'accounts:client_detail' client.pk %}" class="btn btn-warning">
+                    <i class="fas fa-eye"></i> View Details
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

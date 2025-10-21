@@ -1,0 +1,192 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ action }} Staff - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-user-tie"></i>
+                {{ action }} Staff Profile
+            </h2>
+            <a href="{% url 'accounts:staff_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Staff
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- User Selection -->
+            <div class="form-group">
+                <label class="form-label" for="{{ form.user.id_for_label }}">
+                    <i class="fas fa-user"></i> User *
+                </label>
+                {{ form.user }}
+                {% if form.user.errors %}
+                    <div class="text-danger">
+                        {% for error in form.user.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text text-muted">Select a user with 'Staff' role</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.department.id_for_label }}">
+                            <i class="fas fa-building"></i> Department *
+                        </label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                            <div class="text-danger">
+                                {% for error in form.department.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.position_title.id_for_label }}">
+                            <i class="fas fa-briefcase"></i> Position Title *
+                        </label>
+                        {{ form.position_title }}
+                        {% if form.position_title.errors %}
+                            <div class="text-danger">
+                                {% for error in form.position_title.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.employee_id.id_for_label }}">
+                            <i class="fas fa-id-badge"></i> Employee ID
+                        </label>
+                        {{ form.employee_id }}
+                        {% if form.employee_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.employee_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contact_number.id_for_label }}">
+                            <i class="fas fa-phone"></i> Contact Number *
+                        </label>
+                        {{ form.contact_number }}
+                        {% if form.contact_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.contact_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.address.id_for_label }}">
+                    <i class="fas fa-map-marker-alt"></i> Address *
+                </label>
+                {{ form.address }}
+                {% if form.address.errors %}
+                    <div class="text-danger">
+                        {% for error in form.address.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.hire_date.id_for_label }}">
+                            <i class="fas fa-calendar-alt"></i> Hire Date *
+                        </label>
+                        {{ form.hire_date }}
+                        {% if form.hire_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.hire_date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.photo_id.id_for_label }}">
+                            <i class="fas fa-camera"></i> Photo ID
+                        </label>
+                        {{ form.photo_id }}
+                        {% if form.photo_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.photo_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if staff and staff.photo_id %}
+                            <div class="mt-2">
+                                <small class="text-muted">Current photo:</small><br>
+                                <img src="{{ staff.photo_id.url }}" alt="Current photo" 
+                                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-label" for="{{ form.is_active.id_for_label }}">
+                        <i class="fas fa-check-circle"></i> Active Staff Member
+                    </label>
+                </div>
+                {% if form.is_active.errors %}
+                    <div class="text-danger">
+                        {% for error in form.is_active.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Staff Profile
+                </button>
+                <a href="{% url 'accounts:staff_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                {% if staff and action == "Edit" %}
+                <a href="{% url 'accounts:staff_detail' staff.pk %}" class="btn btn-warning">
+                    <i class="fas fa-eye"></i> View Details
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Staff Management - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-user-tie"></i>
+                Staff Management
+            </h2>
+            <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Staff
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Search and Filters -->
+        <form method="get" class="search-filters">
+            <div class="search-box">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search by name, position, or department..." 
+                       value="{{ search_query|default:'' }}">
+            </div>
+            <div class="filter-group">
+                <select name="department" class="form-control">
+                    <option value="">All Departments</option>
+                    {% for value, label in department_choices %}
+                        <option value="{{ value }}" {% if department_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <a href="{% url 'accounts:staff_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+
+        <!-- Staff Table -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Department</th>
+                        <th>Employee ID</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in page_obj %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                {% if staff.photo_id %}
+                                    <img src="{{ staff.photo_id.url }}" alt="{{ staff.user.get_full_name }}" 
+                                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                        {{ staff.user.first_name.0 }}{{ staff.user.last_name.0 }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ staff.user.get_full_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ staff.user.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ staff.position_title }}</td>
+                        <td>
+                            <span class="badge badge-department-{{ staff.department }}">
+                                {{ staff.get_department_display }}
+                            </span>
+                        </td>
+                        <td>{{ staff.employee_id|default:"Not assigned" }}</td>
+                        <td>{{ staff.contact_number }}</td>
+                        <td>
+                            {% if staff.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="{% url 'accounts:staff_detail' staff.pk %}" 
+                                   class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{% url 'accounts:staff_edit' staff.pk %}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #6c757d;">
+                            {% if search_query or department_filter %}
+                                No staff found matching your search criteria.
+                            {% else %}
+                                No staff found. <a href="{% url 'accounts:staff_create' %}">Add the first staff member</a>.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if department_filter %}department={{ department_filter }}&{% endif %}page=1">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if department_filter %}department={{ department_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if department_filter %}department={{ department_filter }}&{% endif %}page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if department_filter %}department={{ department_filter }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

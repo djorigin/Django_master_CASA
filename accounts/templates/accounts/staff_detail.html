@@ -1,0 +1,193 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ staff.user.get_full_name }} - Staff Profile{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-user-tie"></i>
+                {{ staff.user.get_full_name }} - Staff Profile
+            </h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{% url 'accounts:staff_edit' staff.pk %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+                <a href="{% url 'accounts:staff_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Staff
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Profile Photo and Status -->
+                <div class="profile-photo-section">
+                    {% if staff.photo_id %}
+                        <img src="{{ staff.photo_id.url }}" alt="{{ staff.user.get_full_name }}" 
+                             class="profile-photo">
+                    {% else %}
+                        <div class="profile-photo-placeholder">
+                            {{ staff.user.first_name.0 }}{{ staff.user.last_name.0 }}
+                        </div>
+                    {% endif %}
+                    <h3>{{ staff.user.get_full_name }}</h3>
+                    <p class="position-title">{{ staff.position_title }}</p>
+                    <div class="status-badges">
+                        {% if staff.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Inactive</span>
+                        {% endif %}
+                        <span class="badge badge-department-{{ staff.department }}">
+                            {{ staff.get_department_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-section">
+                    <h4><i class="fas fa-cogs"></i> Quick Actions</h4>
+                    <div class="action-list">
+                        <a href="{% url 'accounts:staff_edit' staff.pk %}" class="action-btn btn-warning">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit Profile</span>
+                        </a>
+                        <a href="{% url 'accounts:user_detail' staff.user.pk %}" class="action-btn btn-primary">
+                            <i class="fas fa-user"></i>
+                            <span>View User Account</span>
+                        </a>
+                        <a href="mailto:{{ staff.user.email }}" class="action-btn btn-secondary">
+                            <i class="fas fa-envelope"></i>
+                            <span>Send Email</span>
+                        </a>
+                        <a href="tel:{{ staff.contact_number }}" class="action-btn btn-secondary">
+                            <i class="fas fa-phone"></i>
+                            <span>Call</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Personal Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-user"></i> Personal Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Full Name</label>
+                            <span>{{ staff.user.get_full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Email</label>
+                            <span>{{ staff.user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Contact Number</label>
+                            <span>{{ staff.contact_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Employee ID</label>
+                            <span>{{ staff.employee_id|default:"Not assigned" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employment Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-briefcase"></i> Employment Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Department</label>
+                            <span>
+                                <span class="badge badge-department-{{ staff.department }}">
+                                    {{ staff.get_department_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Position Title</label>
+                            <span>{{ staff.position_title }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Hire Date</label>
+                            <span>{{ staff.hire_date|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Employment Duration</label>
+                            <span>
+                                {% now "Y-m-d" as today %}
+                                {% if staff.hire_date %}
+                                    {{ staff.hire_date|timesince }} ago
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span>
+                                {% if staff.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Address Information</h4>
+                    <div class="address-content">
+                        <p>{{ staff.address|linebreaks }}</p>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-user-cog"></i> Account Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>User Role</label>
+                            <span>
+                                <span class="badge badge-staff">
+                                    {{ staff.user.get_role_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Account Status</label>
+                            <span>
+                                {% if staff.user.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Date Joined</label>
+                            <span>{{ staff.user.date_joined|date:"F d, Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Last Login</label>
+                            <span>
+                                {% if staff.user.last_login %}
+                                    {{ staff.user.last_login|date:"F d, Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Never logged in</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Certificate Management - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-certificate"></i>
+                Operator Certificates
+            </h2>
+            <a href="{% url 'accounts:certificate_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Certificate
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Search and Filters -->
+        <form method="get" class="search-filters">
+            <div class="search-box">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search by REOC, company, or CASA number..." 
+                       value="{{ search_query|default:'' }}">
+            </div>
+            <div class="filter-group">
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <a href="{% url 'accounts:certificate_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+
+        <!-- Certificates Table -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>REOC Number</th>
+                        <th>Company</th>
+                        <th>Issue Date</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                        <th>Days to Expiry</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for certificate in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ certificate.reoc_number }}</strong>
+                            {% if certificate.casa_operator_number %}
+                                <br><small class="text-muted">CASA: {{ certificate.casa_operator_number }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ certificate.company_name }}
+                            <br>
+                            <small class="text-muted">{{ certificate.contact_email }}</small>
+                        </td>
+                        <td>{{ certificate.issue_date|date:"M d, Y" }}</td>
+                        <td>
+                            {{ certificate.expiry_date|date:"M d, Y" }}
+                            {% if certificate.is_expired %}
+                                <br><span class="badge badge-danger">Expired</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-cert-status-{{ certificate.status }}">
+                                {{ certificate.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if certificate.is_expired %}
+                                <span class="text-danger">Expired</span>
+                            {% else %}
+                                {% if certificate.days_until_expiry <= 30 %}
+                                    <span class="text-warning">{{ certificate.days_until_expiry }} days</span>
+                                {% elif certificate.days_until_expiry <= 90 %}
+                                    <span class="text-info">{{ certificate.days_until_expiry }} days</span>
+                                {% else %}
+                                    <span class="text-muted">{{ certificate.days_until_expiry }} days</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="{% url 'accounts:certificate_detail' certificate.pk %}" 
+                                   class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{% url 'accounts:certificate_edit' certificate.pk %}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #6c757d;">
+                            {% if search_query or status_filter %}
+                                No certificates found matching your search criteria.
+                            {% else %}
+                                No certificates found. <a href="{% url 'accounts:certificate_create' %}">Add the first certificate</a>.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page=1">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

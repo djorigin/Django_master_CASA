@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% trans "CASA Dashboard" %}</title>
+    <title>{% trans "Drone Ultra Images Dashboard" %}</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{% static 'css/master_css.css' %}" rel="stylesheet">
     <style>
@@ -295,7 +295,7 @@
     <header class="header">
         <div class="header-top">
             <div class="logo">
-                <i class="fas fa-helicopter"></i> CASA Dashboard
+                <i class="fas fa-helicopter"></i> Drone Ultra Images Dashboard
             </div>
             <div class="header-actions">
                 <input type="text" class="search-box" placeholder="{% trans 'Search for actions' %}">
@@ -328,7 +328,7 @@
         <section class="section">
             <h2 class="section-title">{% trans "Quick Actions" %}</h2>
             <div class="quick-actions">
-                <a href="#" class="action-tile">
+                <a href="{% url 'accounts:staff_list' %}" class="action-tile">
                     <div class="action-icon action-blue">
                         <i class="fas fa-users"></i>
                     </div>
@@ -370,22 +370,29 @@
                     <div class="action-title">{% trans "Analytics" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'accounts:pilot_list' %}" class="action-tile">
                     <div class="action-icon action-pink">
-                        <i class="fas fa-user-tie"></i>
+                        <i class="fas fa-user-astronaut"></i>
                     </div>
                     <div class="action-title">{% trans "Pilots" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'accounts:client_list' %}" class="action-tile">
                     <div class="action-icon action-indigo">
-                        <i class="fas fa-building"></i>
+                        <i class="fas fa-handshake"></i>
                     </div>
                     <div class="action-title">{% trans "Clients" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'accounts:dashboard' %}" class="action-tile">
                     <div class="action-icon action-cyan">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div class="action-title">{% trans "User Management" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-teal">
                         <i class="fas fa-tools"></i>
                     </div>
                     <div class="action-title">{% trans "Maintenance" %}</div>

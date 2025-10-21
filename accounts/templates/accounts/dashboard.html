@@ -1,0 +1,118 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Accounts Dashboard - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-tachometer-alt"></i>
+            Accounts Management Dashboard
+        </h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ total_users }}</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ active_staff }}</h3>
+                        <p>Active Staff</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-astronaut"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ available_pilots }}</h3>
+                        <p>Available Pilots</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ active_clients }}</h3>
+                        <p>Active Clients</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="quick-actions">
+                    <h4><i class="fas fa-plus-circle"></i> Quick Actions</h4>
+                    <div class="action-buttons">
+                        <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Add User
+                        </a>
+                        <a href="{% url 'accounts:staff_create' %}" class="btn btn-success">
+                            <i class="fas fa-user-tie"></i> Add Staff
+                        </a>
+                        <a href="{% url 'accounts:pilot_create' %}" class="btn btn-warning">
+                            <i class="fas fa-user-astronaut"></i> Add Pilot
+                        </a>
+                        <a href="{% url 'accounts:client_create' %}" class="btn btn-secondary">
+                            <i class="fas fa-handshake"></i> Add Client
+                        </a>
+                        <a href="{% url 'accounts:certificate_create' %}" class="btn btn-primary">
+                            <i class="fas fa-certificate"></i> Add Certificate
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="recent-activity">
+                    <h4><i class="fas fa-clock"></i> Recent Users</h4>
+                    <div class="activity-list">
+                        {% for user in recent_users %}
+                        <div class="activity-item">
+                            <div class="activity-info">
+                                <strong>{{ user.get_full_name }}</strong>
+                                <span class="badge badge-{{ user.role|lower }}">{{ user.get_role_display }}</span>
+                            </div>
+                            <small>{{ user.date_joined|date:"M d, Y" }}</small>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No recent users</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="certificates-info">
+                    <h4><i class="fas fa-certificate"></i> Certificates Status</h4>
+                    <p><strong>{{ active_certificates }}</strong> active operator certificates</p>
+                    <a href="{% url 'accounts:certificate_list' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list"></i> View All Certificates
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

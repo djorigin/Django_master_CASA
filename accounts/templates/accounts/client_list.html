@@ -1,0 +1,168 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Client Management - CASA Aviation{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-handshake"></i>
+                Client Management
+            </h2>
+            <a href="{% url 'accounts:client_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Client
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Search and Filters -->
+        <form method="get" class="search-filters">
+            <div class="search-box">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search by name, company, or ABN..." 
+                       value="{{ search_query|default:'' }}">
+            </div>
+            <div class="filter-group">
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <a href="{% url 'accounts:client_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+
+        <!-- Clients Table -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Company</th>
+                        <th>Industry</th>
+                        <th>Status</th>
+                        <th>Account Manager</th>
+                        <th>Contact</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in page_obj %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                {% if client.photo_id %}
+                                    <img src="{{ client.photo_id.url }}" alt="{{ client.user.get_full_name }}" 
+                                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #ffc107; display: flex; align-items: center; justify-content: center; color: #212529; font-weight: bold;">
+                                        {{ client.user.first_name.0 }}{{ client.user.last_name.0 }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ client.user.get_full_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ client.user.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ client.company_name }}</strong>
+                            {% if client.abn %}
+                                <br><small class="text-muted">ABN: {{ client.abn }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.industry %}
+                                <span class="badge badge-industry-{{ client.industry }}">
+                                    {{ client.get_industry_display }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Not specified</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-status-{{ client.status }}">
+                                {{ client.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if client.account_manager %}
+                                {{ client.account_manager.user.get_full_name }}
+                                <br><small class="text-muted">{{ client.account_manager.department }}</small>
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ client.contact_number }}
+                            <br>
+                            <small class="text-muted">{{ client.billing_email }}</small>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="{% url 'accounts:client_detail' client.pk %}" 
+                                   class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{% url 'accounts:client_edit' client.pk %}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #6c757d;">
+                            {% if search_query or status_filter %}
+                                No clients found matching your search criteria.
+                            {% else %}
+                                No clients found. <a href="{% url 'accounts:client_create' %}">Add the first client</a>.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page=1">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

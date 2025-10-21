@@ -1,0 +1,304 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ pilot.user.get_full_name }} - Pilot Profile{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+                <i class="fas fa-plane"></i>
+                {{ pilot.user.get_full_name }} - Pilot Profile
+            </h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{% url 'accounts:pilot_edit' pilot.pk %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+                <a href="{% url 'accounts:pilot_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Pilots
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Pilot Overview -->
+                <div class="pilot-overview">
+                    {% if pilot.photo_id %}
+                        <img src="{{ pilot.photo_id.url }}" alt="{{ pilot.user.get_full_name }}" 
+                             class="pilot-photo">
+                    {% else %}
+                        <div class="pilot-photo-placeholder">
+                            {{ pilot.user.first_name.0 }}{{ pilot.user.last_name.0 }}
+                        </div>
+                    {% endif %}
+                    <h3>{{ pilot.user.get_full_name }}</h3>
+                    <p class="pilot-role">{{ pilot.get_role_display }}</p>
+                    <div class="status-badges">
+                        <span class="badge badge-status-{{ pilot.status }}">
+                            {{ pilot.get_status_display }}
+                        </span>
+                        {% if pilot.rpas_rating %}
+                        <span class="badge badge-rpas">
+                            RPAS {{ pilot.rpas_rating }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- License Status -->
+                <div class="license-status-section">
+                    <h4><i class="fas fa-id-card"></i> License Status</h4>
+                    <div class="license-info">
+                        <div class="license-item">
+                            <label>ReOC Number</label>
+                            <span class="license-number">{{ pilot.reoc_number|default:"Not assigned" }}</span>
+                        </div>
+                        {% if pilot.reoc_expiry %}
+                        <div class="license-item">
+                            <label>ReOC Expiry</label>
+                            <span class="expiry-date {% if pilot.reoc_expiry|date:'Y-m-d' < today|date:'Y-m-d' %}expired{% elif pilot.reoc_expiry|timeuntil|slice:':2' == '30' %}expiring-soon{% endif %}">
+                                {{ pilot.reoc_expiry|date:"M d, Y" }}
+                                {% if pilot.reoc_expiry|date:'Y-m-d' < today|date:'Y-m-d' %}
+                                    <i class="fas fa-exclamation-triangle" title="Expired"></i>
+                                {% elif pilot.reoc_expiry|timeuntil|slice:':2' == '30' %}
+                                    <i class="fas fa-clock" title="Expiring Soon"></i>
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="license-item">
+                            <label>RPAS Rating</label>
+                            <span>{{ pilot.get_rpas_rating_display|default:"Not specified" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-section">
+                    <h4><i class="fas fa-cogs"></i> Quick Actions</h4>
+                    <div class="action-list">
+                        <a href="{% url 'accounts:pilot_edit' pilot.pk %}" class="action-btn btn-warning">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit Profile</span>
+                        </a>
+                        <a href="{% url 'accounts:user_detail' pilot.user.pk %}" class="action-btn btn-primary">
+                            <i class="fas fa-user"></i>
+                            <span>View User Account</span>
+                        </a>
+                        <a href="mailto:{{ pilot.user.email }}" class="action-btn btn-secondary">
+                            <i class="fas fa-envelope"></i>
+                            <span>Send Email</span>
+                        </a>
+                        <a href="tel:{{ pilot.contact_number }}" class="action-btn btn-secondary">
+                            <i class="fas fa-phone"></i>
+                            <span>Call</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Personal Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-user"></i> Personal Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Full Name</label>
+                            <span>{{ pilot.user.get_full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Employee ID</label>
+                            <span>{{ pilot.employee_id|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Role</label>
+                            <span>
+                                <span class="badge badge-pilot">
+                                    {{ pilot.get_role_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span>
+                                <span class="badge badge-status-{{ pilot.status }}">
+                                    {{ pilot.get_status_display }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-address-card"></i> Contact Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Email Address</label>
+                            <span>{{ pilot.user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Contact Number</label>
+                            <span>{{ pilot.contact_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Emergency Contact</label>
+                            <span>{{ pilot.emergency_contact|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Emergency Phone</label>
+                            <span>{{ pilot.emergency_phone|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Address Information</h4>
+                    <div class="address-content">
+                        <p>{{ pilot.address|linebreaks }}</p>
+                    </div>
+                </div>
+
+                <!-- Professional Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-certificate"></i> Professional Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>ReOC Number</label>
+                            <span>{{ pilot.reoc_number|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>ReOC Expiry Date</label>
+                            <span>
+                                {% if pilot.reoc_expiry %}
+                                    <span class="expiry-date {% if pilot.reoc_expiry|date:'Y-m-d' < today|date:'Y-m-d' %}expired{% elif pilot.reoc_expiry|timeuntil|slice:':2' == '30' %}expiring-soon{% endif %}">
+                                        {{ pilot.reoc_expiry|date:"F d, Y" }}
+                                        {% if pilot.reoc_expiry|date:'Y-m-d' < today|date:'Y-m-d' %}
+                                            <span class="badge badge-danger">Expired</span>
+                                        {% elif pilot.reoc_expiry|timeuntil|slice:':2' == '30' %}
+                                            <span class="badge badge-warning">Expiring Soon</span>
+                                        {% else %}
+                                            <span class="badge badge-success">Valid</span>
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Not set</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>RPAS Rating</label>
+                            <span>
+                                {% if pilot.rpas_rating %}
+                                    <span class="badge badge-rpas">{{ pilot.get_rpas_rating_display }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Total Flight Hours</label>
+                            <span>
+                                {% if pilot.total_flight_hours %}
+                                    {{ pilot.total_flight_hours }} hours
+                                {% else %}
+                                    <span class="text-muted">Not recorded</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employment Details -->
+                <div class="info-section">
+                    <h4><i class="fas fa-briefcase"></i> Employment Details</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Hire Date</label>
+                            <span>{{ pilot.hire_date|date:"F d, Y"|default:"Not specified" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Salary</label>
+                            <span>
+                                {% if pilot.salary %}
+                                    ${{ pilot.salary|floatformat:2 }} AUD
+                                {% else %}
+                                    <span class="text-muted">Not disclosed</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Supervisor</label>
+                            <span>
+                                {% if pilot.supervisor %}
+                                    {{ pilot.supervisor.user.get_full_name }}
+                                    <br><small class="text-muted">{{ pilot.supervisor.get_department_display }}</small>
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training & Certifications -->
+                {% if pilot.training_records %}
+                <div class="info-section">
+                    <h4><i class="fas fa-graduation-cap"></i> Training & Certifications</h4>
+                    <div class="training-content">
+                        <p>{{ pilot.training_records|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Additional Notes -->
+                {% if pilot.notes %}
+                <div class="info-section">
+                    <h4><i class="fas fa-sticky-note"></i> Notes</h4>
+                    <div class="notes-content">
+                        <p>{{ pilot.notes|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Account Information -->
+                <div class="info-section">
+                    <h4><i class="fas fa-user-circle"></i> Account Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>User Role</label>
+                            <span>
+                                <span class="badge badge-pilot">
+                                    {{ pilot.user.get_role_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Account Status</label>
+                            <span>
+                                {% if pilot.user.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Date Joined</label>
+                            <span>{{ pilot.user.date_joined|date:"F d, Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Last Updated</label>
+                            <span>{{ pilot.updated_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

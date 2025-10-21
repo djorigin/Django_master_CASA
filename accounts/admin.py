@@ -31,13 +31,12 @@ class StaffProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'position_title', 'department', 'contact_number', 'is_active', 'hire_date')
     list_filter = ('department', 'is_active', 'hire_date')
     search_fields = ('user__first_name', 'user__last_name', 'position_title', 'department')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ()
     fieldsets = (
         (_('User Information'), {'fields': ('user',)}),
         (_('Job Details'), {'fields': ('position_title', 'department', 'employee_id', 'hire_date', 'is_active')}),
         (_('Contact Information'), {'fields': ('contact_number', 'address')}),
         (_('Documents'), {'fields': ('photo_id',)}),
-        (_('System Information'), {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )
 
 
