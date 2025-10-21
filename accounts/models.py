@@ -308,3 +308,146 @@ class ClientProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.company_name}"
+
+
+class CompanyContactDetails(models.Model):
+    """
+    Singleton model for company contact details and organizational information.
+    Only one instance should exist in the database.
+    """
+
+    # Contact Information
+    legal_entity_name = models.CharField(
+        max_length=200,
+        verbose_name="Name of Legal Entity",
+        help_text="Official registered legal name of the company",
+    )
+    trading_name = models.CharField(
+        max_length=200,
+        verbose_name="Trading Name",
+        help_text="Business trading name (if different from legal name)",
+        blank=True,
+    )
+
+    # Registered Office
+    registered_office_address = models.TextField(
+        verbose_name="Registered Office Address",
+        help_text="Full registered office address including postcode",
+    )
+
+    # Registration Numbers
+    arn = models.CharField(
+        max_length=20,
+        verbose_name="ARN",
+        help_text="Aviation Reference Number",
+        validators=[
+            RegexValidator(
+                regex=r"^[A-Z0-9]{6,20}$",
+                message="ARN must be 6-20 alphanumeric characters",
+            )
+        ],
+    )
+    abn = models.CharField(
+        max_length=15,
+        verbose_name="ABN",
+        help_text="Australian Business Number",
+        validators=[
+            RegexValidator(
+                regex=r"^\d{11}$",
+                message="ABN must be 11 digits",
+            )
+        ],
+    )
+
+    # Operational Headquarters
+    operational_hq_address = models.TextField(
+        verbose_name="Operational Headquarters Address",
+        help_text="Physical address of operational headquarters",
+    )
+    operational_hq_phone = models.CharField(
+        max_length=20,
+        verbose_name="Operations Headquarters Phone",
+        validators=[phone_validator],
+    )
+    operational_hq_email = models.EmailField(
+        verbose_name="Operational Headquarters Email",
+        help_text="Main operational contact email",
+    )
+
+    # Organizational Overview
+    organizational_overview = models.TextField(
+        verbose_name="Organisational Overview",
+        help_text="Description of the company's operations and specialties",
+        default=(
+            "{Legal Entity Name} is an entity that holds a remotely piloted aircraft "
+            "operator's certificate (ReOC) to conduct aerial work activities in remotely "
+            "piloted aircraft systems (RPAS). {Legal Entity Name} specialises in aerial "
+            "survey operations over mine sites utilising the RPA listed in operational "
+            "documentation. Remote pilots and ground crew are employed on a full-time, "
+            "part-time or casual basis depending on demand and level of activity. "
+            "Maintenance is subcontracted to various organisations as required."
+        ),
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Last Updated By",
+        help_text="User who last updated these details",
+    )
+
+    class Meta:
+        verbose_name = "Company Contact Details"
+        verbose_name_plural = "Company Contact Details"
+
+    def save(self, *args, **kwargs):
+        """
+        Ensure only one instance exists (Singleton pattern).
+        """
+        if CompanyContactDetails.objects.exists() and not self.pk:
+            raise ValidationError(
+                "Only one Company Contact Details record is allowed. "
+                "Please edit the existing record."
+            )
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_instance(cls):
+        """
+        Get the singleton instance, create if doesn't exist.
+        """
+        instance, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                "legal_entity_name": "Your Company Name",
+                "trading_name": "",
+                "registered_office_address": "Enter your registered address",
+                "arn": "ARN000000",
+                "abn": "00000000000",
+                "operational_hq_address": "Enter your operational address",
+                "operational_hq_phone": "+61000000000",
+                "operational_hq_email": "operations@yourcompany.com.au",
+            },
+        )
+        return instance
+
+    @property
+    def display_name(self):
+        """Return the trading name if available, otherwise legal name."""
+        return self.trading_name if self.trading_name else self.legal_entity_name
+
+    def get_formatted_overview(self):
+        """
+        Return organizational overview with placeholders replaced.
+        """
+        return self.organizational_overview.replace(
+            "{Legal Entity Name}", self.legal_entity_name
+        ).replace("{Trading Name}", self.display_name)
+
+    def __str__(self):
+        return f"Company Details: {self.display_name}"
