@@ -450,9 +450,7 @@ class KeyPersonnelAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     class Media:
-        css = {
-            'all': ('admin/css/forms.css',)
-        }
+        css = {"all": ("admin/css/forms.css",)}
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

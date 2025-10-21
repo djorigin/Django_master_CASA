@@ -475,7 +475,7 @@ class KeyPersonnel(models.Model):
 
     # Chief Remote Pilot - ForeignKey to PilotProfile (already vetted pilot data)
     chief_remote_pilot = models.ForeignKey(
-        'PilotProfile',
+        "PilotProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -492,7 +492,7 @@ class KeyPersonnel(models.Model):
 
     # Maintenance Controller - ForeignKey to StaffProfile (already vetted staff data)
     maintenance_controller = models.ForeignKey(
-        'StaffProfile',
+        "StaffProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -509,7 +509,7 @@ class KeyPersonnel(models.Model):
 
     # CEO - ForeignKey to StaffProfile (already vetted staff data)
     ceo = models.ForeignKey(
-        'StaffProfile',
+        "StaffProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -538,11 +538,11 @@ class KeyPersonnel(models.Model):
             # If trying to create a new instance and one already exists, update the existing one
             existing = KeyPersonnel.objects.first()
             self.pk = existing.pk
-        
+
         super().save(*args, **kwargs)
-        
+
         # Clear cache when key personnel information changes
-        cache.delete('key_personnel_cache')
+        cache.delete("key_personnel_cache")
 
     @classmethod
     def load(cls):
@@ -558,16 +558,16 @@ class KeyPersonnel(models.Model):
         CASA requires all positions to be filled.
         """
         vacant = []
-        
+
         if not self.chief_remote_pilot:
             vacant.append("Chief Remote Pilot")
-        
+
         if not self.maintenance_controller:
             vacant.append("Maintenance Controller")
-            
+
         if not self.ceo:
             vacant.append("CEO")
-            
+
         return vacant
 
     def is_casa_compliant(self):
@@ -582,23 +582,39 @@ class KeyPersonnel(models.Model):
         Return a dictionary summary of all key personnel using existing vetted data.
         """
         return {
-            'chief_remote_pilot': {
-                'name': self.chief_remote_pilot.user.get_full_name() if self.chief_remote_pilot else 'VACANT',
-                'arn': self.chief_remote_pilot.license_number if self.chief_remote_pilot else 'N/A',
-                'approved_date': self.chief_remote_pilot_approved_date,
-                'profile': self.chief_remote_pilot,
+            "chief_remote_pilot": {
+                "name": (
+                    self.chief_remote_pilot.user.get_full_name()
+                    if self.chief_remote_pilot
+                    else "VACANT"
+                ),
+                "arn": (
+                    self.chief_remote_pilot.license_number
+                    if self.chief_remote_pilot
+                    else "N/A"
+                ),
+                "approved_date": self.chief_remote_pilot_approved_date,
+                "profile": self.chief_remote_pilot,
             },
-            'maintenance_controller': {
-                'name': self.maintenance_controller.user.get_full_name() if self.maintenance_controller else 'VACANT',
-                'employee_id': self.maintenance_controller.employee_id if self.maintenance_controller else 'N/A',
-                'approved_date': self.maintenance_controller_approved_date,
-                'profile': self.maintenance_controller,
+            "maintenance_controller": {
+                "name": (
+                    self.maintenance_controller.user.get_full_name()
+                    if self.maintenance_controller
+                    else "VACANT"
+                ),
+                "employee_id": (
+                    self.maintenance_controller.employee_id
+                    if self.maintenance_controller
+                    else "N/A"
+                ),
+                "approved_date": self.maintenance_controller_approved_date,
+                "profile": self.maintenance_controller,
             },
-            'ceo': {
-                'name': self.ceo.user.get_full_name() if self.ceo else 'VACANT',
-                'employee_id': self.ceo.employee_id if self.ceo else 'N/A',
-                'approved_date': self.ceo_approved_date,
-                'profile': self.ceo,
+            "ceo": {
+                "name": self.ceo.user.get_full_name() if self.ceo else "VACANT",
+                "employee_id": self.ceo.employee_id if self.ceo else "N/A",
+                "approved_date": self.ceo_approved_date,
+                "profile": self.ceo,
             },
         }
 

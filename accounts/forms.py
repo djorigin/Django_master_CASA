@@ -306,94 +306,100 @@ class KeyPersonnelForm(forms.ModelForm):
     Form for managing CASA Key Personnel positions using existing vetted profiles.
     Ensures data security and integrity through ForeignKey relationships.
     """
-    
+
     class Meta:
         model = KeyPersonnel
         fields = [
-            'chief_remote_pilot',
-            'chief_remote_pilot_approved_date',
-            'maintenance_controller',
-            'maintenance_controller_approved_date',
-            'ceo',
-            'ceo_approved_date',
+            "chief_remote_pilot",
+            "chief_remote_pilot_approved_date",
+            "maintenance_controller",
+            "maintenance_controller_approved_date",
+            "ceo",
+            "ceo_approved_date",
         ]
         widgets = {
-            'chief_remote_pilot': forms.Select(
+            "chief_remote_pilot": forms.Select(
                 attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Select Chief Remote Pilot',
+                    "class": "form-control",
+                    "placeholder": "Select Chief Remote Pilot",
                 }
             ),
-            'chief_remote_pilot_approved_date': forms.DateInput(
+            "chief_remote_pilot_approved_date": forms.DateInput(
                 attrs={
-                    'class': 'form-control',
-                    'type': 'date',
-                    'placeholder': 'CASA Approval Date',
+                    "class": "form-control",
+                    "type": "date",
+                    "placeholder": "CASA Approval Date",
                 }
             ),
-            'maintenance_controller': forms.Select(
+            "maintenance_controller": forms.Select(
                 attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Select Maintenance Controller',
+                    "class": "form-control",
+                    "placeholder": "Select Maintenance Controller",
                 }
             ),
-            'maintenance_controller_approved_date': forms.DateInput(
+            "maintenance_controller_approved_date": forms.DateInput(
                 attrs={
-                    'class': 'form-control',
-                    'type': 'date',
-                    'placeholder': 'CASA Approval Date',
+                    "class": "form-control",
+                    "type": "date",
+                    "placeholder": "CASA Approval Date",
                 }
             ),
-            'ceo': forms.Select(
+            "ceo": forms.Select(
                 attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Select CEO',
+                    "class": "form-control",
+                    "placeholder": "Select CEO",
                 }
             ),
-            'ceo_approved_date': forms.DateInput(
+            "ceo_approved_date": forms.DateInput(
                 attrs={
-                    'class': 'form-control',
-                    'type': 'date',
-                    'placeholder': 'CASA Approval Date',
+                    "class": "form-control",
+                    "type": "date",
+                    "placeholder": "CASA Approval Date",
                 }
             ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # Customize querysets to show relevant information
-        self.fields['chief_remote_pilot'].queryset = PilotProfile.objects.select_related('user').filter(
-            user__is_active=True
+        self.fields["chief_remote_pilot"].queryset = (
+            PilotProfile.objects.select_related("user").filter(user__is_active=True)
         )
-        self.fields['maintenance_controller'].queryset = StaffProfile.objects.select_related('user').filter(
-            user__is_active=True,
-            is_active=True
+        self.fields["maintenance_controller"].queryset = (
+            StaffProfile.objects.select_related("user").filter(
+                user__is_active=True, is_active=True
+            )
         )
-        self.fields['ceo'].queryset = StaffProfile.objects.select_related('user').filter(
-            user__is_active=True,
-            is_active=True
-        )
-        
+        self.fields["ceo"].queryset = StaffProfile.objects.select_related(
+            "user"
+        ).filter(user__is_active=True, is_active=True)
+
         # Add help text
-        self.fields['chief_remote_pilot'].help_text = "Select from existing pilot profiles with valid licenses"
-        self.fields['maintenance_controller'].help_text = "Select from existing staff profiles qualified for maintenance control"
-        self.fields['ceo'].help_text = "Select from existing staff profiles authorized as CEO"
+        self.fields["chief_remote_pilot"].help_text = (
+            "Select from existing pilot profiles with valid licenses"
+        )
+        self.fields["maintenance_controller"].help_text = (
+            "Select from existing staff profiles qualified for maintenance control"
+        )
+        self.fields["ceo"].help_text = (
+            "Select from existing staff profiles authorized as CEO"
+        )
 
     def clean(self):
         cleaned_data = super().clean()
-        
+
         # Ensure no person holds multiple key positions simultaneously
-        chief_pilot = cleaned_data.get('chief_remote_pilot')
-        maintenance_controller = cleaned_data.get('maintenance_controller')
-        ceo = cleaned_data.get('ceo')
-        
+        chief_pilot = cleaned_data.get("chief_remote_pilot")
+        maintenance_controller = cleaned_data.get("maintenance_controller")
+        ceo = cleaned_data.get("ceo")
+
         staff_positions = [maintenance_controller, ceo]
-        
+
         # Check if same staff member is assigned to multiple positions
         if maintenance_controller and ceo and maintenance_controller == ceo:
             raise ValidationError(
                 "The same person cannot hold both Maintenance Controller and CEO positions simultaneously."
             )
-            
+
         return cleaned_data
