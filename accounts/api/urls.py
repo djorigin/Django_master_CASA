@@ -1,14 +1,15 @@
+from django.urls import include, path
+
 from rest_framework.routers import DefaultRouter
-from django.urls import path, include
 
 from .views import (
-    CustomUserViewSet,
-    StaffProfileViewSet,
-    PilotProfileViewSet,
     ClientProfileViewSet,
-    OperatorCertificateViewSet,
     CompanyContactDetailsViewSet,
+    CustomUserViewSet,
     KeyPersonnelViewSet,
+    OperatorCertificateViewSet,
+    PilotProfileViewSet,
+    StaffProfileViewSet,
 )
 
 # Create router and register viewsets

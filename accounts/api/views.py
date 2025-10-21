@@ -1,10 +1,11 @@
-from rest_framework import viewsets, status, filters
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 from ..models import (
     ClientProfile,
@@ -14,17 +15,16 @@ from ..models import (
     PilotProfile,
     StaffProfile,
 )
-
 from .serializers import (
-    CustomUserSerializer,
-    StaffProfileSerializer,
-    StaffProfileDetailSerializer,
-    PilotProfileSerializer,
-    PilotProfileDetailSerializer,
     ClientProfileSerializer,
-    OperatorCertificateSerializer,
     CompanyContactDetailsSerializer,
+    CustomUserSerializer,
     KeyPersonnelSerializer,
+    OperatorCertificateSerializer,
+    PilotProfileDetailSerializer,
+    PilotProfileSerializer,
+    StaffProfileDetailSerializer,
+    StaffProfileSerializer,
     UserSummarySerializer,
 )
 
