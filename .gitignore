@@ -27,10 +27,9 @@ media/
 # Environment variables
 .env
 
-# Test files and configurations
+# Test files and configurations  
 test_settings.py
 pytest.ini
-test_requirements.txt
 .pytest_cache/
 htmlcov/
 .coverage
