@@ -10,6 +10,7 @@ from django.views.decorators.http import require_http_methods
 from .forms import (
     ClientProfileForm,
     CustomUserForm,
+    KeyPersonnelForm,
     OperatorCertificateForm,
     PilotProfileForm,
     StaffProfileForm,
@@ -17,6 +18,7 @@ from .forms import (
 from .models import (
     ClientProfile,
     CustomUser,
+    KeyPersonnel,
     OperatorCertificate,
     PilotProfile,
     StaffProfile,
@@ -26,6 +28,9 @@ from .models import (
 @login_required
 def accounts_dashboard(request):
     """Main accounts dashboard with statistics"""
+    # Get key personnel information
+    personnel = KeyPersonnel.load()
+
     context = {
         "total_users": CustomUser.objects.count(),
         "active_staff": StaffProfile.objects.filter(is_active=True).count(),
@@ -37,6 +42,9 @@ def accounts_dashboard(request):
             status="active"
         ).count(),
         "recent_users": CustomUser.objects.order_by("-date_joined")[:5],
+        "key_personnel": personnel,
+        "casa_compliance": personnel.is_casa_compliant(),
+        "vacant_positions_count": len(personnel.get_vacant_positions()),
     }
     return render(request, "accounts/dashboard.html", context)
 
@@ -439,3 +447,40 @@ def certificate_edit(request, pk):
 
     context = {"form": form, "certificate": certificate, "action": "Edit"}
     return render(request, "accounts/certificate_form.html", context)
+
+
+# KeyPersonnel Views (Singleton Pattern)
+@login_required
+def keypersonnel_detail(request):
+    """Display key personnel information - CASA required positions"""
+    personnel = KeyPersonnel.load()  # Load singleton instance
+    context = {
+        "personnel": personnel,
+        "personnel_summary": personnel.get_personnel_summary(),
+        "vacant_positions": personnel.get_vacant_positions(),
+        "is_casa_compliant": personnel.is_casa_compliant(),
+    }
+    return render(request, "accounts/keypersonnel_detail.html", context)
+
+
+@login_required
+def keypersonnel_edit(request):
+    """Edit key personnel information - singleton pattern"""
+    personnel = KeyPersonnel.load()  # Load or create singleton instance
+
+    if request.method == "POST":
+        form = KeyPersonnelForm(request.POST, instance=personnel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Key Personnel information updated successfully.")
+            return redirect("accounts:keypersonnel_detail")
+    else:
+        form = KeyPersonnelForm(instance=personnel)
+
+    context = {
+        "form": form,
+        "personnel": personnel,
+        "action": "Edit",
+        "vacant_positions": personnel.get_vacant_positions(),
+    }
+    return render(request, "accounts/keypersonnel_form.html", context)

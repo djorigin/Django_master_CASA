@@ -464,3 +464,163 @@ class CompanyContactDetails(models.Model):
 
     def __str__(self):
         return f"Company Details: {self.display_name}"
+
+
+class KeyPersonnel(models.Model):
+    """
+    Singleton model for CASA key personnel information.
+    Uses ForeignKey relationships to existing vetted data models for data security and integrity.
+    Only one instance should exist in the database per CASA regulations.
+    """
+
+    # Chief Remote Pilot - ForeignKey to PilotProfile (already vetted pilot data)
+    chief_remote_pilot = models.ForeignKey(
+        "PilotProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Chief Remote Pilot",
+        help_text="Select from existing pilot profiles - must be CASA approved",
+        related_name="chief_remote_pilot_assignments",
+    )
+    chief_remote_pilot_approved_date = models.DateField(
+        verbose_name="Chief Remote Pilot Approval Date",
+        help_text="Date approved by CASA for this key position",
+        null=True,
+        blank=True,
+    )
+
+    # Maintenance Controller - ForeignKey to StaffProfile (already vetted staff data)
+    maintenance_controller = models.ForeignKey(
+        "StaffProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Maintenance Controller",
+        help_text="Select from existing staff profiles - must be qualified for maintenance control",
+        related_name="maintenance_controller_assignments",
+    )
+    maintenance_controller_approved_date = models.DateField(
+        verbose_name="Maintenance Controller Approval Date",
+        help_text="Date approved by CASA for this key position",
+        null=True,
+        blank=True,
+    )
+
+    # CEO - ForeignKey to StaffProfile (already vetted staff data)
+    ceo = models.ForeignKey(
+        "StaffProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Chief Executive Officer",
+        help_text="Select from existing staff profiles - must be authorized CEO",
+        related_name="ceo_assignments",
+    )
+    ceo_approved_date = models.DateField(
+        verbose_name="CEO Approval Date",
+        help_text="Date approved by CASA for this key position",
+        null=True,
+        blank=True,
+    )
+
+    # Metadata
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Key Personnel"
+        verbose_name_plural = "Key Personnel"
+
+    def save(self, *args, **kwargs):
+        """Singleton pattern - only allow one instance."""
+        if not self.pk and KeyPersonnel.objects.exists():
+            # If trying to create a new instance and one already exists, update the existing one
+            existing = KeyPersonnel.objects.first()
+            self.pk = existing.pk
+
+        super().save(*args, **kwargs)
+
+        # Clear cache when key personnel information changes
+        cache.delete("key_personnel_cache")
+
+    @classmethod
+    def load(cls):
+        """
+        Singleton loader - returns the single instance or creates one if it doesn't exist.
+        """
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def get_vacant_positions(self):
+        """
+        Return a list of vacant key personnel positions.
+        CASA requires all positions to be filled.
+        """
+        vacant = []
+
+        if not self.chief_remote_pilot:
+            vacant.append("Chief Remote Pilot")
+
+        if not self.maintenance_controller:
+            vacant.append("Maintenance Controller")
+
+        if not self.ceo:
+            vacant.append("CEO")
+
+        return vacant
+
+    def is_casa_compliant(self):
+        """
+        Check if all required key personnel positions are filled.
+        Returns True if compliant, False if any positions are vacant.
+        """
+        return len(self.get_vacant_positions()) == 0
+
+    def get_personnel_summary(self):
+        """
+        Return a dictionary summary of all key personnel using existing vetted data.
+        """
+        return {
+            "chief_remote_pilot": {
+                "name": (
+                    self.chief_remote_pilot.user.get_full_name()
+                    if self.chief_remote_pilot
+                    else "VACANT"
+                ),
+                "arn": (
+                    self.chief_remote_pilot.license_number
+                    if self.chief_remote_pilot
+                    else "N/A"
+                ),
+                "approved_date": self.chief_remote_pilot_approved_date,
+                "profile": self.chief_remote_pilot,
+            },
+            "maintenance_controller": {
+                "name": (
+                    self.maintenance_controller.user.get_full_name()
+                    if self.maintenance_controller
+                    else "VACANT"
+                ),
+                "employee_id": (
+                    self.maintenance_controller.employee_id
+                    if self.maintenance_controller
+                    else "N/A"
+                ),
+                "approved_date": self.maintenance_controller_approved_date,
+                "profile": self.maintenance_controller,
+            },
+            "ceo": {
+                "name": self.ceo.user.get_full_name() if self.ceo else "VACANT",
+                "employee_id": self.ceo.employee_id if self.ceo else "N/A",
+                "approved_date": self.ceo_approved_date,
+                "profile": self.ceo,
+            },
+        }
+
+    def __str__(self):
+        vacant_count = len(self.get_vacant_positions())
+        if vacant_count == 0:
+            return "Key Personnel: All positions filled"
+        else:
+            return f"Key Personnel: {vacant_count} position(s) vacant"

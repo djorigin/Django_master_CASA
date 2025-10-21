@@ -60,6 +60,12 @@
                     <span>Certificates</span>
                 </a>
             </div>
+            <div class="nav-item">
+                <a href="{% url 'accounts:keypersonnel_detail' %}">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Key Personnel</span>
+                </a>
+            </div>
             {% if user.is_authenticated %}
             <div class="nav-item">
                 <a href="/admin/logout/">

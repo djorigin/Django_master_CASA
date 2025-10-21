@@ -48,3 +48,7 @@ bandit-report.json
 # Code quality tools
 .mypy_cache/
 .flake8_cache/
+
+# API test files - exclude from repo
+*/api/tests.py
+**/api/tests.py

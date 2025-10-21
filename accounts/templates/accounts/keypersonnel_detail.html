@@ -1,0 +1,171 @@
+{% extends "accounts/base.html" %}
+{% load company_tags %}
+
+{% block title %}Key Personnel - CASA Requirements{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Key Personnel</h2>
+                    <p class="text-muted">CASA Required Key Positions - Section 1.2</p>
+                </div>
+                <div>
+                    {% if not is_casa_compliant %}
+                        <span class="badge badge-warning me-2">{{ vacant_positions|length }} Position(s) Vacant</span>
+                    {% else %}
+                        <span class="badge badge-success me-2">CASA Compliant</span>
+                    {% endif %}
+                    <a href="{% url 'accounts:keypersonnel_edit' %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Key Personnel
+                    </a>
+                </div>
+            </div>
+
+            <!-- CASA Compliance Alert -->
+            {% if not is_casa_compliant %}
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>CASA Compliance Warning:</strong> Operations must not be conducted where key positions are vacant unless approved by CASA.
+                <br><strong>Vacant Positions:</strong> 
+                {% for position in vacant_positions %}
+                    {{ position }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Key Personnel Cards -->
+            <div class="row">
+                <!-- Chief Remote Pilot -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-user-tie"></i> Chief Remote Pilot
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if personnel_summary.chief_remote_pilot.profile %}
+                                <h6 class="text-primary">{{ personnel_summary.chief_remote_pilot.name }}</h6>
+                                <p class="mb-2"><strong>License Number:</strong> {{ personnel_summary.chief_remote_pilot.arn }}</p>
+                                {% if personnel_summary.chief_remote_pilot.approved_date %}
+                                    <p class="mb-2"><strong>CASA Approved:</strong> {{ personnel_summary.chief_remote_pilot.approved_date|date:"d M Y" }}</p>
+                                {% else %}
+                                    <p class="mb-2 text-warning"><strong>CASA Approval:</strong> Pending</p>
+                                {% endif %}
+                                <small class="text-muted">
+                                    Contact: {{ personnel_summary.chief_remote_pilot.profile.user.email }}
+                                </small>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                    <p class="mb-0"><strong>POSITION VACANT</strong></p>
+                                    <small>Must be appointed and approved by CASA</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Controller -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-tools"></i> Maintenance Controller
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if personnel_summary.maintenance_controller.profile %}
+                                <h6 class="text-success">{{ personnel_summary.maintenance_controller.name }}</h6>
+                                <p class="mb-2"><strong>Employee ID:</strong> {{ personnel_summary.maintenance_controller.employee_id }}</p>
+                                {% if personnel_summary.maintenance_controller.approved_date %}
+                                    <p class="mb-2"><strong>CASA Approved:</strong> {{ personnel_summary.maintenance_controller.approved_date|date:"d M Y" }}</p>
+                                {% else %}
+                                    <p class="mb-2 text-warning"><strong>CASA Approval:</strong> Pending</p>
+                                {% endif %}
+                                <small class="text-muted">
+                                    Department: {{ personnel_summary.maintenance_controller.profile.department }}<br>
+                                    Contact: {{ personnel_summary.maintenance_controller.profile.user.email }}
+                                </small>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                    <p class="mb-0"><strong>POSITION VACANT</strong></p>
+                                    <small>Must be appointed and approved by CASA</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CEO -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-crown"></i> Chief Executive Officer
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if personnel_summary.ceo.profile %}
+                                <h6 class="text-info">{{ personnel_summary.ceo.name }}</h6>
+                                <p class="mb-2"><strong>Employee ID:</strong> {{ personnel_summary.ceo.employee_id }}</p>
+                                {% if personnel_summary.ceo.approved_date %}
+                                    <p class="mb-2"><strong>CASA Approved:</strong> {{ personnel_summary.ceo.approved_date|date:"d M Y" }}</p>
+                                {% else %}
+                                    <p class="mb-2 text-warning"><strong>CASA Approval:</strong> Pending</p>
+                                {% endif %}
+                                <small class="text-muted">
+                                    Position: {{ personnel_summary.ceo.profile.position_title }}<br>
+                                    Contact: {{ personnel_summary.ceo.profile.user.email }}
+                                </small>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                    <p class="mb-0"><strong>POSITION VACANT</strong></p>
+                                    <small>Must be appointed and approved by CASA</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CASA Regulations Information -->
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> CASA Regulatory Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Section 1.2 - Key Personnel</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Each key personnel position must be filled by an individual appointed by the organisation</li>
+                                <li><i class="fas fa-check text-success"></i> All appointments must be approved by CASA</li>
+                                <li><i class="fas fa-exclamation-triangle text-warning"></i> Operations must not be conducted where a key position is vacant unless approved by CASA</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Last Updated</h6>
+                            <p class="text-muted">{{ personnel.last_updated|date:"d M Y H:i" }}</p>
+                            
+                            <h6>Actions</h6>
+                            <a href="{% url 'accounts:keypersonnel_edit' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit"></i> Update Assignments
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

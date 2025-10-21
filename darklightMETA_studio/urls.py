@@ -26,6 +26,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("core.urls")),
     path("accounts/", include("accounts.urls")),
+    # API endpoints
+    path("api/v1/accounts/", include("accounts.api.urls")),
+    path("api-auth/", include("rest_framework.urls")),  # DRF login/logout
 ]
 
 if settings.DEBUG:
