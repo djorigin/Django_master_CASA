@@ -782,16 +782,12 @@ class ManualSubsectionInline(admin.TabularInline):
     ordering = ["order", "subsection_number"]
 
 
-class ManualSectionInline(admin.StackedInline):
+class ManualSectionInline(admin.TabularInline):
     """Inline admin for Manual Sections"""
 
     model = ManualSection
     extra = 1
-    fields = [
-        ("section_number", "title"),
-        ("section_type", "order"),
-        "content",
-    ]
+    fields = ["section_number", "title", "section_type", "order"]
     ordering = ["order", "section_number"]
 
 
@@ -1085,7 +1081,8 @@ class ManualSectionAdmin(admin.ModelAdmin):
         ),
     )
 
-    filter_horizontal = ["related_sops", "required_training"]
+    # Note: ManyToMany fields removed from inline to prevent configuration issues
+    # Use the admin interface for complex relationships
     inlines = [ManualSubsectionInline]
 
     def section_display(self, obj):
