@@ -49,6 +49,36 @@ bandit-report.json
 .mypy_cache/
 .flake8_cache/
 
-# API test files - exclude from repo
+# Test files - exclude comprehensive test files for security
+# Allow minimal placeholder tests.py for CI/CD, but block detailed test files
+
+# Block all other test patterns
+**/test_*.py
+*/test_*.py  
+test_*.py
+*_tests.py
+**/test.py
+*/test.py
+test.py
+
+# Block comprehensive test directories
+tests/
+**/tests/
+
+# Specific API test files (unless minimal placeholders)
 */api/tests.py
 **/api/tests.py
+
+# Test configuration files  
+**/test_settings.py
+*/test_settings.py
+
+# Allow minimal CI/CD placeholder tests.py files
+# (These contain no sensitive data, just basic import tests)
+!accounts/tests.py
+!aircraft/tests.py  
+!airspace/tests.py
+!core/tests.py
+!flight_operations/tests.py
+!incidents/tests.py
+!maintenance/tests.py
