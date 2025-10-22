@@ -49,6 +49,23 @@ bandit-report.json
 .mypy_cache/
 .flake8_cache/
 
-# API test files - exclude from repo
+# Test files - exclude from repo for security
+# All test files in any directory (Django and general)
+**/test*.py
+*/test*.py
+test*.py
+tests*.py
+
+# Specific patterns for Django test files
+*/tests.py
+**/tests.py
+*/test.py
+**/test.py
+
+# Specific API test files
 */api/tests.py
 **/api/tests.py
+
+# Test configuration files
+**/test_settings.py
+*/test_settings.py
