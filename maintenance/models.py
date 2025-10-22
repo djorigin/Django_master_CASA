@@ -393,3 +393,441 @@ class MaintenanceRecord(models.Model):
             self.maintenance_id = f"MNT-{year}-{next_seq:06d}"
 
         super().save(*args, **kwargs)
+
+    @property
+    def rpas_log_entries(self):
+        """Get related RPAS Technical Log entries"""
+        return self.rpas_entries.all()
+
+    @property
+    def is_in_rpas_log(self):
+        """Check if this maintenance record is included in RPAS Technical Log"""
+        return self.rpas_entries.exists()
+
+    @property
+    def rpas_defect_status(self):
+        """Get RPAS defect categorization"""
+        rpas_entries = self.rpas_entries.all()
+        if not rpas_entries:
+            return "Not in RPAS Log"
+
+        defect_categories = [entry.defect_category for entry in rpas_entries]
+        if "major" in defect_categories:
+            return "Major Defect"
+        elif "minor" in defect_categories:
+            return "Minor Defect"
+        else:
+            return "No Defect"
+
+
+class RPASTechnicalLogPartA(models.Model):
+    """
+    RPAS Technical Log - Part A: Maintenance and Defects
+    Company standard form for CASA Part 101 compliance
+    References existing maintenance system without duplicating data
+    """
+
+    # RPA Identification
+    aircraft = models.ForeignKey(
+        "aircraft.Aircraft",
+        on_delete=models.PROTECT,
+        verbose_name="RPA",
+        help_text="RPA Aircraft - references existing aircraft data",
+    )
+
+    rpa_type_model = models.CharField(
+        max_length=100,
+        verbose_name="RPA Type & Model",
+        help_text="Automatically populated from aircraft data",
+        blank=True,
+    )
+
+    max_gross_weight = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        verbose_name="Max Gross Weight (kg)",
+        help_text="Maximum gross weight from aircraft specifications",
+        null=True,
+        blank=True,
+    )
+
+    date_of_registration_expiry = models.DateField(
+        verbose_name="Date of Registration Expiry",
+        help_text="Aircraft registration expiry date",
+        null=True,
+        blank=True,
+    )
+
+    # Maintenance Schedule
+    maintenance_schedule_reference = models.TextField(
+        verbose_name="Maintenance Schedule",
+        help_text="Reference to manufacturer's maintenance system or Operations Manual",
+        blank=True,
+    )
+
+    # Part 101 MOC Certification
+    part_101_moc_issued_by = models.CharField(
+        max_length=100,
+        verbose_name="Part 101 MOC Issued By",
+        help_text="Authority certifying MOC compliance",
+        blank=True,
+    )
+
+    part_101_moc_issued_on = models.DateField(
+        verbose_name="Part 101 MOC Issued On",
+        help_text="Date of MOC certification",
+        null=True,
+        blank=True,
+    )
+
+    part_101_moc_signed_by = models.CharField(
+        max_length=100,
+        verbose_name="Part 101 MOC Signed By",
+        help_text="Name and ARNC of certifying authority",
+        blank=True,
+    )
+
+    # Maintenance Required Section
+    # Links to existing maintenance records rather than duplicating
+
+    # Major Defects Section
+    major_defects_notes = models.TextField(
+        verbose_name="Major Defects",
+        help_text="These defects preclude further flight until rectified",
+        blank=True,
+    )
+
+    # Minor Defects Section
+    minor_defects_notes = models.TextField(
+        verbose_name="Minor Defects",
+        help_text="These defects must be checked at each Daily Inspection until rectified",
+        blank=True,
+    )
+
+    # Status and tracking
+    current_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("serviceable", "Serviceable"),
+            ("unserviceable", "Unserviceable - Major Defects"),
+            ("conditional", "Conditional - Minor Defects Only"),
+        ],
+        default="serviceable",
+        verbose_name="Current RPA Status",
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        "accounts.StaffProfile",
+        on_delete=models.PROTECT,
+        verbose_name="Created By",
+        help_text="Staff member who created this log entry",
+    )
+
+    class Meta:
+        verbose_name = "RPAS Technical Log - Part A"
+        verbose_name_plural = "RPAS Technical Log - Part A"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Part A - {self.aircraft.registration_mark} ({self.created_at.strftime('%Y-%m-%d')})"
+
+    def save(self, *args, **kwargs):
+        """Auto-populate aircraft data to prevent duplication"""
+        if self.aircraft:
+            self.rpa_type_model = f"{self.aircraft.manufacturer} {self.aircraft.model}"
+            self.max_gross_weight = getattr(self.aircraft, "max_takeoff_weight", None)
+            # Registration expiry would come from aircraft model if that field exists
+        super().save(*args, **kwargs)
+
+    @property
+    def linked_maintenance_records(self):
+        """Get maintenance records related to this aircraft"""
+        return MaintenanceRecord.objects.filter(
+            aircraft=self.aircraft, created_at__date=self.created_at.date()
+        )
+
+    @property
+    def has_major_defects(self):
+        """Check if RPA has major defects"""
+        return bool(self.major_defects_notes.strip())
+
+    @property
+    def has_minor_defects(self):
+        """Check if RPA has minor defects"""
+        return bool(self.minor_defects_notes.strip())
+
+    @property
+    def flight_authorization_status(self):
+        """Determine flight authorization status"""
+        if self.has_major_defects:
+            return "NOT AUTHORIZED - Major Defects"
+        elif self.has_minor_defects:
+            return "CONDITIONAL - Monitor Minor Defects"
+        else:
+            return "AUTHORIZED"
+
+
+class RPASTechnicalLogPartB(models.Model):
+    """
+    RPAS Technical Log - Part B: Daily Inspection and Time in Service
+    Company standard form for daily operations logging
+    Integrates with existing flight operations and maintenance
+    """
+
+    # Daily Inspection Certification Choices
+    SIGNATURE_CHOICES = [
+        ("ARN", "ARN - Aviation Reference Number"),
+        ("RPC", "RPC - Remote Pilot Certificate"),
+    ]
+
+    # Link to Part A for complete record
+    technical_log_part_a = models.ForeignKey(
+        RPASTechnicalLogPartA,
+        on_delete=models.CASCADE,
+        related_name="daily_logs",
+        verbose_name="Technical Log Part A",
+        help_text="Associated Part A record",
+    )
+
+    # Daily Inspection Certification
+    date = models.DateField(verbose_name="Date", help_text="Date of daily inspection")
+
+    daily_inspection_certification = models.TextField(
+        verbose_name="Daily Inspection Certification",
+        help_text="Daily inspection certification details (IFP, MC, approved crew member, etc.)",
+        blank=True,
+    )
+
+    signature_type = models.CharField(
+        max_length=3,
+        choices=SIGNATURE_CHOICES,
+        verbose_name="Signature Type",
+        help_text="Type of signature/authorization",
+    )
+
+    signature_identifier = models.CharField(
+        max_length=20,
+        verbose_name="Signature/ARN",
+        help_text="ARN number or certificate identifier",
+    )
+
+    # RPA Time in Service
+    flight_time = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Flight Time",
+        help_text="Flight time for this date (hours)",
+        default=Decimal("0.00"),
+    )
+
+    progressive_total_hrs = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="Progressive Total (Hrs)",
+        help_text="Running total of flight hours",
+        null=True,
+        blank=True,
+    )
+
+    progressive_total_min = models.PositiveSmallIntegerField(
+        verbose_name="Progressive Total (Min)",
+        help_text="Additional minutes for precision",
+        default=0,
+    )
+
+    # Integration with flight operations
+    linked_flight_logs = models.ManyToManyField(
+        "flight_operations.FlightLog",
+        blank=True,
+        verbose_name="Linked Flight Logs",
+        help_text="Flight logs that contribute to this day's time",
+    )
+
+    # Daily Notes
+    daily_notes = models.TextField(
+        verbose_name="Daily Notes",
+        help_text="Additional notes for this daily inspection",
+        blank=True,
+    )
+
+    # Status
+    inspection_satisfactory = models.BooleanField(
+        default=True,
+        verbose_name="Inspection Satisfactory",
+        help_text="Daily inspection completed satisfactorily",
+    )
+
+    defects_found = models.TextField(
+        verbose_name="Defects Found",
+        help_text="Any defects found during daily inspection",
+        blank=True,
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    inspector = models.ForeignKey(
+        "accounts.StaffProfile",
+        on_delete=models.PROTECT,
+        verbose_name="Inspector",
+        help_text="Person who performed daily inspection",
+    )
+
+    class Meta:
+        verbose_name = "RPAS Technical Log - Part B"
+        verbose_name_plural = "RPAS Technical Log - Part B"
+        ordering = ["-date"]
+        unique_together = ["technical_log_part_a", "date"]
+
+    def __str__(self):
+        return f"Part B - {self.technical_log_part_a.aircraft.registration_mark} ({self.date})"
+
+    def clean(self):
+        """Validate daily inspection data"""
+        if not self.inspection_satisfactory and not self.defects_found:
+            raise ValidationError(
+                "If inspection is not satisfactory, defects must be recorded"
+            )
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate progressive totals"""
+        if not self.progressive_total_hrs:
+            # Get previous day's total for this aircraft
+            previous_entry = (
+                RPASTechnicalLogPartB.objects.filter(
+                    technical_log_part_a__aircraft=self.technical_log_part_a.aircraft,
+                    date__lt=self.date,
+                )
+                .order_by("-date")
+                .first()
+            )
+
+            if previous_entry:
+                prev_total_decimal = previous_entry.progressive_total_hrs + (
+                    previous_entry.progressive_total_min / 60
+                )
+                new_total_decimal = prev_total_decimal + self.flight_time
+            else:
+                new_total_decimal = self.flight_time
+
+            self.progressive_total_hrs = int(new_total_decimal)
+            self.progressive_total_min = int((new_total_decimal % 1) * 60)
+
+        super().save(*args, **kwargs)
+
+    @property
+    def total_time_formatted(self):
+        """Format total time as HH:MM"""
+        return f"{int(self.progressive_total_hrs)}:{self.progressive_total_min:02d}"
+
+    @property
+    def aircraft(self):
+        """Quick access to aircraft"""
+        return self.technical_log_part_a.aircraft
+
+
+class RPASMaintenanceEntry(models.Model):
+    """
+    Bridge model connecting RPAS Technical Log Part A with existing MaintenanceRecord
+    Prevents duplication while maintaining RPAS-specific requirements
+    """
+
+    technical_log_part_a = models.ForeignKey(
+        RPASTechnicalLogPartA,
+        on_delete=models.CASCADE,
+        related_name="maintenance_entries",
+        verbose_name="RPAS Technical Log Part A",
+    )
+
+    maintenance_record = models.ForeignKey(
+        MaintenanceRecord,
+        on_delete=models.CASCADE,
+        related_name="rpas_entries",
+        verbose_name="Maintenance Record",
+        help_text="Link to existing maintenance record",
+    )
+
+    # RPAS-specific maintenance fields that don't exist in MaintenanceRecord
+    item_description = models.CharField(
+        max_length=200,
+        verbose_name="Item",
+        help_text="Maintenance item description for RPAS log",
+    )
+
+    due_date_tts = models.DateField(
+        verbose_name="Due (date or TTS)",
+        help_text="Due date or Time To Service",
+        null=True,
+        blank=True,
+    )
+
+    completed_date_arn = models.DateField(
+        verbose_name="Completed (date, name, ARN)",
+        help_text="Completion date with technician details",
+        null=True,
+        blank=True,
+    )
+
+    completed_by_name = models.CharField(
+        max_length=100,
+        verbose_name="Completed By (Name)",
+        help_text="Name of person who completed maintenance",
+        blank=True,
+    )
+
+    completed_by_arn = models.CharField(
+        max_length=20,
+        verbose_name="Completed By (ARN)",
+        help_text="ARN of person who completed maintenance",
+        blank=True,
+    )
+
+    # Defect tracking specific to RPAS requirements
+    defect_category = models.CharField(
+        max_length=10,
+        choices=[
+            ("major", "Major Defect"),
+            ("minor", "Minor Defect"),
+            ("none", "No Defect"),
+        ],
+        default="none",
+        verbose_name="Defect Category",
+    )
+
+    rpas_specific_notes = models.TextField(
+        verbose_name="RPAS Specific Notes",
+        help_text="Additional notes specific to RPAS Technical Log requirements",
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = "RPAS Maintenance Entry"
+        verbose_name_plural = "RPAS Maintenance Entries"
+        unique_together = ["technical_log_part_a", "maintenance_record"]
+
+    def __str__(self):
+        return f"RPAS Entry: {self.item_description} - {self.maintenance_record.maintenance_id}"
+
+    def save(self, *args, **kwargs):
+        """Auto-populate data from linked maintenance record"""
+        if self.maintenance_record and not self.completed_by_name:
+            # Auto-populate from maintenance record
+            self.completed_by_name = (
+                self.maintenance_record.performed_by.user.get_full_name()
+            )
+            # ARN would need to be added to StaffProfile or derived from other fields
+
+        super().save(*args, **kwargs)
+
+    @property
+    def maintenance_status(self):
+        """Get status from linked maintenance record"""
+        return self.maintenance_record.status if self.maintenance_record else "unknown"
+
+    @property
+    def is_completed(self):
+        """Check if maintenance is completed"""
+        return self.maintenance_record and self.maintenance_record.status == "completed"

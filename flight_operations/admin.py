@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import FlightLog, FlightPlan, Mission
+from .models import FlightLog, FlightPlan, JobSafetyAssessment, Mission, RiskRegister
 
 
 @admin.register(Mission)
@@ -28,8 +28,9 @@ class MissionAdmin(admin.ModelAdmin):
         "status",
         "priority",
         "casa_authorization_required",
-        "risk_level",
-        "risk_assessment_completed",
+        "overall_risk_level",
+        "risk_assessment_required",
+        "jsa_required",
     ]
     search_fields = [
         "mission_id",
@@ -519,3 +520,218 @@ class FlightLogAdmin(admin.ModelAdmin):
                 "flight_plan__aircraft", "flight_plan__pilot_in_command__user"
             )
         )
+
+
+@admin.register(RiskRegister)
+class RiskRegisterAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Risk Register Management
+    """
+
+    list_display = [
+        "reference_number",
+        "mission",
+        "hazard",
+        "risk_description",
+        "risk_level_display",
+        "risk_accepted",
+        "risk_owner",
+    ]
+
+    list_filter = [
+        "risk_level",
+        "risk_accepted",
+        "initial_likelihood",
+        "initial_consequence",
+        "mission__mission_type",
+    ]
+
+    search_fields = [
+        "reference_number",
+        "hazard",
+        "risk_description",
+        "mission__name",
+        "mission__mission_id",
+    ]
+
+    fieldsets = (
+        (
+            "Risk Identification",
+            {
+                "fields": (
+                    "reference_number",
+                    "mission",
+                    "date_entered",
+                    "hazard",
+                    "risk_description",
+                )
+            },
+        ),
+        (
+            "Risk Assessment",
+            {
+                "fields": (
+                    "initial_likelihood",
+                    "initial_consequence",
+                    "initial_risk_rating",
+                    "existing_controls",
+                )
+            },
+        ),
+        (
+            "Risk Treatment",
+            {
+                "fields": (
+                    "additional_controls",
+                    "residual_likelihood",
+                    "residual_consequence",
+                    "residual_risk_rating",
+                )
+            },
+        ),
+        (
+            "Risk Management",
+            {
+                "fields": (
+                    "risk_level",
+                    "acceptance_level",
+                    "risk_owner",
+                    "review_due_date",
+                    "actions_required",
+                )
+            },
+        ),
+        (
+            "Risk Acceptance",
+            {"fields": ("risk_accepted", "accepted_by", "accepted_date")},
+        ),
+        (
+            "Metadata",
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
+    )
+
+    readonly_fields = (
+        "initial_risk_rating",
+        "residual_risk_rating",
+        "risk_level",
+        "acceptance_level",
+        "created_at",
+        "updated_at",
+    )
+
+    def risk_level_display(self, obj):
+        """Display risk level with color coding"""
+        colors = {"low": "green", "medium": "orange", "high": "red"}
+        color = colors.get(obj.risk_level, "black")
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            obj.risk_level.upper(),
+        )
+
+    risk_level_display.short_description = "Risk Level"
+
+
+@admin.register(JobSafetyAssessment)
+class JobSafetyAssessmentAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Job Safety Assessment Management
+    """
+
+    list_display = [
+        "jsa_id",
+        "mission",
+        "operation_type",
+        "flight_authorized",
+        "section1_approved",
+        "section2_approved",
+    ]
+
+    list_filter = [
+        "operation_type",
+        "flight_authorized",
+        "airspace_class",
+        "sop_adequate",
+        "preliminary_assessment_accurate",
+    ]
+
+    search_fields = [
+        "jsa_id",
+        "mission__name",
+        "mission__mission_id",
+        "operation_description",
+        "hazards_identified",
+    ]
+
+    fieldsets = (
+        ("JSA Identification", {"fields": ("jsa_id", "mission", "operation_type")}),
+        (
+            "Operating Area",
+            {
+                "fields": (
+                    "operating_area_map",
+                    "airspace_class",
+                    "maximum_operating_height_agl",
+                )
+            },
+        ),
+        (
+            "Risk Assessment",
+            {"fields": ("hazards_addressed", "sop_adequate", "unmitigated_hazards")},
+        ),
+        (
+            "Assessment Validation",
+            {
+                "fields": (
+                    "preliminary_assessment_accurate",
+                    "assessment_changes",
+                    "additional_operating_restrictions",
+                )
+            },
+        ),
+        (
+            "Authorization",
+            {
+                "fields": (
+                    "official_authorization",
+                    "flight_authorized",
+                    "authorized_date",
+                    "authorized_by",
+                )
+            },
+        ),
+        (
+            "Approvals",
+            {
+                "fields": (
+                    "section1_approval_signature",
+                    "section1_approval_date",
+                    "section2_approval_signature",
+                    "section2_approval_date",
+                )
+            },
+        ),
+        (
+            "Metadata",
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
+    )
+
+    readonly_fields = ("jsa_id", "created_at", "updated_at")
+
+    def section1_approved(self, obj):
+        """Display Section 1 approval status"""
+        if obj.section1_approval_signature and obj.section1_approval_date:
+            return format_html('<span style="color: green;">✓ Approved</span>')
+        return format_html('<span style="color: red;">✗ Pending</span>')
+
+    section1_approved.short_description = "Section 1"
+
+    def section2_approved(self, obj):
+        """Display Section 2 approval status"""
+        if obj.section2_approval_signature and obj.section2_approval_date:
+            return format_html('<span style="color: green;">✓ Approved</span>')
+        return format_html('<span style="color: red;">✗ Pending</span>')
+
+    section2_approved.short_description = "Section 2"
