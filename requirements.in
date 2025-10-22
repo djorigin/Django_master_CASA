@@ -8,6 +8,9 @@ django-filter
 psycopg2-binary
 pillow
 
+# Date/Time utilities
+python-dateutil
+
 # Production server
 gunicorn
 
