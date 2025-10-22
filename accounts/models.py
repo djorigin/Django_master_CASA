@@ -475,7 +475,7 @@ class KeyPersonnel(models.Model):
 
     # Chief Remote Pilot - ForeignKey to PilotProfile (already vetted pilot data)
     chief_remote_pilot = models.ForeignKey(
-        "PilotProfile",
+        "accounts.PilotProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -492,7 +492,7 @@ class KeyPersonnel(models.Model):
 
     # Maintenance Controller - ForeignKey to StaffProfile (already vetted staff data)
     maintenance_controller = models.ForeignKey(
-        "StaffProfile",
+        "accounts.StaffProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -509,7 +509,7 @@ class KeyPersonnel(models.Model):
 
     # CEO - ForeignKey to StaffProfile (already vetted staff data)
     ceo = models.ForeignKey(
-        "StaffProfile",
+        "accounts.StaffProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
