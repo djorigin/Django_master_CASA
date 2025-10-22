@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "accounts",
     "aircraft",
-    "airspace", 
+    "airspace",
     "core",
     "flight_operations",
     "incidents",
