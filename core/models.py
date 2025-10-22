@@ -413,10 +413,12 @@ class SOPRiskAssessment(models.Model):
         verbose_name="SOP",
     )
 
-    # Link to flight operations risk register
+    # Link to flight operations risk register (optional to prevent circular imports)
     risk_register = models.ForeignKey(
         "flight_operations.RiskRegister",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         verbose_name="Risk Register Entry",
         help_text="Associated risk register entry from flight operations",
     )
