@@ -46,11 +46,11 @@ INSTALLED_APPS = [
     "accounts",
     "core",
     # Aviation Operations Suite - CASA Part 101 Compliant
-    "aircraft",          # Aircraft registration & specifications
-    "maintenance",       # Part 101 maintenance compliance
-    "flight_operations", # Flight planning & operations
-    "incidents",         # CASA incident reporting
-    "airspace",          # Operational areas & restrictions
+    "aircraft",  # Aircraft registration & specifications
+    "maintenance",  # Part 101 maintenance compliance
+    "flight_operations",  # Flight planning & operations
+    "incidents",  # CASA incident reporting
+    "airspace",  # Operational areas & restrictions
 ]
 
 MIDDLEWARE = [
