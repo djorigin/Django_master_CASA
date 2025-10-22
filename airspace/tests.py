@@ -13,6 +13,7 @@ class PlaceholderTestCase(TestCase):
         """Minimal test to ensure module can be imported."""
         # Import the current app module
         import sys
-        module_name = __name__.split('.')[0]
-        __import__(f'{module_name}.models')
+
+        module_name = __name__.split(".")[0]
+        __import__(f"{module_name}.models")
         self.assertTrue(True, f"{module_name} module loads successfully")

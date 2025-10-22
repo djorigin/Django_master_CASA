@@ -1,4 +1,4 @@
-# Minimal test placeholder for CI/CD compatibility  
+# Minimal test placeholder for CI/CD compatibility
 # Original comprehensive test suite removed for security reasons per GitGuardian flag
 from django.test import TestCase
 
@@ -11,7 +11,8 @@ class AircraftPlaceholderTestCase(TestCase):
 
     def test_aircraft_module_loads(self):
         """Minimal test to ensure aircraft module can be imported."""
-        from aircraft import models, views, admin
+        from aircraft import admin, models, views
+
         self.assertTrue(True, "Aircraft module loads successfully")
 
     def test_basic_functionality(self):

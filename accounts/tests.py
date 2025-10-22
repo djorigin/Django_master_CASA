@@ -11,7 +11,8 @@ class AccountsPlaceholderTestCase(TestCase):
 
     def test_accounts_module_loads(self):
         """Minimal test to ensure accounts module can be imported."""
-        from accounts import models, views, forms
+        from accounts import forms, models, views
+
         self.assertTrue(True, "Accounts module loads successfully")
 
     def test_basic_functionality(self):
