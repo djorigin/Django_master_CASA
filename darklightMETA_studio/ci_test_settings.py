@@ -34,7 +34,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "accounts",
+    "aircraft",
+    "airspace", 
     "core",
+    "flight_operations",
+    "incidents",
+    "maintenance",
 ]
 
 MIDDLEWARE = [
