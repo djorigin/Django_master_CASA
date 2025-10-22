@@ -90,16 +90,47 @@ Successfully implemented specialized Django apps structure for CASA Part 101 reg
 - Controlled airspace coordination
 - NOTAM and AIP reference integration
 
+### 5. Flight Operations App (`flight_operations/`)
+**Purpose**: Mission planning, flight execution, and crew management
+
+**Models**:
+- `Mission`: RPA operation planning and authorization management
+- `FlightPlan`: Detailed flight planning with CASA compliance validation
+- `FlightLog`: Comprehensive flight record keeping and performance tracking
+
+**Key Features**:
+- Mission lifecycle management (planning → active → completed)
+- CASA-compliant flight planning with VLOS/BVLOS support
+- Auto-generated IDs (MSN-YYYY-XXXXXX, FPL-YYYY-XXXXXX, LOG-YYYY-XXXXXX)
+- Weather conditions and safety procedure documentation
+- Crew assignment and operational area coordination
+- Flight performance data collection and analysis
+- Risk assessment and CASA authorization tracking
+
+**CASA Compliance**:
+- Part 101 flight operation requirements
+- VLOS altitude and range validation (120ft, 500m limits)
+- Weather minimums and NOTAM checking
+- Emergency and lost link procedures
+- Flight time and performance logging
+
 ## Database Schema Integration
 
 ### Foreign Key Relationships
 ```
 accounts.ClientProfile ← aircraft.Aircraft (owner/operator)
+accounts.ClientProfile ← flight_operations.Mission (client)
 accounts.PilotProfile ← incidents.IncidentReport (pilot_in_command)
+accounts.PilotProfile ← flight_operations.FlightPlan (pilot_in_command/observer)
 accounts.StaffProfile ← maintenance.MaintenanceRecord (performed_by/supervised_by)
+accounts.StaffProfile ← flight_operations.Mission (mission_commander)
 aircraft.Aircraft ← maintenance.MaintenanceRecord (aircraft)
 aircraft.Aircraft ← incidents.IncidentReport (aircraft)
+aircraft.Aircraft ← flight_operations.FlightPlan (aircraft)
 airspace.AirspaceClass ← airspace.OperationalArea (airspace_class)
+airspace.OperationalArea ← flight_operations.FlightPlan (operational_area)
+flight_operations.Mission ← flight_operations.FlightPlan (mission)
+flight_operations.FlightPlan ← flight_operations.FlightLog (flight_plan - OneToOne)
 ```
 
 ### Auto-Generated Identifiers
@@ -107,6 +138,9 @@ airspace.AirspaceClass ← airspace.OperationalArea (airspace_class)
 - Maintenance: MNT-YYYY-XXXXXX format
 - Incidents: INC-YYYY-XXXXXX format
 - Operational Areas: OA-XXXXXX format
+- Missions: MSN-YYYY-XXXXXX format
+- Flight Plans: FPL-YYYY-XXXXXX format
+- Flight Logs: LOG-YYYY-XXXXXX format
 
 ## Admin Interface Features
 
@@ -177,12 +211,13 @@ All models include:
 
 ## Next Steps
 
-1. **Flight Operations App**: Create flight planning, logging, and crew management
-2. **API Development**: Extend REST APIs for each specialized app
-3. **React Integration**: Build frontend components for each app
-4. **Reporting**: Create CASA-compliant reports and dashboards
-5. **Mobile App**: Develop field operations mobile interface
-6. **Document Management**: Add maintenance manual and certificate storage
+1. **API Development**: Extend REST APIs for each specialized app (aircraft, maintenance, incidents, airspace, flight_operations)
+2. **React Integration**: Build frontend components for each app
+3. **Reporting**: Create CASA-compliant reports and dashboards
+4. **Mobile App**: Develop field operations mobile interface
+5. **Document Management**: Add maintenance manual and certificate storage
+6. **Real-time Integration**: Add real-time flight tracking and telemetry
+7. **Weather Integration**: Connect to weather services for automated checks
 
 ## Technical Standards Met
 
@@ -204,5 +239,6 @@ All apps are:
 - ✅ **Tested**: Models validated and working
 - ✅ **Documented**: Comprehensive documentation
 - ✅ **Integration Ready**: ForeignKey relationships established
+- ✅ **Formatted**: Code formatted with isort and black
 
-The specialized aviation apps architecture provides a solid foundation for comprehensive RPA operations management under CASA Part 101 regulations.
+The specialized aviation apps architecture provides a solid foundation for comprehensive RPA operations management under CASA Part 101 regulations. All 5 specialized apps are now complete and fully functional.
