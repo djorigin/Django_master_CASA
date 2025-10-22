@@ -791,40 +791,37 @@ class ManualSectionInline(admin.StackedInline):
         ("section_number", "title"),
         ("section_type", "order"),
         "content",
-        ("related_sops", "required_training"),
     ]
-    filter_horizontal = ["related_sops", "required_training"]
     ordering = ["order", "section_number"]
 
 
-class ManualApprovalHistoryInline(admin.TabularInline):
-    """Inline admin for Manual Approval History"""
+# Temporarily commented out to resolve admin configuration issues
+# class ManualApprovalHistoryInline(admin.TabularInline):
+#     """Inline admin for Manual Approval History"""
+#     model = ManualApprovalHistory
+#     extra = 0
+#     fields = ["action", "action_date", "performed_by", "version_at_action", "comments"]
+#     readonly_fields = ["action_date"]
+#     ordering = ["-action_date"]
+#
+#     def has_add_permission(self, request, obj=None):
+#         # Approval history is added automatically
+#         return False
 
-    model = ManualApprovalHistory
-    extra = 0
-    fields = ["action", "action_date", "performed_by", "version_at_action", "comments"]
-    readonly_fields = ["action_date"]
-    ordering = ["-action_date"]
 
-    def has_add_permission(self, request, obj=None):
-        # Approval history is added automatically
-        return False
-
-
-class ManualDistributionRecordInline(admin.TabularInline):
-    """Inline admin for Manual Distribution Records"""
-
-    model = ManualDistributionRecord
-    extra = 1
-    fields = [
-        "distributed_to",
-        "version_distributed",
-        "access_granted_by",
-        "acknowledgment_required",
-        "acknowledged_date",
-        "access_revoked",
-    ]
-    readonly_fields = ["distribution_date"]
+# class ManualDistributionRecordInline(admin.TabularInline):
+#     """Inline admin for Manual Distribution Records"""
+#     model = ManualDistributionRecord
+#     extra = 1
+#     fields = [
+#         "distributed_to",
+#         "version_distributed",
+#         "access_granted_by",
+#         "acknowledgment_required",
+#         "acknowledged_date",
+#         "access_revoked",
+#     ]
+#     readonly_fields = ["distribution_date"]
 
 
 @admin.register(RPASOperationsManual)
@@ -927,11 +924,7 @@ class RPASOperationsManualAdmin(admin.ModelAdmin):
 
     filter_horizontal = ["related_sops", "training_syllabus"]
     readonly_fields = ["manual_id"]
-    inlines = [
-        ManualSectionInline,
-        ManualApprovalHistoryInline,
-        ManualDistributionRecordInline,
-    ]
+    inlines = [ManualSectionInline]
 
     def get_queryset(self, request):
         """Optimize queries"""
@@ -1191,7 +1184,8 @@ class ManualSubsectionAdmin(admin.ModelAdmin):
     content_length.short_description = "Content"
 
 
-@admin.register(ManualApprovalHistory)
+# Temporarily commented out to resolve admin issues
+# @admin.register(ManualApprovalHistory)
 class ManualApprovalHistoryAdmin(admin.ModelAdmin):
     """Admin interface for Manual Approval History"""
 
@@ -1259,7 +1253,8 @@ class ManualApprovalHistoryAdmin(admin.ModelAdmin):
     signature_status.short_description = "Signature"
 
 
-@admin.register(ManualDistributionRecord)
+# Temporarily commented out to resolve admin issues
+# @admin.register(ManualDistributionRecord)
 class ManualDistributionRecordAdmin(admin.ModelAdmin):
     """Admin interface for Manual Distribution Records"""
 
