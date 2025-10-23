@@ -11,7 +11,7 @@ class AircraftTypeForm(forms.ModelForm):
         model = AircraftType
         fields = [
             "name",
-            "manufacturer", 
+            "manufacturer",
             "model",
             "category",
             "operation_type",
@@ -29,16 +29,25 @@ class AircraftTypeForm(forms.ModelForm):
             "insurance_requirements",
             "is_active",
         ]
-        
+
         widgets = {
             "name": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Enter aircraft type name"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Enter aircraft type name",
+                }
             ),
             "manufacturer": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Enter manufacturer name"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Enter manufacturer name",
+                }
             ),
             "model": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Enter model designation"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Enter model designation",
+                }
             ),
             "category": forms.Select(attrs={"class": "form-control"}),
             "operation_type": forms.Select(attrs={"class": "form-control"}),
@@ -75,7 +84,7 @@ class AircraftTypeForm(forms.ModelForm):
             ),
             "maintenance_requirements": forms.Textarea(
                 attrs={
-                    "class": "form-control", 
+                    "class": "form-control",
                     "rows": 3,
                     "placeholder": "Describe maintenance requirements",
                 }
@@ -83,7 +92,7 @@ class AircraftTypeForm(forms.ModelForm):
             "training_requirements": forms.Textarea(
                 attrs={
                     "class": "form-control",
-                    "rows": 3, 
+                    "rows": 3,
                     "placeholder": "Describe training requirements",
                 }
             ),
@@ -119,7 +128,7 @@ class AircraftForm(forms.ModelForm):
             "aircraft_id",
             "aircraft_type",
             "serial_number",
-            "registration_number", 
+            "registration_number",
             "status",
             "owner",
             "operator",

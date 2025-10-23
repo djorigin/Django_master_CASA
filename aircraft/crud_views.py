@@ -17,7 +17,7 @@ def aircraft_dashboard(request):
     total_aircraft = Aircraft.objects.count()
     active_aircraft = Aircraft.objects.filter(status="operational").count()
     aircraft_types = AircraftType.objects.filter(is_active=True).count()
-    
+
     # Aircraft status breakdown
     status_breakdown = {}
     for status_choice in Aircraft.STATUS_CHOICES:
@@ -28,11 +28,11 @@ def aircraft_dashboard(request):
 
     # Recent aircraft additions
     recent_aircraft = Aircraft.objects.order_by("-acquisition_date")[:5]
-    
+
     # Aircraft requiring inspection soon (within 30 days)
     upcoming_inspections = Aircraft.objects.filter(
         next_inspection_due__lte=timezone.now().date() + timezone.timedelta(days=30),
-        status="operational"
+        status="operational",
     ).count()
 
     context = {
@@ -131,7 +131,7 @@ def aircraft_type_create(request):
 def aircraft_type_update(request, pk):
     """Update existing aircraft type"""
     aircraft_type = get_object_or_404(AircraftType, pk=pk)
-    
+
     if request.method == "POST":
         form = AircraftTypeForm(request.POST, instance=aircraft_type)
         if form.is_valid():
@@ -152,29 +152,35 @@ def aircraft_type_update(request, pk):
 def aircraft_type_delete(request, pk):
     """Delete aircraft type (AJAX only)"""
     aircraft_type = get_object_or_404(AircraftType, pk=pk)
-    
+
     # Check if any aircraft use this type
     aircraft_count = Aircraft.objects.filter(aircraft_type=aircraft_type).count()
     if aircraft_count > 0:
-        return JsonResponse({
-            "success": False,
-            "message": f"Cannot delete aircraft type. {aircraft_count} aircraft are using this type."
-        })
-    
+        return JsonResponse(
+            {
+                "success": False,
+                "message": f"Cannot delete aircraft type. {aircraft_count} aircraft are using this type.",
+            }
+        )
+
     aircraft_type_name = aircraft_type.name
     aircraft_type.delete()
-    
-    return JsonResponse({
-        "success": True,
-        "message": f"Aircraft type {aircraft_type_name} deleted successfully."
-    })
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": f"Aircraft type {aircraft_type_name} deleted successfully.",
+        }
+    )
 
 
 # Aircraft Views
 @login_required
 def aircraft_list(request):
     """List all aircraft with search and filtering"""
-    aircraft = Aircraft.objects.select_related("aircraft_type").order_by("-acquisition_date")
+    aircraft = Aircraft.objects.select_related("aircraft_type").order_by(
+        "-acquisition_date"
+    )
 
     # Search functionality
     search_query = request.GET.get("search")
@@ -220,8 +226,10 @@ def aircraft_list(request):
 @login_required
 def aircraft_detail(request, pk):
     """Display detailed aircraft information"""
-    aircraft = get_object_or_404(Aircraft.objects.select_related("aircraft_type"), pk=pk)
-    
+    aircraft = get_object_or_404(
+        Aircraft.objects.select_related("aircraft_type"), pk=pk
+    )
+
     # Calculate days until next inspection
     days_to_inspection = None
     if aircraft.next_inspection_due:
@@ -256,7 +264,7 @@ def aircraft_create(request):
 def aircraft_update(request, pk):
     """Update existing aircraft"""
     aircraft = get_object_or_404(Aircraft, pk=pk)
-    
+
     if request.method == "POST":
         form = AircraftForm(request.POST, instance=aircraft)
         if form.is_valid():
@@ -277,11 +285,10 @@ def aircraft_update(request, pk):
 def aircraft_delete(request, pk):
     """Delete aircraft (AJAX only)"""
     aircraft = get_object_or_404(Aircraft, pk=pk)
-    
+
     aircraft_id = aircraft.aircraft_id
     aircraft.delete()
-    
-    return JsonResponse({
-        "success": True,
-        "message": f"Aircraft {aircraft_id} deleted successfully."
-    })
+
+    return JsonResponse(
+        {"success": True, "message": f"Aircraft {aircraft_id} deleted successfully."}
+    )
