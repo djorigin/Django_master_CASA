@@ -115,4 +115,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Add event listeners for delete buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-btn')) {
+            const button = e.target.closest('.delete-btn');
+            const aircraftId = button.getAttribute('data-aircraft-id');
+            const aircraftName = button.getAttribute('data-aircraft-name');
+            
+            if (aircraftId && aircraftName) {
+                deleteAircraft(aircraftId, aircraftName);
+            }
+        }
+    });
 });

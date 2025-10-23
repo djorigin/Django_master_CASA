@@ -134,8 +134,9 @@
                        class="action-btn" title="Edit">
                         <i class="fas fa-edit"></i>
                     </a>
-                    <button onclick="deleteAircraft({{ aircraft.pk }}, '{{ aircraft.aircraft_id|escapejs }}')" 
-                            class="action-btn delete-btn" title="Delete">
+                    <button class="action-btn delete-btn" title="Delete"
+                            data-aircraft-id="{{ aircraft.pk }}"
+                            data-aircraft-name="{{ aircraft.aircraft_id|escapejs }}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
