@@ -1,0 +1,160 @@
+{% extends "aircraft/base.html" %}
+{% load i18n %}
+
+{% block title %}Aircraft Dashboard - {{ block.super }}{% endblock %}
+
+{% block page_title %}Aircraft Dashboard{% endblock %}
+{% block page_subtitle %}Overview of aircraft fleet and operations{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'aircraft:aircraft_create' %}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Add Aircraft
+</a>
+<a href="{% url 'aircraft:aircraft_type_create' %}" class="btn btn-secondary">
+    <i class="fas fa-plus-circle"></i> Add Aircraft Type
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-plane"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ total_aircraft }}</h3>
+            <p>Total Aircraft</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon operational">
+            <i class="fas fa-plane-departure"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ active_aircraft }}</h3>
+            <p>Operational Aircraft</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-cogs"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ aircraft_types }}</h3>
+            <p>Aircraft Types</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-tools"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ upcoming_inspections }}</h3>
+            <p>Inspections Due Soon</p>
+        </div>
+    </div>
+</div>
+
+<!-- Aircraft Status Breakdown -->
+<div class="dashboard-section">
+    <div class="section-header">
+        <h2>Aircraft Status Breakdown</h2>
+        <a href="{% url 'aircraft:aircraft_list' %}" class="btn btn-outline">View All Aircraft</a>
+    </div>
+    
+    <div class="status-grid">
+        {% for status_name, count in status_breakdown.items %}
+        <div class="status-item">
+            <div class="status-count">{{ count }}</div>
+            <div class="status-label">{{ status_name }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Recent Aircraft and Quick Actions -->
+<div class="dashboard-grid">
+    <!-- Recent Aircraft -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>Recent Aircraft Additions</h3>
+            <a href="{% url 'aircraft:aircraft_list' %}">View All</a>
+        </div>
+        <div class="card-content">
+            {% if recent_aircraft %}
+                <div class="aircraft-list">
+                    {% for aircraft in recent_aircraft %}
+                    <div class="aircraft-item">
+                        <div class="aircraft-icon">
+                            <i class="fas fa-plane"></i>
+                        </div>
+                        <div class="aircraft-info">
+                            <h4>{{ aircraft.aircraft_id }}</h4>
+                            <p>{{ aircraft.aircraft_type.name }}</p>
+                            <small>Added: {{ aircraft.acquisition_date|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="aircraft-status">
+                            <span class="status-badge status-{{ aircraft.status }}">
+                                {{ aircraft.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-plane-slash"></i>
+                    <p>No aircraft added yet</p>
+                    <a href="{% url 'aircraft:aircraft_create' %}" class="btn btn-primary">Add First Aircraft</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="card-content">
+            <div class="quick-actions">
+                <a href="{% url 'aircraft:aircraft_create' %}" class="quick-action">
+                    <i class="fas fa-plus"></i>
+                    <span>Add New Aircraft</span>
+                </a>
+                <a href="{% url 'aircraft:aircraft_type_create' %}" class="quick-action">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add Aircraft Type</span>
+                </a>
+                <a href="{% url 'aircraft:aircraft_list' %}?status=operational" class="quick-action">
+                    <i class="fas fa-plane-departure"></i>
+                    <span>View Operational Aircraft</span>
+                </a>
+                <a href="{% url 'aircraft:aircraft_list' %}?status=maintenance" class="quick-action">
+                    <i class="fas fa-tools"></i>
+                    <span>Aircraft in Maintenance</span>
+                </a>
+                <a href="{% url 'aircraft:aircraft_type_list' %}" class="quick-action">
+                    <i class="fas fa-cogs"></i>
+                    <span>Manage Aircraft Types</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CASA Compliance Notice -->
+<div class="compliance-notice">
+    <div class="notice-icon">
+        <i class="fas fa-shield-alt"></i>
+    </div>
+    <div class="notice-content">
+        <h4>CASA Part 101 Compliance</h4>
+        <p>All aircraft and aircraft types must comply with CASA Part 101 regulations. Ensure proper documentation and certification before operation.</p>
+    </div>
+</div>
+{% endblock %}
