@@ -121,6 +121,12 @@ body {
     color: white;
 }
 
+.nav-item.nav-divider {
+    border-left: 2px solid #e0e0e0;
+    padding-left: 1rem;
+    margin-left: 0.5rem;
+}
+
 /* Navigation User Menu */
 .nav-user {
     margin-left: auto;

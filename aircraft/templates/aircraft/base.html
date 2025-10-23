@@ -54,6 +54,24 @@
                     <span>Add Type</span>
                 </a>
             </div>
+            <div class="nav-item nav-divider">
+                <a href="{% url 'airspace:dashboard' %}">
+                    <i class="fas fa-map"></i>
+                    <span>Airspace</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'airspace:airspace_class_list' %}">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Classes</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'airspace:operational_area_list' %}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Areas</span>
+                </a>
+            </div>
         </nav>
         <div class="nav-user">
             {% if user.is_authenticated %}
