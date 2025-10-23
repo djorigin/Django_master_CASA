@@ -58,7 +58,7 @@
         <div class="nav-user">
             {% if user.is_authenticated %}
                 <div class="user-menu">
-                    <span><i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}</span>
+                    <span><i class="fas fa-user-circle"></i> {{ user.first_name|default:user.email }}</span>
                     <div class="user-dropdown">
                         <a href="{% url 'accounts:user_detail' user.pk %}">Profile</a>
                         <a href="{% url 'admin:logout' %}">Logout</a>

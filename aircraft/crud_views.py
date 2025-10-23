@@ -16,7 +16,7 @@ def aircraft_dashboard(request):
     """Main aircraft dashboard with statistics"""
     total_aircraft = Aircraft.objects.count()
     active_aircraft = Aircraft.objects.filter(status="operational").count()
-    aircraft_types = AircraftType.objects.filter(is_active=True).count()
+    aircraft_types = AircraftType.objects.count()
 
     # Aircraft status breakdown
     status_breakdown = {}
@@ -27,11 +27,11 @@ def aircraft_dashboard(request):
         ).count()
 
     # Recent aircraft additions
-    recent_aircraft = Aircraft.objects.order_by("-acquisition_date")[:5]
+    recent_aircraft = Aircraft.objects.order_by("-created_at")[:5]
 
     # Aircraft requiring inspection soon (within 30 days)
     upcoming_inspections = Aircraft.objects.filter(
-        next_inspection_due__lte=timezone.now().date() + timezone.timedelta(days=30),
+        next_maintenance_due__lte=timezone.now().date() + timezone.timedelta(days=30),
         status="operational",
     ).count()
 
@@ -71,11 +71,6 @@ def aircraft_type_list(request):
     if operation_filter:
         aircraft_types = aircraft_types.filter(operation_type=operation_filter)
 
-    # Active status filtering
-    active_filter = request.GET.get("active")
-    if active_filter:
-        aircraft_types = aircraft_types.filter(is_active=active_filter == "true")
-
     paginator = Paginator(aircraft_types, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -85,7 +80,6 @@ def aircraft_type_list(request):
         "search_query": search_query,
         "category_filter": category_filter,
         "operation_filter": operation_filter,
-        "active_filter": active_filter,
         "category_choices": AircraftType.CATEGORY_CHOICES,
         "operation_choices": AircraftType.OPERATION_TYPE_CHOICES,
     }
@@ -98,7 +92,7 @@ def aircraft_type_detail(request, pk):
     aircraft_type = get_object_or_404(AircraftType, pk=pk)
     aircraft_count = Aircraft.objects.filter(aircraft_type=aircraft_type).count()
     recent_aircraft = Aircraft.objects.filter(aircraft_type=aircraft_type).order_by(
-        "-acquisition_date"
+        "-created_at"
     )[:5]
 
     context = {
@@ -178,16 +172,13 @@ def aircraft_type_delete(request, pk):
 @login_required
 def aircraft_list(request):
     """List all aircraft with search and filtering"""
-    aircraft = Aircraft.objects.select_related("aircraft_type").order_by(
-        "-acquisition_date"
-    )
+    aircraft = Aircraft.objects.select_related("aircraft_type").order_by("-created_at")
 
     # Search functionality
     search_query = request.GET.get("search")
     if search_query:
         aircraft = aircraft.filter(
-            Q(aircraft_id__icontains=search_query)
-            | Q(registration_number__icontains=search_query)
+            Q(registration_mark__icontains=search_query)
             | Q(serial_number__icontains=search_query)
             | Q(aircraft_type__name__icontains=search_query)
         )
@@ -203,10 +194,6 @@ def aircraft_list(request):
         aircraft = aircraft.filter(aircraft_type_id=type_filter)
 
     # Active status filtering
-    active_filter = request.GET.get("active")
-    if active_filter:
-        aircraft = aircraft.filter(is_active=active_filter == "true")
-
     paginator = Paginator(aircraft, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -216,9 +203,8 @@ def aircraft_list(request):
         "search_query": search_query,
         "status_filter": status_filter,
         "type_filter": type_filter,
-        "active_filter": active_filter,
         "status_choices": Aircraft.STATUS_CHOICES,
-        "aircraft_types": AircraftType.objects.filter(is_active=True),
+        "aircraft_types": AircraftType.objects.all(),
     }
     return render(request, "aircraft/aircraft_list.html", context)
 
@@ -232,8 +218,10 @@ def aircraft_detail(request, pk):
 
     # Calculate days until next inspection
     days_to_inspection = None
-    if aircraft.next_inspection_due:
-        days_to_inspection = (aircraft.next_inspection_due - timezone.now().date()).days
+    if aircraft.next_maintenance_due:
+        days_to_inspection = (
+            aircraft.next_maintenance_due - timezone.now().date()
+        ).days
 
     context = {
         "aircraft": aircraft,
@@ -250,7 +238,7 @@ def aircraft_create(request):
         if form.is_valid():
             aircraft = form.save()
             messages.success(
-                request, f"Aircraft {aircraft.aircraft_id} created successfully."
+                request, f"Aircraft {aircraft.registration_mark} created successfully."
             )
             return redirect("aircraft:aircraft_detail", pk=aircraft.pk)
     else:
@@ -270,7 +258,7 @@ def aircraft_update(request, pk):
         if form.is_valid():
             aircraft = form.save()
             messages.success(
-                request, f"Aircraft {aircraft.aircraft_id} updated successfully."
+                request, f"Aircraft {aircraft.registration_mark} updated successfully."
             )
             return redirect("aircraft:aircraft_detail", pk=aircraft.pk)
     else:
@@ -286,9 +274,12 @@ def aircraft_delete(request, pk):
     """Delete aircraft (AJAX only)"""
     aircraft = get_object_or_404(Aircraft, pk=pk)
 
-    aircraft_id = aircraft.aircraft_id
+    aircraft_registration = aircraft.registration_mark
     aircraft.delete()
 
     return JsonResponse(
-        {"success": True, "message": f"Aircraft {aircraft_id} deleted successfully."}
+        {
+            "success": True,
+            "message": f"Aircraft {aircraft_registration} deleted successfully.",
+        }
     )

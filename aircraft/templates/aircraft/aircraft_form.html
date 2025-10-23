@@ -218,11 +218,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="{{ form.next_inspection_due.id_for_label }}">{{ form.next_inspection_due.label }}</label>
-                    {{ form.next_inspection_due }}
-                    {% if form.next_inspection_due.errors %}
+                    <label for="{{ form.next_maintenance_due.id_for_label }}">{{ form.next_maintenance_due.label }}</label>
+                    {{ form.next_maintenance_due }}
+                    {% if form.next_maintenance_due.errors %}
                         <div class="form-errors">
-                            {% for error in form.next_inspection_due.errors %}
+                            {% for error in form.next_maintenance_due.errors %}
                                 <span class="error">{{ error }}</span>
                             {% endfor %}
                         </div>

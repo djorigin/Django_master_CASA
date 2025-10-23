@@ -43,21 +43,21 @@ class AircraftTypeForm(forms.ModelForm):
                     "placeholder": "Enter model designation",
                 }
             ),
-            "category": forms.Select(attrs={"class": "form-select"}),
-            "operation_type": forms.Select(attrs={"class": "form-select"}),
+            "category": forms.Select(attrs={"class": "form-control"}),
+            "operation_type": forms.Select(attrs={"class": "form-control"}),
             "maximum_takeoff_weight": forms.NumberInput(
-                attrs={"class": "form-control", "step": "0.01", "placeholder": "kg"}
+                attrs={"class": "form-control", "step": "0.001", "placeholder": "kg"}
             ),
             "maximum_operating_height": forms.NumberInput(
                 attrs={"class": "form-control", "placeholder": "feet AGL"}
             ),
             "maximum_speed": forms.NumberInput(
-                attrs={"class": "form-control", "placeholder": "km/h"}
+                attrs={"class": "form-control", "placeholder": "knots"}
             ),
             "casa_type_certificate": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "CASA certificate number",
+                    "placeholder": "CASA type certificate number",
                 }
             ),
             "excluded_category_compliant": forms.CheckboxInput(
@@ -90,95 +90,81 @@ class AircraftForm(forms.ModelForm):
     class Meta:
         model = Aircraft
         fields = [
-            "registration_mark",
+            "aircraft_id",
             "aircraft_type",
-            "owner",
-            "operator",
             "serial_number",
-            "year_manufactured",
+            "registration_mark",
             "status",
-            "airworthiness_valid_until",
-            "insurance_valid_until",
-            "last_maintenance_check",
-            "next_maintenance_due",
-            "current_flight_hours",
-            "maximum_flight_hours",
-            "flight_manual_reference",
-            "notes",
+            "current_location",
+            "owner_operator",
+            "manufacture_date",
+            "acquisition_date",
+            "flight_hours",
+            "flight_cycles",
+            "last_inspection_date",
+            "next_inspection_due_date",
+            "current_airworthiness_status",
+            "maintenance_notes",
         ]
 
         widgets = {
+            "aircraft_id": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Enter aircraft ID"}
+            ),
+            "aircraft_type": forms.Select(attrs={"class": "form-control"}),
+            "serial_number": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Enter serial number"}
+            ),
             "registration_mark": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "placeholder": "Enter registration mark",
                 }
             ),
-            "aircraft_type": forms.Select(attrs={"class": "form-select"}),
-            "owner": forms.Select(attrs={"class": "form-select"}),
-            "operator": forms.Select(attrs={"class": "form-select"}),
-            "serial_number": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Enter serial number"}
+            "status": forms.Select(attrs={"class": "form-control"}),
+            "current_location": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Current location"}
             ),
-            "year_manufactured": forms.NumberInput(
-                attrs={"class": "form-control", "placeholder": "Enter year"}
+            "owner_operator": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Owner/Operator name"}
             ),
-            "status": forms.Select(attrs={"class": "form-select"}),
-            "airworthiness_valid_until": forms.DateInput(
+            "manufacture_date": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}
             ),
-            "insurance_valid_until": forms.DateInput(
+            "acquisition_date": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}
             ),
-            "last_maintenance_check": forms.DateInput(
+            "flight_hours": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.1", "placeholder": "hours"}
+            ),
+            "flight_cycles": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "flight cycles"}
+            ),
+            "last_inspection_date": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}
             ),
-            "next_maintenance_due": forms.DateInput(
+            "next_inspection_due_date": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}
             ),
-            "current_flight_hours": forms.NumberInput(
-                attrs={"class": "form-control", "step": "0.01", "placeholder": "hours"}
+            "current_airworthiness_status": forms.Select(
+                attrs={"class": "form-control"}
             ),
-            "maximum_flight_hours": forms.NumberInput(
-                attrs={"class": "form-control", "placeholder": "maximum hours"}
-            ),
-            "flight_manual_reference": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Manual reference"}
-            ),
-            "notes": forms.Textarea(
+            "maintenance_notes": forms.Textarea(
                 attrs={
                     "class": "form-control",
                     "rows": 4,
-                    "placeholder": "Additional notes",
+                    "placeholder": "Additional maintenance notes",
                 }
             ),
         }
 
-    def clean_registration_mark(self):
-        registration_mark = self.cleaned_data.get("registration_mark")
-        if registration_mark:
-            # Check for duplicate registration marks (excluding current instance)
-            existing = Aircraft.objects.filter(registration_mark=registration_mark)
+    def clean_aircraft_id(self):
+        aircraft_id = self.cleaned_data.get("aircraft_id")
+        if aircraft_id:
+            # Check for duplicate aircraft IDs (excluding current instance)
+            existing = Aircraft.objects.filter(aircraft_id=aircraft_id)
             if self.instance.pk:
                 existing = existing.exclude(pk=self.instance.pk)
             if existing.exists():
-                raise ValidationError("Registration mark must be unique")
-        return registration_mark
-
-    def clean_current_flight_hours(self):
-        current_hours = self.cleaned_data.get("current_flight_hours")
-        maximum_hours = self.cleaned_data.get("maximum_flight_hours")
-
-        if current_hours is not None and current_hours < 0:
-            raise ValidationError("Flight hours cannot be negative")
-
-        if (
-            current_hours is not None
-            and maximum_hours is not None
-            and current_hours > maximum_hours
-        ):
-            raise ValidationError(
-                "Current flight hours cannot exceed maximum flight hours"
-            )
-
-        return current_hours
+                raise ValidationError("Aircraft ID must be unique")
+        return aircraft_id

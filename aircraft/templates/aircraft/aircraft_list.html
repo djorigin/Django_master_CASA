@@ -1,5 +1,6 @@
 {% extends "aircraft/base.html" %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}Aircraft Fleet - {{ block.super }}{% endblock %}
 
@@ -117,9 +118,9 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if aircraft.next_inspection_due %}
-                        <span class="inspection-date {% if aircraft.next_inspection_due <= today %}overdue{% elif aircraft.next_inspection_due <= soon_date %}due-soon{% endif %}">
-                            {{ aircraft.next_inspection_due|date:"M d, Y" }}
+                    {% if aircraft.next_maintenance_due %}
+                        <span class="inspection-date {% if aircraft.next_maintenance_due <= today %}overdue{% elif aircraft.next_maintenance_due <= soon_date %}due-soon{% endif %}">
+                            {{ aircraft.next_maintenance_due|date:"M d, Y" }}
                         </span>
                     {% else %}
                         <span class="text-muted">Not scheduled</span>
