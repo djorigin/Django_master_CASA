@@ -1,0 +1,312 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block page_title %}Airspace Management Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+.airspace-dashboard {
+    padding: 0;
+}
+
+.stats-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid #667eea;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card h5 {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card .stat-description {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.breakdown-section {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.breakdown-chart {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.breakdown-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.breakdown-count {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.recent-areas {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.area-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.area-item:last-child {
+    border-bottom: none;
+}
+
+.area-info h6 {
+    margin: 0;
+    color: #333;
+}
+
+.area-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.area-type-badge {
+    background: #f8f9fa;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.action-btn {
+    display: block;
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.action-btn:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn i {
+    margin-right: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="airspace-dashboard">
+    <!-- Header -->
+    <div class="stats-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="mb-0">
+                        <i class="fas fa-layer-group me-3"></i>
+                        Airspace Management Dashboard
+                    </h1>
+                    <p class="mb-0 mt-2">Comprehensive airspace and operational area management</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Key Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h5>Total Airspace Classes</h5>
+                <div class="stat-number">{{ total_airspace_classes }}</div>
+                <div class="stat-description">CASA defined classes</div>
+            </div>
+            <div class="stat-card">
+                <h5>Operational Areas</h5>
+                <div class="stat-number">{{ total_operational_areas }}</div>
+                <div class="stat-description">Total defined areas</div>
+            </div>
+            <div class="stat-card">
+                <h5>Active Areas</h5>
+                <div class="stat-number">{{ active_operational_areas }}</div>
+                <div class="stat-description">Currently operational</div>
+            </div>
+            <div class="stat-card">
+                <h5>Authorization Required</h5>
+                <div class="stat-number">{{ auth_required_areas }}</div>
+                <div class="stat-description">Special approval needed</div>
+            </div>
+            <div class="stat-card">
+                <h5>Expiring Soon</h5>
+                <div class="stat-number">{{ upcoming_expiries }}</div>
+                <div class="stat-description">Within 7 days</div>
+            </div>
+        </div>
+
+        <!-- Breakdown Charts -->
+        <div class="breakdown-section">
+            <h4 class="mb-4">
+                <i class="fas fa-chart-pie me-2"></i>
+                Distribution Analysis
+            </h4>
+            <div class="breakdown-grid">
+                <!-- Airspace Class Breakdown -->
+                <div>
+                    <h5 class="mb-3">Areas by Airspace Class</h5>
+                    <div class="breakdown-chart">
+                        {% for class_name, count in class_breakdown.items %}
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">{{ class_name }}</span>
+                            <span class="breakdown-count">{{ count }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No airspace classes defined</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Area Type Breakdown -->
+                <div>
+                    <h5 class="mb-3">Areas by Type</h5>
+                    <div class="breakdown-chart">
+                        {% for type_name, count in area_type_breakdown.items %}
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">{{ type_name }}</span>
+                            <span class="breakdown-count">{{ count }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No operational areas defined</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Areas -->
+        <div class="recent-areas">
+            <h4 class="mb-4">
+                <i class="fas fa-clock me-2"></i>
+                Recently Added Areas
+            </h4>
+            {% for area in recent_areas %}
+            <div class="area-item">
+                <div class="area-info">
+                    <h6>{{ area.area_id }} - {{ area.name }}</h6>
+                    <p>{{ area.controlling_authority }} | Added {{ area.created_at|date:"M d, Y" }}</p>
+                </div>
+                <div>
+                    <span class="area-type-badge">{{ area.get_area_type_display }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No operational areas added yet</p>
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{% url 'airspace:airspace_class_create' %}" class="action-btn">
+                <i class="fas fa-plus"></i>
+                Add Airspace Class
+            </a>
+            <a href="{% url 'airspace:operational_area_create' %}" class="action-btn">
+                <i class="fas fa-map-marker-alt"></i>
+                Add Operational Area
+            </a>
+            <a href="{% url 'airspace:airspace_class_list' %}" class="action-btn">
+                <i class="fas fa-list"></i>
+                View All Classes
+            </a>
+            <a href="{% url 'airspace:operational_area_list' %}" class="action-btn">
+                <i class="fas fa-map"></i>
+                View All Areas
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any dashboard-specific JavaScript here
+    console.log('Airspace dashboard loaded');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,461 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Risk Register - Flight Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-shield-alt"></i> Risk Register Management
+                </h2>
+                <div>
+                    <a href="{% url 'flight_operations:risk_register_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Risk Entry
+                    </a>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportSelected('csv')">
+                                <i class="fas fa-file-csv"></i> Export Selected as CSV
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportAll('pdf')">
+                                <i class="fas fa-file-pdf"></i> Export All as PDF
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="generateReport()">
+                                <i class="fas fa-chart-pie"></i> Risk Analysis Report
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Overview Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h4 class="text-danger">{{ high_risk_count|default:0 }}</h4>
+                    <small class="text-muted">High Risk</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h4 class="text-warning">{{ medium_risk_count|default:0 }}</h4>
+                    <small class="text-muted">Medium Risk</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h4 class="text-success">{{ low_risk_count|default:0 }}</h4>
+                    <small class="text-muted">Low Risk</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-info">{{ open_count|default:0 }}</h4>
+                    <small class="text-muted">Open</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-secondary">{{ closed_count|default:0 }}</h4>
+                    <small class="text-muted">Closed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-dark">{{ total_count|default:0 }}</h4>
+                    <small class="text-muted">Total Risks</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="Search risk description, category...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="risk_level" class="form-label">Risk Level</label>
+                            <select class="form-select" id="risk_level" name="risk_level">
+                                <option value="">All Levels</option>
+                                <option value="high" {% if request.GET.risk_level == 'high' %}selected{% endif %}>High</option>
+                                <option value="medium" {% if request.GET.risk_level == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="low" {% if request.GET.risk_level == 'low' %}selected{% endif %}>Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>Open</option>
+                                <option value="monitoring" {% if request.GET.status == 'monitoring' %}selected{% endif %}>Monitoring</option>
+                                <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                <option value="operational" {% if request.GET.category == 'operational' %}selected{% endif %}>Operational</option>
+                                <option value="weather" {% if request.GET.category == 'weather' %}selected{% endif %}>Weather</option>
+                                <option value="mechanical" {% if request.GET.category == 'mechanical' %}selected{% endif %}>Mechanical</option>
+                                <option value="human_factor" {% if request.GET.category == 'human_factor' %}selected{% endif %}>Human Factor</option>
+                                <option value="regulatory" {% if request.GET.category == 'regulatory' %}selected{% endif %}>Regulatory</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="owner" class="form-label">Risk Owner</label>
+                            <select class="form-select" id="owner" name="owner">
+                                <option value="">All Owners</option>
+                                <!-- Owner options will be populated by context -->
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Matrix -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-th"></i> Risk Matrix
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center">
+                            <thead>
+                                <tr>
+                                    <th>Probability \ Impact</th>
+                                    <th class="bg-success text-white">Low</th>
+                                    <th class="bg-warning text-dark">Medium</th>
+                                    <th class="bg-danger text-white">High</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th class="bg-danger text-white">High</th>
+                                    <td class="bg-warning">Medium</td>
+                                    <td class="bg-danger text-white">High</td>
+                                    <td class="bg-danger text-white">Critical</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-warning text-dark">Medium</th>
+                                    <td class="bg-success text-white">Low</td>
+                                    <td class="bg-warning">Medium</td>
+                                    <td class="bg-danger text-white">High</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-success text-white">Low</th>
+                                    <td class="bg-success text-white">Low</td>
+                                    <td class="bg-success text-white">Low</td>
+                                    <td class="bg-warning">Medium</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list"></i> Risk Register Entries
+                            {% if page_obj.paginator.count %}
+                                <small class="text-muted">({{ page_obj.paginator.count }} found)</small>
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">
+                                <i class="fas fa-check-square"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                                <i class="fas fa-square"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if object_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)">
+                                        </th>
+                                        <th>Risk Details</th>
+                                        <th>Risk Level</th>
+                                        <th>Category & Owner</th>
+                                        <th>Status & Dates</th>
+                                        <th width="120">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for risk in object_list %}
+                                    <tr class="{% if risk.risk_level == 'high' %}table-danger{% elif risk.risk_level == 'medium' %}table-warning{% endif %}">
+                                        <td>
+                                            <input type="checkbox" class="risk-checkbox" value="{{ risk.pk }}">
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'flight_operations:risk_register_detail' risk.pk %}" class="text-decoration-none">
+                                                        {{ risk.risk_description|truncatechars:60 }}
+                                                    </a>
+                                                </h6>
+                                                {% if risk.impact_description %}
+                                                    <small class="text-muted">Impact: {{ risk.impact_description|truncatechars:80 }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if risk.risk_level == 'high' %}
+                                                <span class="badge bg-danger">HIGH</span>
+                                            {% elif risk.risk_level == 'medium' %}
+                                                <span class="badge bg-warning text-dark">MEDIUM</span>
+                                            {% elif risk.risk_level == 'low' %}
+                                                <span class="badge bg-success">LOW</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ risk.get_risk_level_display|upper }}</span>
+                                            {% endif %}
+                                            {% if risk.probability_score and risk.impact_score %}
+                                                <br><small class="text-muted">P:{{ risk.probability_score }} I:{{ risk.impact_score }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if risk.risk_category %}
+                                                    <span class="badge bg-info">{{ risk.get_risk_category_display }}</span><br>
+                                                {% endif %}
+                                                {% if risk.risk_owner %}
+                                                    <small class="text-primary">{{ risk.risk_owner.get_full_name|default:risk.risk_owner.email }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if risk.status %}
+                                                    {% if risk.status == 'open' %}
+                                                        <span class="badge bg-danger">{{ risk.get_status_display }}</span>
+                                                    {% elif risk.status == 'monitoring' %}
+                                                        <span class="badge bg-warning text-dark">{{ risk.get_status_display }}</span>
+                                                    {% elif risk.status == 'closed' %}
+                                                        <span class="badge bg-success">{{ risk.get_status_display }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ risk.get_status_display }}</span>
+                                                    {% endif %}
+                                                    <br>
+                                                {% endif %}
+                                                <small class="text-muted">
+                                                    Created: {{ risk.date_identified|date:"M d, Y" }}<br>
+                                                    {% if risk.target_closure_date %}
+                                                        Target: {{ risk.target_closure_date|date:"M d, Y" }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                <a href="{% url 'flight_operations:risk_register_detail' risk.pk %}" class="btn btn-outline-info btn-sm" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'flight_operations:risk_register_update' risk.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-success btn-sm" title="Export">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-btn" title="Delete" 
+                                                        data-risk-id="{{ risk.pk }}" 
+                                                        data-risk-name="{{ risk.risk_description|truncatechars:50|escapejs }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <div class="card-footer">
+                            <nav aria-label="Risk register pagination">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Risk Entries Found</h5>
+                            <p class="text-muted">Start identifying and managing operational risks.</p>
+                            <a href="{% url 'flight_operations:risk_register_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First Risk Entry
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this risk entry?</p>
+                <p><strong id="deleteItemName"></strong></p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Selection functionality
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.risk-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = source.checked;
+    });
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.risk-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.risk-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+}
+
+// Export functions
+function exportSelected(format) {
+    const selected = Array.from(document.querySelectorAll('.risk-checkbox:checked')).map(cb => cb.value);
+    if (selected.length === 0) {
+        alert('Please select at least one risk entry to export.');
+        return;
+    }
+    console.log('Export selected:', selected, 'Format:', format);
+}
+
+function exportAll(format) {
+    console.log('Export all, Format:', format);
+}
+
+function generateReport() {
+    console.log('Generate risk analysis report');
+    alert('Risk analysis report generation will be implemented.');
+}
+
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Handle delete button clicks
+    $('.delete-btn').on('click', function() {
+        const riskId = $(this).data('risk-id');
+        const riskName = $(this).data('risk-name');
+        document.getElementById('deleteItemName').textContent = riskName;
+        document.getElementById('deleteForm').action = `/flight_operations/risk-register/${riskId}/delete/`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    });
+});
+</script>
+{% endblock %}

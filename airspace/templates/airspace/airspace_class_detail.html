@@ -1,0 +1,187 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ airspace_class.name }} - Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <span class="badge bg-primary fs-4 me-2">Class {{ airspace_class.airspace_class }}</span>
+                        {{ airspace_class.name }}
+                    </h2>
+                    <p class="text-muted mb-0">{{ airspace_class.get_authorization_level_display }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'airspace:airspace_class_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                    <a href="{% url 'airspace:airspace_class_update' airspace_class.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Main Details -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Airspace Class Details
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Airspace Class</label>
+                                    <div class="fw-bold">Class {{ airspace_class.airspace_class }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Class Name</label>
+                                    <div class="fw-bold">{{ airspace_class.name }}</div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">Description</label>
+                                    <div>{{ airspace_class.description }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Authorization Level</label>
+                                    <div>
+                                        <span class="badge 
+                                            {% if airspace_class.authorization_level == 'prohibited' %}bg-danger
+                                            {% elif airspace_class.authorization_level == 'casa_approval' %}bg-warning
+                                            {% elif airspace_class.authorization_level == 'atc_clearance' %}bg-info
+                                            {% elif airspace_class.authorization_level == 'notification' %}bg-secondary
+                                            {% elif airspace_class.authorization_level == 'restricted' %}bg-warning
+                                            {% else %}bg-success{% endif %}">
+                                            {{ airspace_class.get_authorization_level_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Maximum Height AGL</label>
+                                    <div>
+                                        {% if airspace_class.maximum_height_agl %}
+                                            {{ airspace_class.maximum_height_agl|floatformat:0 }} feet
+                                        {% else %}
+                                            <span class="text-muted">No height restriction</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Pilot License Required</label>
+                                    <div>{{ airspace_class.get_pilot_license_required_display }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Excluded Category Allowed</label>
+                                    <div>
+                                        {% if airspace_class.excluded_category_allowed %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">No</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if airspace_class.casa_regulation_reference %}
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">CASA Regulation Reference</label>
+                                    <div>{{ airspace_class.casa_regulation_reference }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Summary Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>Summary
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="h4 mb-0">{{ operational_areas|length }}</div>
+                                    <small class="text-muted">Operational Areas</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h4 mb-0">
+                                        {{ airspace_class.created_at|date:"M Y" }}
+                                    </div>
+                                    <small class="text-muted">Created</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Operational Areas -->
+                    {% if operational_areas %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>Recent Areas ({{ operational_areas|length }})
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for area in operational_areas %}
+                                <a href="{% url 'airspace:operational_area_detail' area.pk %}" 
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ area.area_id }}</h6>
+                                            <p class="mb-1 small">{{ area.name }}</p>
+                                            <small class="text-muted">{{ area.get_area_type_display }}</small>
+                                        </div>
+                                        <small class="text-muted">{{ area.created_at|date:"M d" }}</small>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+                            {% if operational_areas|length >= 10 %}
+                            <div class="card-footer">
+                                <a href="{% url 'airspace:operational_area_list' %}?airspace_class={{ airspace_class.pk }}" 
+                                   class="btn btn-sm btn-outline-primary w-100">
+                                    View All Areas
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Metadata -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Metadata
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Created</small>
+                            <div>{{ airspace_class.created_at|date:"F d, Y \a\t g:i A" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Last Updated</small>
+                            <div>{{ airspace_class.updated_at|date:"F d, Y \a\t g:i A" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

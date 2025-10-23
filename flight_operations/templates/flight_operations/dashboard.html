@@ -1,0 +1,247 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Flight Operations Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-plane"></i> Flight Operations Dashboard</h2>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'flight_operations:mission_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Mission
+                    </a>
+                    <a href="{% url 'flight_operations:flight_plan_create' %}" class="btn btn-success">
+                        <i class="fas fa-route"></i> New Flight Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Active Missions</h5>
+                            <h3 class="text-primary">{{ active_missions_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tasks fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Flight Hours (Month)</h5>
+                            <h3 class="text-success">{{ monthly_flight_hours|floatformat:1 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Pending Approvals</h5>
+                            <h3 class="text-warning">{{ pending_approvals_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">High Risk Items</h5>
+                            <h3 class="text-danger">{{ high_risk_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Cards -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h4>Operations Management</h4>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-tasks"></i> Missions</h5>
+                </div>
+                <div class="card-body">
+                    <p>Manage flight missions and operations</p>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'flight_operations:mission_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> View All Missions
+                        </a>
+                        <a href="{% url 'flight_operations:mission_create' %}" class="btn btn-outline-success">
+                            <i class="fas fa-plus"></i> Create Mission
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <div class="col-12 text-center">
+                    <a href="{% url 'flight_operations:flight_plan_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus-circle"></i> Create New Flight Plan
+                    </a>
+                </div>        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-clipboard-list"></i> Flight Logs</h5>
+                </div>
+                <div class="card-body">
+                    <p>Record and review flight operations</p>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'flight_operations:flight_log_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> View Flight Logs
+                        </a>
+                        <a href="{% url 'flight_operations:flight_log_create' %}" class="btn btn-outline-success">
+                            <i class="fas fa-plus"></i> Create Flight Log
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Risk Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Monitor and manage operational risks</p>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'flight_operations:risk_register_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> Risk Register
+                        </a>
+                        <a href="{% url 'flight_operations:risk_register_create' %}" class="btn btn-outline-success">
+                            <i class="fas fa-plus"></i> Add Risk Item
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="fas fa-hard-hat"></i> Safety Assessments</h5>
+                </div>
+                <div class="card-body">
+                    <p>Conduct job safety assessments</p>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'flight_operations:jsa_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> Safety Assessments
+                        </a>
+                        <a href="{% url 'flight_operations:jsa_create' %}" class="btn btn-outline-success">
+                            <i class="fas fa-plus"></i> New Assessment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_missions %}
+                        <h6>Recent Missions:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Mission</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mission in recent_missions %}
+                                    <tr>
+                                        <td>{{ mission.name }}</td>
+                                        <td>{{ mission.get_mission_type_display }}</td>
+                                        <td>
+                                            {% if mission.status == 'active' %}
+                                                <span class="badge bg-success">{{ mission.get_status_display }}</span>
+                                            {% elif mission.status == 'planning' %}
+                                                <span class="badge bg-warning">{{ mission.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ mission.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ mission.planned_start_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'flight_operations:mission_detail' mission.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent missions found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-refresh dashboard every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+    
+    // Add tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

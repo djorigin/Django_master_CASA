@@ -1,0 +1,317 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Core Operations Dashboard - RPAS Operations Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .metric-card h3 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+    
+    .metric-card p {
+        margin: 0;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+    
+    .action-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .action-card:hover {
+        background: #f8f9fa;
+        border-color: #007bff;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .action-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: #007bff;
+    }
+    
+    .recent-section {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-top: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-draft { background-color: #f8f9fa; color: #6c757d; }
+    .status-under-review { background-color: #fff3cd; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-active { background-color: #d1ecf1; color: #0c5460; }
+    .status-superseded { background-color: #f8d7da; color: #721c24; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Core Operations Dashboard</h2>
+                    <p class="text-muted mb-0">Standard Operating Procedures, Training, and Operations Manuals</p>
+                </div>
+                <div class="text-end">
+                    <p class="mb-0"><small class="text-muted">Last updated: <span id="last-updated">{{ now|date:"M d, Y H:i" }}</span></small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h3 id="sop-count">{{ total_sops }}</h3>
+                <p>Standard Operating Procedures</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h3 id="training-count">{{ total_training }}</h3>
+                <p>Training Syllabuses</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h3 id="manual-count">{{ total_manuals }}</h3>
+                <p>Operations Manuals</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h3 id="pending-count">{{ pending_approvals }}</h3>
+                <p>Pending Approvals</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">Quick Actions</h4>
+            <div class="quick-actions-grid">
+                <a href="{% url 'core:sop_create' %}" class="action-card">
+                    <div class="action-icon">📋</div>
+                    <h5>Create SOP</h5>
+                    <p class="text-muted">Create new Standard Operating Procedure</p>
+                </a>
+                
+                <a href="{% url 'core:training_syllabus_create' %}" class="action-card">
+                    <div class="action-icon">🎓</div>
+                    <h5>Create Training</h5>
+                    <p class="text-muted">Develop new Training Syllabus</p>
+                </a>
+                
+                <a href="{% url 'core:operations_manual_create' %}" class="action-card">
+                    <div class="action-icon">📖</div>
+                    <h5>Create Manual</h5>
+                    <p class="text-muted">Create RPAS Operations Manual</p>
+                </a>
+                
+                <a href="{% url 'core:sop_list' %}" class="action-card">
+                    <div class="action-icon">📊</div>
+                    <h5>View SOPs</h5>
+                    <p class="text-muted">Manage Standard Operating Procedures</p>
+                </a>
+                
+                <a href="{% url 'core:training_syllabus_list' %}" class="action-card">
+                    <div class="action-icon">📚</div>
+                    <h5>View Training</h5>
+                    <p class="text-muted">Manage Training Syllabuses</p>
+                </a>
+                
+                <a href="{% url 'core:operations_manual_list' %}" class="action-card">
+                    <div class="action-icon">📋</div>
+                    <h5>View Manuals</h5>
+                    <p class="text-muted">Manage Operations Manuals</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="recent-section">
+                <h5 class="mb-3">Recent SOPs</h5>
+                {% if recent_sops %}
+                    {% for sop in recent_sops %}
+                        <div class="recent-item">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{% url 'core:sop_detail' sop.pk %}" class="text-decoration-none">
+                                        {{ sop.sop_id }} - {{ sop.title|truncatechars:40 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">{{ sop.created_at|timesince }} ago</small>
+                            </div>
+                            <span class="status-badge status-{{ sop.status|lower }}">{{ sop.get_status_display }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">No SOPs created yet</p>
+                {% endif %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'core:sop_list' %}" class="btn btn-outline-primary btn-sm">View All SOPs</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="recent-section">
+                <h5 class="mb-3">Recent Training Syllabuses</h5>
+                {% if recent_training %}
+                    {% for training in recent_training %}
+                        <div class="recent-item">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{% url 'core:training_syllabus_detail' training.pk %}" class="text-decoration-none">
+                                        {{ training.title|truncatechars:40 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">{{ training.created_at|timesince }} ago</small>
+                            </div>
+                            <span class="status-badge status-{{ training.status|lower }}">{{ training.get_status_display }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">No training syllabuses created yet</p>
+                {% endif %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'core:training_syllabus_list' %}" class="btn btn-outline-primary btn-sm">View All Training</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operations Manuals -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="recent-section">
+                <h5 class="mb-3">Recent Operations Manuals</h5>
+                {% if recent_manuals %}
+                    <div class="row">
+                        {% for manual in recent_manuals %}
+                            <div class="col-md-6 mb-3">
+                                <div class="recent-item">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'core:operations_manual_detail' manual.pk %}" class="text-decoration-none">
+                                                {{ manual.manual_id }} - {{ manual.title|truncatechars:35 }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">{{ manual.created_at|timesince }} ago • {{ manual.get_manual_type_display }}</small>
+                                    </div>
+                                    <span class="status-badge status-{{ manual.approval_status|lower }}">{{ manual.get_approval_status_display }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">No operations manuals created yet</p>
+                {% endif %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'core:operations_manual_list' %}" class="btn btn-outline-primary btn-sm">View All Manuals</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard stats every 5 minutes
+    function refreshDashboardStats() {
+        fetch('{% url "core:ajax_dashboard_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('sop-count').textContent = data.stats.total_sops;
+                    document.getElementById('training-count').textContent = data.stats.total_training;
+                    document.getElementById('manual-count').textContent = data.stats.total_manuals;
+                    document.getElementById('pending-count').textContent = data.stats.pending_approvals;
+                    document.getElementById('last-updated').textContent = new Date().toLocaleString();
+                }
+            })
+            .catch(error => {
+                console.log('Dashboard refresh error:', error);
+            });
+    }
+
+    // Refresh every 5 minutes
+    setInterval(refreshDashboardStats, 300000);
+    
+    // Add hover effects for action cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const actionCards = document.querySelectorAll('.action-card');
+        actionCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
+{% endblock %}

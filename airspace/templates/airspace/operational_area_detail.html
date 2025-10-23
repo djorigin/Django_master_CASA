@@ -1,0 +1,371 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ operational_area.area_id }} - Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <span class="badge bg-primary fs-4 me-2">{{ operational_area.area_id }}</span>
+                        {{ operational_area.name }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {{ operational_area.get_area_type_display }} | 
+                        {{ operational_area.controlling_authority }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'airspace:operational_area_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                    <a href="{% url 'airspace:operational_area_update' operational_area.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Main Details -->
+                <div class="col-lg-8">
+                    <!-- Basic Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Basic Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Area ID</label>
+                                    <div class="fw-bold">{{ operational_area.area_id }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Area Name</label>
+                                    <div class="fw-bold">{{ operational_area.name }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Area Type</label>
+                                    <div>
+                                        <span class="badge bg-info">{{ operational_area.get_area_type_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Airspace Class</label>
+                                    <div>
+                                        <span class="badge bg-primary">Class {{ operational_area.airspace_class.airspace_class }}</span>
+                                        <small class="text-muted ms-2">{{ operational_area.airspace_class.name }}</small>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">Description</label>
+                                    <div>{{ operational_area.description }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Geographic Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-globe me-2"></i>Geographic Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">Center Latitude</label>
+                                    <div class="fw-bold">{{ operational_area.center_latitude }}°</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">Center Longitude</label>
+                                    <div class="fw-bold">{{ operational_area.center_longitude }}°</div>
+                                </div>
+                                {% if operational_area.radius_nautical_miles %}
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">Radius</label>
+                                    <div class="fw-bold">{{ operational_area.radius_nautical_miles }} NM</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Altitude Restrictions -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-arrows-alt-v me-2"></i>Altitude Restrictions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% if operational_area.floor_altitude_amsl or operational_area.ceiling_altitude_amsl %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">AMSL Limits</label>
+                                    <div>
+                                        {% if operational_area.floor_altitude_amsl %}
+                                        Floor: {{ operational_area.floor_altitude_amsl|floatformat:0 }} ft<br>
+                                        {% endif %}
+                                        {% if operational_area.ceiling_altitude_amsl %}
+                                        Ceiling: {{ operational_area.ceiling_altitude_amsl|floatformat:0 }} ft
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if operational_area.floor_height_agl or operational_area.ceiling_height_agl %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">AGL Limits</label>
+                                    <div>
+                                        {% if operational_area.floor_height_agl %}
+                                        Floor: {{ operational_area.floor_height_agl|floatformat:0 }} ft AGL<br>
+                                        {% endif %}
+                                        {% if operational_area.ceiling_height_agl %}
+                                        Ceiling: {{ operational_area.ceiling_height_agl|floatformat:0 }} ft AGL
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if not operational_area.floor_altitude_amsl and not operational_area.ceiling_altitude_amsl and not operational_area.floor_height_agl and not operational_area.ceiling_height_agl %}
+                                <div class="col-12">
+                                    <p class="text-muted">No altitude restrictions specified</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if operational_area.floor_altitude_amsl or operational_area.ceiling_altitude_amsl or operational_area.floor_height_agl or operational_area.ceiling_height_agl %}
+                            <div class="alert alert-info mt-3">
+                                <strong>Altitude Summary:</strong> {{ operational_area.altitude_range_description }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-address-book me-2"></i>Contact Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label text-muted">Controlling Authority</label>
+                                    <div class="fw-bold">{{ operational_area.controlling_authority }}</div>
+                                </div>
+                                {% if operational_area.contact_frequency %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Contact Frequency</label>
+                                    <div>{{ operational_area.contact_frequency }}</div>
+                                </div>
+                                {% endif %}
+                                {% if operational_area.contact_phone %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Contact Phone</label>
+                                    <div>{{ operational_area.contact_phone }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    {% if operational_area.operational_notes or operational_area.casa_reference %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-alt me-2"></i>Additional Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if operational_area.operational_notes %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Operational Notes</label>
+                                <div>{{ operational_area.operational_notes|linebreaks }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if operational_area.casa_reference %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted">CASA Reference</label>
+                                <div>{{ operational_area.casa_reference }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Status Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-traffic-light me-2"></i>Status & Operations
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Current Status</label>
+                                <div>
+                                    <span class="badge 
+                                        {% if operational_area.status == 'active' %}bg-success
+                                        {% elif operational_area.status == 'inactive' %}bg-secondary
+                                        {% elif operational_area.status == 'temporary' %}bg-warning
+                                        {% else %}bg-info{% endif %} fs-6">
+                                        {{ operational_area.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted">RPA Operations</label>
+                                <div>
+                                    {% if operational_area.rpa_operations_permitted %}
+                                        <span class="badge bg-success">Permitted</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Not Permitted</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Authorization Required</label>
+                                <div>
+                                    {% if operational_area.authorization_required %}
+                                        <span class="badge bg-warning">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-success">No</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if operational_area.is_currently_active %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Currently Active</strong>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Not Currently Active</strong>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Time Restrictions -->
+                    {% if operational_area.effective_from or operational_area.effective_until %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-clock me-2"></i>Time Restrictions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if operational_area.effective_from %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Effective From</label>
+                                <div>{{ operational_area.effective_from|date:"F d, Y \a\t g:i A" }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if operational_area.effective_until %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Effective Until</label>
+                                <div>{{ operational_area.effective_until|date:"F d, Y \a\t g:i A" }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-bolt me-2"></i>Quick Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'airspace:operational_area_update' operational_area.pk %}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit me-2"></i>Edit Area
+                                </a>
+                                <a href="{% url 'airspace:airspace_class_detail' operational_area.airspace_class.pk %}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-layer-group me-2"></i>View Airspace Class
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                        onclick="deleteOperationalArea()">
+                                    <i class="fas fa-trash me-2"></i>Delete Area
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info me-2"></i>Metadata
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Created</small>
+                            <div>{{ operational_area.created_at|date:"F d, Y \a\t g:i A" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Last Updated</small>
+                            <div>{{ operational_area.updated_at|date:"F d, Y \a\t g:i A" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteOperationalArea() {
+    if (confirm(`Are you sure you want to delete operational area "${operational_area.area_id}"?`)) {
+        fetch(`{% url 'airspace:operational_area_delete' operational_area.pk %}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.href = '{% url "airspace:operational_area_list" %}';
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error deleting operational area');
+        });
+    }
+}
+</script>
+{% endblock %}

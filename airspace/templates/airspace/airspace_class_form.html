@@ -1,0 +1,187 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block page_title %}
+    {% if title %}{{ title }}{% else %}Airspace Class Form{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="fas fa-layer-group me-2"></i>
+                        {{ title|default:"Airspace Class Form" }}
+                    </h2>
+                    {% if airspace_class %}
+                    <p class="text-muted mb-0">Class {{ airspace_class.airspace_class }} - {{ airspace_class.name }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'airspace:airspace_class_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                    {% if airspace_class %}
+                    <a href="{% url 'airspace:airspace_class_detail' airspace_class.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-2"></i>View Details
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <!-- Airspace Class -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.airspace_class.id_for_label }}" class="form-label">
+                                    {{ form.airspace_class.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.airspace_class }}
+                                {% if form.airspace_class.help_text %}
+                                <div class="form-text">{{ form.airspace_class.help_text }}</div>
+                                {% endif %}
+                                {% if form.airspace_class.errors %}
+                                <div class="text-danger small">{{ form.airspace_class.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    {{ form.name.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.help_text %}
+                                <div class="form-text">{{ form.name.help_text }}</div>
+                                {% endif %}
+                                {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                {{ form.description.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                            {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <!-- Authorization Level -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.authorization_level.id_for_label }}" class="form-label">
+                                    {{ form.authorization_level.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.authorization_level }}
+                                {% if form.authorization_level.help_text %}
+                                <div class="form-text">{{ form.authorization_level.help_text }}</div>
+                                {% endif %}
+                                {% if form.authorization_level.errors %}
+                                <div class="text-danger small">{{ form.authorization_level.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Maximum Height AGL -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.maximum_height_agl.id_for_label }}" class="form-label">
+                                    {{ form.maximum_height_agl.label }}
+                                </label>
+                                {{ form.maximum_height_agl }}
+                                {% if form.maximum_height_agl.help_text %}
+                                <div class="form-text">{{ form.maximum_height_agl.help_text }}</div>
+                                {% endif %}
+                                {% if form.maximum_height_agl.errors %}
+                                <div class="text-danger small">{{ form.maximum_height_agl.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Pilot License Required -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.pilot_license_required.id_for_label }}" class="form-label">
+                                    {{ form.pilot_license_required.label }}
+                                </label>
+                                {{ form.pilot_license_required }}
+                                {% if form.pilot_license_required.help_text %}
+                                <div class="form-text">{{ form.pilot_license_required.help_text }}</div>
+                                {% endif %}
+                                {% if form.pilot_license_required.errors %}
+                                <div class="text-danger small">{{ form.pilot_license_required.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- CASA Regulation Reference -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.casa_regulation_reference.id_for_label }}" class="form-label">
+                                    {{ form.casa_regulation_reference.label }}
+                                </label>
+                                {{ form.casa_regulation_reference }}
+                                {% if form.casa_regulation_reference.help_text %}
+                                <div class="form-text">{{ form.casa_regulation_reference.help_text }}</div>
+                                {% endif %}
+                                {% if form.casa_regulation_reference.errors %}
+                                <div class="text-danger small">{{ form.casa_regulation_reference.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Excluded Category Allowed -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.excluded_category_allowed }}
+                                <label class="form-check-label" for="{{ form.excluded_category_allowed.id_for_label }}">
+                                    {{ form.excluded_category_allowed.label }}
+                                </label>
+                                {% if form.excluded_category_allowed.help_text %}
+                                <div class="form-text">{{ form.excluded_category_allowed.help_text }}</div>
+                                {% endif %}
+                                {% if form.excluded_category_allowed.errors %}
+                                <div class="text-danger small">{{ form.excluded_category_allowed.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'airspace:airspace_class_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if airspace_class %}Update Airspace Class{% else %}Create Airspace Class{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block page_title %}Operational Areas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Operational Areas
+                    </h2>
+                    <p class="text-muted mb-0">Defined operational areas for RPA operations</p>
+                </div>
+                <a href="{% url 'airspace:operational_area_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Operational Area
+                </a>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_query }}" placeholder="Search areas, IDs, authorities...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="area_type" class="form-label">Area Type</label>
+                            <select class="form-select" id="area_type" name="area_type">
+                                <option value="">All Types</option>
+                                {% for value, label in area_type_choices %}
+                                <option value="{{ value }}" {% if area_type == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="airspace_class" class="form-label">Airspace Class</label>
+                            <select class="form-select" id="airspace_class" name="airspace_class">
+                                <option value="">All Classes</option>
+                                {% for ac in airspace_classes %}
+                                <option value="{{ ac.pk }}" {% if airspace_class_id == ac.pk|stringformat:"s" %}selected{% endif %}>
+                                    Class {{ ac.airspace_class }} - {{ ac.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'airspace:operational_area_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            {% if page_obj.object_list %}
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Area ID</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Airspace Class</th>
+                                    <th>Status</th>
+                                    <th>Controlling Authority</th>
+                                    <th width="120">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for area in page_obj %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ area.area_id }}</strong>
+                                        {% if area.authorization_required %}
+                                        <span class="badge bg-warning ms-1" title="Authorization Required">Auth</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ area.name|truncatechars:40 }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ area.get_area_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">Class {{ area.airspace_class.airspace_class }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if area.status == 'active' %}bg-success
+                                            {% elif area.status == 'inactive' %}bg-secondary
+                                            {% elif area.status == 'temporary' %}bg-warning
+                                            {% else %}bg-info{% endif %}">
+                                            {{ area.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ area.controlling_authority|truncatechars:30 }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'airspace:operational_area_detail' area.pk %}" 
+                                               class="btn btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'airspace:operational_area_update' area.pk %}" 
+                                               class="btn btn-outline-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&area_type={{ area_type }}&status={{ status }}&airspace_class={{ airspace_class_id }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&search={{ search_query }}&area_type={{ area_type }}&status={{ status }}&airspace_class={{ airspace_class_id }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&area_type={{ area_type }}&status={{ status }}&airspace_class={{ airspace_class_id }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- No Results -->
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                    <h4>No Operational Areas Found</h4>
+                    <p class="text-muted">
+                        {% if search_query or area_type or status or airspace_class_id %}
+                        No operational areas match your search criteria. Try adjusting your filters.
+                        {% else %}
+                        No operational areas have been created yet. Add your first operational area to get started.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'airspace:operational_area_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add First Operational Area
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

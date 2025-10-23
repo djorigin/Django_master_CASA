@@ -1,0 +1,491 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Flight Plan{% else %}Create Flight Plan{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-route"></i>
+                    {% if form.instance.pk %}Edit Flight Plan: {{ form.instance.flight_number }}{% else %}Create New Flight Plan{% endif %}
+                </h2>
+                <div>
+                    <a href="{% url 'flight_operations:flight_plan_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    {% if form.instance.pk %}
+                        <a href="{% url 'flight_operations:flight_plan_detail' form.instance.pk %}" class="btn btn-info">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Information -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Flight Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.flight_number.id_for_label }}" class="form-label">Flight Number *</label>
+                                {{ form.flight_number }}
+                                {% if form.flight_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.flight_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.mission.id_for_label }}" class="form-label">Mission</label>
+                                {{ form.mission }}
+                                {% if form.mission.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.mission.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.purpose.id_for_label }}" class="form-label">Purpose</label>
+                            {{ form.purpose }}
+                            {% if form.purpose.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.purpose.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.aircraft.id_for_label }}" class="form-label">Aircraft *</label>
+                                {{ form.aircraft }}
+                                {% if form.aircraft.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.aircraft.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.pilot.id_for_label }}" class="form-label">Pilot *</label>
+                                {{ form.pilot }}
+                                {% if form.pilot.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.pilot.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-map"></i> Route Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.departure_airport.id_for_label }}" class="form-label">Departure Airport *</label>
+                                {{ form.departure_airport }}
+                                {% if form.departure_airport.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.departure_airport.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.arrival_airport.id_for_label }}" class="form-label">Arrival Airport *</label>
+                                {{ form.arrival_airport }}
+                                {% if form.arrival_airport.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.arrival_airport.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.route.id_for_label }}" class="form-label">Planned Route</label>
+                            {{ form.route }}
+                            {% if form.route.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.route.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.altitude.id_for_label }}" class="form-label">Altitude (ft)</label>
+                                {{ form.altitude }}
+                                {% if form.altitude.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.altitude.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.airspeed.id_for_label }}" class="form-label">Airspeed (knots)</label>
+                                {{ form.airspeed }}
+                                {% if form.airspeed.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.airspeed.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.estimated_duration.id_for_label }}" class="form-label">Duration (hours)</label>
+                                {{ form.estimated_duration }}
+                                {% if form.estimated_duration.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.estimated_duration.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-calendar"></i> Scheduling</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.scheduled_departure.id_for_label }}" class="form-label">Scheduled Departure *</label>
+                                {{ form.scheduled_departure }}
+                                {% if form.scheduled_departure.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.scheduled_departure.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.scheduled_arrival.id_for_label }}" class="form-label">Scheduled Arrival</label>
+                                {{ form.scheduled_arrival }}
+                                {% if form.scheduled_arrival.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.scheduled_arrival.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather & Conditions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cloud"></i> Weather & Conditions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.weather_conditions.id_for_label }}" class="form-label">Weather Conditions</label>
+                                {{ form.weather_conditions }}
+                                {% if form.weather_conditions.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.weather_conditions.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fuel_required.id_for_label }}" class="form-label">Fuel Required (liters)</label>
+                                {{ form.fuel_required }}
+                                {% if form.fuel_required.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.fuel_required.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.special_instructions.id_for_label }}" class="form-label">Special Instructions</label>
+                            {{ form.special_instructions }}
+                            {% if form.special_instructions.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.special_instructions.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Status & Approval -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-check-circle"></i> Approval Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.approval_status.id_for_label }}" class="form-label">Status *</label>
+                            {{ form.approval_status }}
+                            {% if form.approval_status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.approval_status.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.instance.pk and form.instance.approval_status == 'rejected' %}
+                            <div class="mb-3">
+                                <label for="{{ form.approval_notes.id_for_label }}" class="form-label">Approval Notes</label>
+                                {{ form.approval_notes }}
+                                {% if form.approval_notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.approval_notes.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if form.instance.pk %}Update Flight Plan{% else %}Create Flight Plan{% endif %}
+                            </button>
+                            
+                            {% if form.instance.pk %}
+                                <a href="{% url 'flight_operations:flight_plan_detail' form.instance.pk %}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                
+                                {% if form.instance.approval_status == 'pending' %}
+                                    <button type="button" class="btn btn-success" onclick="updateApproval('approved')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="updateApproval('rejected')">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                {% endif %}
+                                
+                                {% if form.instance.approval_status == 'approved' %}
+                                    <a href="{% url 'flight_operations:flight_log_create' %}?flight_plan={{ form.instance.pk }}" class="btn btn-success">
+                                        <i class="fas fa-clipboard-list"></i> Create Flight Log
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <a href="{% url 'flight_operations:flight_plan_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Calculations -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-calculator"></i> Flight Calculations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <h6>Estimated Distance</h6>
+                                <span id="estimatedDistance" class="fs-5 text-primary">-- nm</span>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Flight Time</h6>
+                                <span id="flightTime" class="fs-5 text-success">-- hours</span>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Fuel Required</h6>
+                                <span id="fuelEstimate" class="fs-5 text-warning">-- liters</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="calculateFlight()">
+                            <i class="fas fa-calculator"></i> Calculate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Help -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-question-circle"></i> Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <strong>Flight Planning Tips:</strong><br>
+                            • Check NOTAMs and weather before departure<br>
+                            • Ensure aircraft is properly maintained<br>
+                            • File flight plan with ATC if required<br>
+                            • Calculate fuel requirements with reserves<br>
+                            • Brief crew on route and emergency procedures<br><br>
+                            
+                            <strong>Approval Process:</strong><br>
+                            • Pending: Awaiting approval<br>
+                            • Approved: Ready for execution<br>
+                            • Rejected: Needs revision<br>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Approval Update Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Approval Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to <span id="approvalAction"></span> this flight plan?</p>
+                <div id="notesSection" style="display: none;">
+                    <div class="mb-3">
+                        <label for="approvalNotesInput" class="form-label">Notes (required for rejection):</label>
+                        <textarea class="form-control" id="approvalNotesInput" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="approvalForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_approval">
+                    <input type="hidden" name="approval_status" id="approvalStatusValue">
+                    <input type="hidden" name="approval_notes" id="approvalNotesValue">
+                    <button type="submit" class="btn btn-primary" id="approvalSubmit">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateApproval(status) {
+    const action = status === 'approved' ? 'approve' : 'reject';
+    document.getElementById('approvalAction').textContent = action;
+    document.getElementById('approvalStatusValue').value = status;
+    
+    if (status === 'rejected') {
+        document.getElementById('notesSection').style.display = 'block';
+        document.getElementById('approvalSubmit').onclick = function() {
+            document.getElementById('approvalNotesValue').value = 
+                document.getElementById('approvalNotesInput').value;
+        };
+    } else {
+        document.getElementById('notesSection').style.display = 'none';
+    }
+    
+    new bootstrap.Modal(document.getElementById('approvalModal')).show();
+}
+
+function calculateFlight() {
+    // Simple flight calculations (placeholder)
+    const duration = parseFloat($('#id_estimated_duration').val()) || 0;
+    const airspeed = parseFloat($('#id_airspeed').val()) || 100;
+    
+    if (duration > 0) {
+        const distance = duration * airspeed;
+        const fuel = duration * 25; // Rough estimate: 25 L/hour
+        
+        $('#estimatedDistance').text(Math.round(distance) + ' nm');
+        $('#flightTime').text(duration + ' hours');
+        $('#fuelEstimate').text(Math.round(fuel) + ' liters');
+        
+        // Update fuel required field
+        if (!$('#id_fuel_required').val()) {
+            $('#id_fuel_required').val(Math.round(fuel * 1.2)); // 20% reserve
+        }
+    }
+}
+
+$(document).ready(function() {
+    // Initialize datetime pickers
+    $('input[type="datetime-local"]').each(function() {
+        if (!this.value && this.name.includes('scheduled_departure')) {
+            // Set default departure time to tomorrow at 9 AM
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(9, 0, 0, 0);
+            this.value = tomorrow.toISOString().slice(0, 16);
+        }
+    });
+    
+    // Auto-calculate arrival time when departure and duration change
+    $('#id_scheduled_departure, #id_estimated_duration').on('change', function() {
+        var departure = $('#id_scheduled_departure').val();
+        var duration = parseFloat($('#id_estimated_duration').val());
+        
+        if (departure && duration) {
+            var dep = new Date(departure);
+            var arr = new Date(dep.getTime() + (duration * 60 * 60 * 1000));
+            $('#id_scheduled_arrival').val(arr.toISOString().slice(0, 16));
+        }
+        
+        calculateFlight();
+    });
+    
+    // Auto-calculate flight parameters
+    $('#id_airspeed, #id_altitude').on('change', calculateFlight);
+    
+    // Form validation
+    $('form').on('submit', function(e) {
+        var isValid = true;
+        var requiredFields = ['flight_number', 'aircraft', 'pilot', 'departure_airport', 'arrival_airport', 'scheduled_departure', 'approval_status'];
+        
+        requiredFields.forEach(function(field) {
+            var input = $('#id_' + field);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+    
+    // Remove validation classes on input
+    $('input, select, textarea').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+    
+    // Load mission data if mission is pre-selected
+    {% if request.GET.mission %}
+    $('#id_mission').val('{{ request.GET.mission }}');
+    {% endif %}
+});
+</script>
+{% endblock %}

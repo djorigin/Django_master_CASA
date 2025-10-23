@@ -1,0 +1,385 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Flight Logs - Flight Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-clipboard-list"></i> Flight Log Management
+                </h2>
+                <div>
+                    <a href="{% url 'flight_operations:flight_log_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Log Entry
+                    </a>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportSelected('csv')">
+                                <i class="fas fa-file-csv"></i> Export Selected as CSV
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportAll('pdf')">
+                                <i class="fas fa-file-pdf"></i> Export All as PDF
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="Search flight ID, pilot, aircraft...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="aircraft" class="form-label">Aircraft</label>
+                            <select class="form-select" id="aircraft" name="aircraft">
+                                <option value="">All Aircraft</option>
+                                <!-- Aircraft options will be populated by context -->
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="pilot" class="form-label">Pilot</label>
+                            <select class="form-select" id="pilot" name="pilot">
+                                <option value="">All Pilots</option>
+                                <!-- Pilot options will be populated by context -->
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label">Date To</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-primary">{{ total_count|default:0 }}</h5>
+                    <small class="text-muted">Total Flights</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-success">{{ today_count|default:0 }}</h5>
+                    <small class="text-muted">Today</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-info">{{ week_count|default:0 }}</h5>
+                    <small class="text-muted">This Week</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-warning">{{ total_hours|default:0 }}</h5>
+                    <small class="text-muted">Total Hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-secondary">{{ avg_duration|default:0 }}</h5>
+                    <small class="text-muted">Avg Duration</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="text-muted">{{ page_obj.paginator.count|default:0 }}</h5>
+                    <small class="text-muted">Filtered</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list"></i> Flight Log Entries
+                            {% if page_obj.paginator.count %}
+                                <small class="text-muted">({{ page_obj.paginator.count }} found)</small>
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">
+                                <i class="fas fa-check-square"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                                <i class="fas fa-square"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if object_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)">
+                                        </th>
+                                        <th>Flight Details</th>
+                                        <th>Aircraft & Pilot</th>
+                                        <th>Duration & Dates</th>
+                                        <th>Performance</th>
+                                        <th width="120">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in object_list %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="log-checkbox" value="{{ log.pk }}">
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'flight_operations:flight_log_detail' log.pk %}" class="text-decoration-none">
+                                                        {{ log.flight_id|default:"Flight Log #"|add:log.pk }}
+                                                    </a>
+                                                </h6>
+                                                {% if log.flight_plan %}
+                                                    <small class="text-muted">Plan: {{ log.flight_plan.flight_plan_id }}</small><br>
+                                                {% endif %}
+                                                {% if log.departure_location and log.arrival_location %}
+                                                    <small class="text-muted">{{ log.departure_location }} → {{ log.arrival_location }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if log.aircraft %}
+                                                    <strong>{{ log.aircraft.registration }}</strong><br>
+                                                    <small class="text-muted">{{ log.aircraft.model }}</small><br>
+                                                {% endif %}
+                                                {% if log.pilot_in_command %}
+                                                    <small class="text-primary">{{ log.pilot_in_command.get_full_name|default:log.pilot_in_command.email }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if log.actual_departure_time %}
+                                                    <strong>{{ log.actual_departure_time|date:"M d, H:i" }}</strong><br>
+                                                {% endif %}
+                                                {% if log.actual_arrival_time %}
+                                                    <small class="text-muted">to {{ log.actual_arrival_time|time:"H:i" }}</small><br>
+                                                {% endif %}
+                                                {% if log.flight_duration %}
+                                                    <small class="text-success">{{ log.flight_duration }} min</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if log.distance_flown %}
+                                                    <small class="text-muted">{{ log.distance_flown }} km</small><br>
+                                                {% endif %}
+                                                {% if log.fuel_used %}
+                                                    <small class="text-muted">{{ log.fuel_used }}L fuel</small><br>
+                                                {% endif %}
+                                                {% if log.max_altitude_reached %}
+                                                    <small class="text-muted">{{ log.max_altitude_reached }}ft max</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                <a href="{% url 'flight_operations:flight_log_detail' log.pk %}" class="btn btn-outline-info btn-sm" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'flight_operations:flight_log_update' log.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-success btn-sm" title="Export">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-btn" title="Delete" 
+                                                        data-log-id="{{ log.pk }}" 
+                                                        data-log-name="{{ log.flight_id|default:"Flight Log #"|add:log.pk|escapejs }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <div class="card-footer">
+                            <nav aria-label="Flight log pagination">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Flight Logs Found</h5>
+                            <p class="text-muted">Start logging your flight operations.</p>
+                            <a href="{% url 'flight_operations:flight_log_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First Log Entry
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this flight log entry?</p>
+                <p><strong id="deleteItemName"></strong></p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Selection functionality
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.log-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = source.checked;
+    });
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.log-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.log-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+}
+
+// Export functions
+function exportSelected(format) {
+    const selected = Array.from(document.querySelectorAll('.log-checkbox:checked')).map(cb => cb.value);
+    if (selected.length === 0) {
+        alert('Please select at least one flight log to export.');
+        return;
+    }
+    console.log('Export selected:', selected, 'Format:', format);
+}
+
+function exportAll(format) {
+    console.log('Export all, Format:', format);
+}
+
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Handle delete button clicks
+    $('.delete-btn').on('click', function() {
+        const logId = $(this).data('log-id');
+        const logName = $(this).data('log-name');
+        document.getElementById('deleteItemName').textContent = logName;
+        document.getElementById('deleteForm').action = `/flight_operations/flight-logs/${logId}/delete/`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    });
+});
+</script>
+{% endblock %}

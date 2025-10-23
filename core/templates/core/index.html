@@ -335,7 +335,14 @@
                     <div class="action-title">{% trans "Manage Staff" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'aircraft:dashboard' %}" class="action-tile">
+                    <div class="action-icon action-red">
+                        <i class="fas fa-plane"></i>
+                    </div>
+                    <div class="action-title">{% trans "Aircraft Fleet" %}</div>
+                </a>
+                
+                <a href="{% url 'flight_operations:dashboard' %}" class="action-tile">
                     <div class="action-icon action-red">
                         <i class="fas fa-helicopter"></i>
                     </div>
@@ -349,18 +356,32 @@
                     <div class="action-title">{% trans "Reports" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'airspace:dashboard' %}" class="action-tile">
                     <div class="action-icon action-purple">
-                        <i class="fas fa-calendar"></i>
+                        <i class="fas fa-map"></i>
                     </div>
-                    <div class="action-title">{% trans "Schedule" %}</div>
+                    <div class="action-title">{% trans "Airspace" %}</div>
+                </a>
+                
+                <a href="{% url 'core:dashboard' %}" class="action-tile">
+                    <div class="action-icon action-orange">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="action-title">{% trans "Core Operations" %}</div>
                 </a>
                 
                 <a href="#" class="action-tile">
-                    <div class="action-icon action-orange">
+                    <div class="action-icon action-green">
                         <i class="fas fa-clipboard-check"></i>
                     </div>
                     <div class="action-title">{% trans "Inspections" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-purple">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="action-title">{% trans "Incidents" %}</div>
                 </a>
                 
                 <a href="#" class="action-tile">
@@ -396,6 +417,13 @@
                         <i class="fas fa-tools"></i>
                     </div>
                     <div class="action-title">{% trans "Maintenance" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-blue">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="action-title">{% trans "Operations Manual" %}</div>
                 </a>
                 
                 <a href="{% url 'admin:index' %}" class="action-tile">

@@ -1,0 +1,190 @@
+{% load i18n %}
+{% load static %}
+{% load company_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aircraft Management - {% company_name %} Aviation{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/master_css.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="nav-header">
+        <div class="nav-brand">
+            <i class="fas fa-plane"></i>
+            <span>{% company_name %} Aviation Management</span>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <a href="{% url 'core:index' %}">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'aircraft:dashboard' %}">
+                    <i class="fas fa-plane"></i>
+                    <span>Aircraft</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'aircraft:aircraft_list' %}">
+                    <i class="fas fa-plane-departure"></i>
+                    <span>Aircraft Fleet</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'aircraft:aircraft_type_list' %}">
+                    <i class="fas fa-cogs"></i>
+                    <span>Aircraft Types</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'aircraft:aircraft_create' %}">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Aircraft</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'aircraft:aircraft_type_create' %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add Type</span>
+                </a>
+            </div>
+            <div class="nav-item nav-divider">
+                <a href="{% url 'airspace:dashboard' %}">
+                    <i class="fas fa-map"></i>
+                    <span>Airspace</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'airspace:airspace_class_list' %}">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Classes</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'airspace:operational_area_list' %}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Areas</span>
+                </a>
+            </div>
+            <div class="nav-item nav-divider">
+                <a href="{% url 'core:dashboard' %}">
+                    <i class="fas fa-cogs"></i>
+                    <span>Core Ops</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'core:sop_list' %}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>SOPs</span>
+                </a>
+            </div>
+            <div class="nav-item nav-divider">
+                <a href="{% url 'flight_operations:dashboard' %}">
+                    <i class="fas fa-plane"></i>
+                    <span>Flight Ops</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'flight_operations:mission_list' %}">
+                    <i class="fas fa-tasks"></i>
+                    <span>Missions</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'flight_operations:flight_plan_list' %}">
+                    <i class="fas fa-route"></i>
+                    <span>Flight Plans</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'core:training_syllabus_list' %}">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Training</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'core:operations_manual_list' %}">
+                    <i class="fas fa-book"></i>
+                    <span>Manuals</span>
+                </a>
+            </div>
+        </nav>
+        <div class="nav-user">
+            {% if user.is_authenticated %}
+                <div class="user-menu">
+                    <span><i class="fas fa-user-circle"></i> {{ user.first_name|default:user.email }}</span>
+                    <div class="user-dropdown">
+                        <a href="{% url 'accounts:user_detail' user.pk %}">Profile</a>
+                        <a href="{% url 'admin:logout' %}">Logout</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'admin:login' %}" class="login-btn">Login</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Breadcrumb Navigation -->
+        {% block breadcrumb %}
+        <nav class="breadcrumb">
+            <a href="{% url 'core:index' %}">Home</a>
+            <span>></span>
+            <a href="{% url 'aircraft:dashboard' %}">Aircraft</a>
+            {% block breadcrumb_extra %}{% endblock %}
+        </nav>
+        {% endblock %}
+
+        <!-- Page Header -->
+        {% block page_header %}
+        <div class="page-header">
+            <div class="page-title">
+                <h1>{% block page_title %}Aircraft Management{% endblock %}</h1>
+                <p class="page-subtitle">{% block page_subtitle %}Manage aircraft fleet and aircraft types{% endblock %}</p>
+            </div>
+            <div class="page-actions">
+                {% block page_actions %}{% endblock %}
+            </div>
+        </div>
+        {% endblock %}
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="close" onclick="this.parentElement.style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; {% now "Y" %} {% company_name %}. All rights reserved. | CASA Part 101 Compliant Aircraft Management System</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/master_js.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

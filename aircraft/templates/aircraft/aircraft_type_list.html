@@ -1,0 +1,194 @@
+{% extends "aircraft/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}Aircraft Types - {{ block.super }}{% endblock %}
+
+{% block breadcrumb_extra %}
+<span>></span>
+<span>Aircraft Types</span>
+{% endblock %}
+
+{% block page_title %}Aircraft Types{% endblock %}
+{% block page_subtitle %}Manage aircraft type definitions and specifications{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'aircraft:aircraft_type_create' %}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Add Aircraft Type
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Search and Filter Section -->
+<div class="filter-section">
+    <form method="get" class="filter-form">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="search">Search:</label>
+                <input type="text" id="search" name="search" value="{{ search_query }}" 
+                       placeholder="Search name, manufacturer, model..." class="form-control">
+            </div>
+            
+            <div class="filter-group">
+                <label for="category">Category:</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for value, label in category_choices %}
+                        <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="operation_type">Operation Type:</label>
+                <select id="operation_type" name="operation_type" class="form-control">
+                    <option value="">All Types</option>
+                    {% for value, label in operation_choices %}
+                        <option value="{{ value }}" {% if operation_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="active">Status:</label>
+                <select id="active" name="active" class="form-control">
+                    <option value="">All</option>
+                    <option value="true" {% if active_filter == "true" %}selected{% endif %}>Active</option>
+                    <option value="false" {% if active_filter == "false" %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+                <a href="{% url 'aircraft:aircraft_type_list' %}" class="btn btn-outline">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Summary -->
+<div class="results-summary">
+    <span class="results-count">{{ page_obj.paginator.count }} aircraft type{{ page_obj.paginator.count|pluralize }} found</span>
+</div>
+
+<!-- Aircraft Types Table -->
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Manufacturer</th>
+                <th>Model</th>
+                <th>Category</th>
+                <th>Operation Type</th>
+                <th>Max Weight</th>
+                <th>Status</th>
+                <th>Aircraft Count</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for aircraft_type in page_obj %}
+            <tr>
+                <td>
+                    <a href="{% url 'aircraft:aircraft_type_detail' aircraft_type.pk %}" class="item-link">
+                        {{ aircraft_type.name }}
+                    </a>
+                </td>
+                <td>{{ aircraft_type.manufacturer }}</td>
+                <td>{{ aircraft_type.model }}</td>
+                <td>
+                    <span class="category-badge category-{{ aircraft_type.category }}">
+                        {{ aircraft_type.get_category_display }}
+                    </span>
+                </td>
+                <td>{{ aircraft_type.get_operation_type_display }}</td>
+                <td>
+                    {% if aircraft_type.max_takeoff_weight %}
+                        {{ aircraft_type.max_takeoff_weight }}kg
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="status-badge {% if aircraft_type.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if aircraft_type.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <span class="aircraft-count">{{ aircraft_type.aircraft_set.count }}</span>
+                </td>
+                <td class="actions">
+                    <a href="{% url 'aircraft:aircraft_type_detail' aircraft_type.pk %}" 
+                       class="action-btn" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'aircraft:aircraft_type_update' aircraft_type.pk %}" 
+                       class="action-btn" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    {% if aircraft_type.aircraft_set.count == 0 %}
+                    <button class="action-btn delete-btn" title="Delete"
+                            data-aircraft-type-id="{{ aircraft_type.pk }}"
+                            data-aircraft-type-name="{{ aircraft_type.name|escapejs }}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="no-data">
+                    <div class="empty-state">
+                        <i class="fas fa-cogs"></i>
+                        <p>No aircraft types found</p>
+                        {% if not search_query and not category_filter and not operation_filter %}
+                        <a href="{% url 'aircraft:aircraft_type_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add First Aircraft Type
+                        </a>
+                        {% else %}
+                        <a href="{% url 'aircraft:aircraft_type_list' %}" class="btn btn-outline">
+                            Clear Filters
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-container">
+    <nav class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}{% if operation_filter %}operation_type={{ operation_filter }}&{% endif %}{% if active_filter %}active={{ active_filter }}&{% endif %}page=1" class="page-btn first">First</a>
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}{% if operation_filter %}operation_type={{ operation_filter }}&{% endif %}{% if active_filter %}active={{ active_filter }}&{% endif %}page={{ page_obj.previous_page_number }}" class="page-btn prev">Previous</a>
+        {% endif %}
+        
+        <span class="page-info">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}{% if operation_filter %}operation_type={{ operation_filter }}&{% endif %}{% if active_filter %}active={{ active_filter }}&{% endif %}page={{ page_obj.next_page_number }}" class="page-btn next">Next</a>
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}{% if operation_filter %}operation_type={{ operation_filter }}&{% endif %}{% if active_filter %}active={{ active_filter }}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="page-btn last">Last</a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'aircraft/js/aircraft_types.js' %}"></script>
+{% endblock %}
