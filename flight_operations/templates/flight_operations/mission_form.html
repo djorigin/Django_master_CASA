@@ -1,0 +1,374 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Mission{% else %}Create Mission{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-tasks"></i>
+                    {% if form.instance.pk %}Edit Mission: {{ form.instance.name }}{% else %}Create New Mission{% endif %}
+                </h2>
+                <div>
+                    <a href="{% url 'flight_operations:mission_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    {% if form.instance.pk %}
+                        <a href="{% url 'flight_operations:mission_detail' form.instance.pk %}" class="btn btn-info">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Information -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Mission Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Mission Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.mission_code.id_for_label }}" class="form-label">Mission Code</label>
+                                {{ form.mission_code }}
+                                {% if form.mission_code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.mission_code.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.mission_type.id_for_label }}" class="form-label">Mission Type *</label>
+                                {{ form.mission_type }}
+                                {% if form.mission_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.mission_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.priority.id_for_label }}" class="form-label">Priority *</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.priority.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-calendar"></i> Scheduling</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.planned_start_date.id_for_label }}" class="form-label">Planned Start Date *</label>
+                                {{ form.planned_start_date }}
+                                {% if form.planned_start_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.planned_start_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.planned_end_date.id_for_label }}" class="form-label">Planned End Date</label>
+                                {{ form.planned_end_date }}
+                                {% if form.planned_end_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.planned_end_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.estimated_duration.id_for_label }}" class="form-label">Estimated Duration (hours)</label>
+                                {{ form.estimated_duration }}
+                                {% if form.estimated_duration.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.estimated_duration.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.weather_requirements.id_for_label }}" class="form-label">Weather Requirements</label>
+                                {{ form.weather_requirements }}
+                                {% if form.weather_requirements.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.weather_requirements.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requirements & Notes -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list"></i> Requirements & Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.special_requirements.id_for_label }}" class="form-label">Special Requirements</label>
+                            {{ form.special_requirements }}
+                            {% if form.special_requirements.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.special_requirements.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Additional Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Client & Assignment -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users"></i> Assignment</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
+                            {{ form.client }}
+                            {% if form.client.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.client.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Leave empty for internal missions</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.assigned_pilot.id_for_label }}" class="form-label">Assigned Pilot</label>
+                            {{ form.assigned_pilot }}
+                            {% if form.assigned_pilot.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.assigned_pilot.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.crew_members.id_for_label }}" class="form-label">Crew Members</label>
+                            {{ form.crew_members }}
+                            {% if form.crew_members.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.crew_members.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mission Status & Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if form.instance.pk %}Update Mission{% else %}Create Mission{% endif %}
+                            </button>
+                            
+                            {% if form.instance.pk %}
+                                <a href="{% url 'flight_operations:mission_detail' form.instance.pk %}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                
+                                {% if form.instance.status == 'planning' %}
+                                    <button type="button" class="btn btn-success" onclick="updateStatus('approved')">
+                                        <i class="fas fa-check"></i> Approve Mission
+                                    </button>
+                                {% endif %}
+                                
+                                {% if form.instance.status == 'approved' %}
+                                    <button type="button" class="btn btn-warning" onclick="updateStatus('active')">
+                                        <i class="fas fa-play"></i> Activate Mission
+                                    </button>
+                                {% endif %}
+                                
+                                {% if form.instance.status == 'active' %}
+                                    <button type="button" class="btn btn-secondary" onclick="updateStatus('completed')">
+                                        <i class="fas fa-stop"></i> Complete Mission
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <a href="{% url 'flight_operations:mission_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-question-circle"></i> Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <strong>Mission Types:</strong><br>
+                            • Survey: Aerial surveys and data collection<br>
+                            • Inspection: Infrastructure inspection<br>
+                            • Mapping: Geographic mapping missions<br>
+                            • Search & Rescue: Emergency operations<br>
+                            • Training: Pilot training missions<br><br>
+                            
+                            <strong>Priority Levels:</strong><br>
+                            • High: Urgent missions requiring immediate attention<br>
+                            • Medium: Standard priority missions<br>
+                            • Low: Non-urgent missions<br>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Mission Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to update the mission status to <span id="newStatus"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="statusForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_status">
+                    <input type="hidden" name="new_status" id="statusValue">
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateStatus(status) {
+    document.getElementById('newStatus').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    document.getElementById('statusValue').value = status;
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
+}
+
+$(document).ready(function() {
+    // Initialize datetime pickers
+    $('input[type="datetime-local"]').each(function() {
+        if (!this.value && this.name.includes('planned_start')) {
+            // Set default start time to tomorrow at 9 AM
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(9, 0, 0, 0);
+            this.value = tomorrow.toISOString().slice(0, 16);
+        }
+    });
+    
+    // Auto-calculate end date when start date and duration change
+    $('#id_planned_start_date, #id_estimated_duration').on('change', function() {
+        var startDate = $('#id_planned_start_date').val();
+        var duration = parseFloat($('#id_estimated_duration').val());
+        
+        if (startDate && duration) {
+            var start = new Date(startDate);
+            var end = new Date(start.getTime() + (duration * 60 * 60 * 1000));
+            $('#id_planned_end_date').val(end.toISOString().slice(0, 16));
+        }
+    });
+    
+    // Form validation
+    $('form').on('submit', function(e) {
+        var isValid = true;
+        var requiredFields = ['name', 'mission_type', 'priority', 'status', 'planned_start_date'];
+        
+        requiredFields.forEach(function(field) {
+            var input = $('#id_' + field);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+    
+    // Remove validation classes on input
+    $('input, select, textarea').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+});
+</script>
+{% endblock %}

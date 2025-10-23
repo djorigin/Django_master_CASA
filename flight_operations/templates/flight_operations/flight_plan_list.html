@@ -1,0 +1,258 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Flight Plans{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-route"></i> Flight Plans</h2>
+                <div>
+                    <a href="{% url 'flight_operations:dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <a href="{% url 'flight_operations:flight_plan_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Flight Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="approval_status" class="form-label">Status</label>
+                            <select name="status" class="form-select" id="status">
+                                <option value="">All Status</option>
+                                <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                                <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Submitted</option>
+                                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="aircraft" class="form-label">Aircraft</label>
+                            <select name="aircraft" class="form-select" id="aircraft">
+                                <option value="">All Aircraft</option>
+                                <!-- Will be populated by view context -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" class="form-control" id="search" 
+                                   value="{{ request.GET.search }}" placeholder="Search flight plans...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flight Plans List -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Flight Plans ({{ object_list.count }})</h5>
+                    <small class="text-muted">
+                        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                    </small>
+                </div>
+                <div class="card-body p-0">
+                    {% if object_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Flight Number</th>
+                                        <th>Mission</th>
+                                        <th>Aircraft</th>
+                                        <th>Route</th>
+                                        <th>Scheduled</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for flight_plan in object_list %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ flight_plan.flight_plan_id }}</strong>
+                                            {% if flight_plan.purpose %}
+                                                <br><small class="text-muted">{{ flight_plan.purpose|truncatechars:40 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if flight_plan.mission %}
+                                                <a href="{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}" class="text-decoration-none">
+                                                    {{ flight_plan.mission.name }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">No mission</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ flight_plan.aircraft.registration_number }}</strong>
+                                            <br><small class="text-muted">{{ flight_plan.aircraft.make_model }}</small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ flight_plan.departure_location }}</strong>
+                                            <i class="fas fa-arrow-right mx-1"></i>
+                                            <strong>Destination</strong>
+                                            {% if flight_plan.route %}
+                                                <br><small class="text-muted">{{ flight_plan.route|truncatechars:30 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ flight_plan.planned_departure_time|date:"M d, Y" }}</strong>
+                                            <br><small class="text-muted">{{ flight_plan.planned_departure_time|time:"H:i" }} - {{ flight_plan.estimated_flight_time }}</small>
+                                        </td>
+                                        <td>
+                                            {% if flight_plan.status == 'approved' %}
+                                                <span class="badge bg-success">{{ flight_plan.get_status_display }}</span>
+                                            {% elif flight_plan.status == 'active' %}
+                                                <span class="badge bg-primary">{{ flight_plan.get_status_display }}</span>
+                                            {% elif flight_plan.status == 'completed' %}
+                                                <span class="badge bg-secondary">{{ flight_plan.get_status_display }}</span>
+                                            {% elif flight_plan.status == 'draft' %}
+                                                <span class="badge bg-warning">{{ flight_plan.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ flight_plan.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'flight_operations:flight_plan_detail' flight_plan.pk %}" 
+                                                   class="btn btn-outline-primary" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'flight_operations:flight_plan_update' flight_plan.pk %}" 
+                                                   class="btn btn-outline-warning" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if flight_plan.status == 'approved' %}
+                                                    <a href="{% url 'flight_operations:flight_log_create' %}?flight_plan={{ flight_plan.pk }}" 
+                                                       class="btn btn-outline-success" title="Create Flight Log">
+                                                        <i class="fas fa-clipboard-list"></i>
+                                                    </a>
+                                                {% endif %}
+                                                <button class="btn btn-outline-danger" title="Delete"
+                                                        onclick="confirmDelete('{{ flight_plan.pk }}', '{{ flight_plan.flight_number }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No flight plans found</h5>
+                            <p class="text-muted">Create your first flight plan to get started.</p>
+                            <a href="{% url 'flight_operations:flight_plan_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Flight Plan
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <nav aria-label="Flight plans pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.aircraft %}&aircraft={{ request.GET.aircraft }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.aircraft %}&aircraft={{ request.GET.aircraft }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.aircraft %}&aircraft={{ request.GET.aircraft }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.aircraft %}&aircraft={{ request.GET.aircraft }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the flight plan "<span id="flightNumber"></span>"?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Flight Plan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(flightPlanId, flightNumber) {
+    document.getElementById('flightNumber').textContent = flightNumber;
+    document.getElementById('deleteForm').action = '/flight_operations/flight-plans/' + flightPlanId + '/delete/';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[title]').tooltip();
+    
+    // Auto-submit form on filter change
+    $('#status, #aircraft').change(function() {
+        $(this).closest('form').submit();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,423 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Job Safety Assessment (JSA) - Flight Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-hard-hat"></i> Job Safety Assessment (JSA) Management
+                </h2>
+                <div>
+                    <a href="{% url 'flight_operations:jsa_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New JSA
+                    </a>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportSelected('csv')">
+                                <i class="fas fa-file-csv"></i> Export Selected as CSV
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportAll('pdf')">
+                                <i class="fas fa-file-pdf"></i> Export All as PDF
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="generateSafetyReport()">
+                                <i class="fas fa-shield-alt"></i> Safety Analysis Report
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Safety Statistics Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-primary">{{ total_count|default:0 }}</h4>
+                    <small class="text-muted">Total JSAs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-success">{{ completed_count|default:0 }}</h4>
+                    <small class="text-muted">Completed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-warning">{{ pending_count|default:0 }}</h4>
+                    <small class="text-muted">Pending</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h4 class="text-danger">{{ high_risk_tasks|default:0 }}</h4>
+                    <small class="text-muted">High Risk Tasks</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-info">{{ this_month|default:0 }}</h4>
+                    <small class="text-muted">This Month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-secondary">{{ overdue_count|default:0 }}</h4>
+                    <small class="text-muted">Overdue</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="Search job title, location, personnel...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                                <option value="pending_review" {% if request.GET.status == 'pending_review' %}selected{% endif %}>Pending Review</option>
+                                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="risk_level" class="form-label">Risk Level</label>
+                            <select class="form-select" id="risk_level" name="risk_level">
+                                <option value="">All Levels</option>
+                                <option value="high" {% if request.GET.risk_level == 'high' %}selected{% endif %}>High</option>
+                                <option value="medium" {% if request.GET.risk_level == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="low" {% if request.GET.risk_level == 'low' %}selected{% endif %}>Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="job_category" class="form-label">Job Category</label>
+                            <select class="form-select" id="job_category" name="job_category">
+                                <option value="">All Categories</option>
+                                <option value="maintenance" {% if request.GET.job_category == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                                <option value="ground_ops" {% if request.GET.job_category == 'ground_ops' %}selected{% endif %}>Ground Operations</option>
+                                <option value="flight_ops" {% if request.GET.job_category == 'flight_ops' %}selected{% endif %}>Flight Operations</option>
+                                <option value="fueling" {% if request.GET.job_category == 'fueling' %}selected{% endif %}>Fueling</option>
+                                <option value="cleaning" {% if request.GET.job_category == 'cleaning' %}selected{% endif %}>Cleaning</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list"></i> Job Safety Assessment Entries
+                            {% if page_obj.paginator.count %}
+                                <small class="text-muted">({{ page_obj.paginator.count }} found)</small>
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">
+                                <i class="fas fa-check-square"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                                <i class="fas fa-square"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if object_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)">
+                                        </th>
+                                        <th>Job Details</th>
+                                        <th>Risk & Category</th>
+                                        <th>Personnel & Location</th>
+                                        <th>Status & Dates</th>
+                                        <th width="120">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for jsa in object_list %}
+                                    <tr class="{% if jsa.overall_risk_level == 'high' %}table-danger{% elif jsa.overall_risk_level == 'medium' %}table-warning{% endif %}">
+                                        <td>
+                                            <input type="checkbox" class="jsa-checkbox" value="{{ jsa.pk }}">
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'flight_operations:jsa_detail' jsa.pk %}" class="text-decoration-none">
+                                                        {{ jsa.job_title|truncatechars:50 }}
+                                                    </a>
+                                                </h6>
+                                                {% if jsa.job_description %}
+                                                    <small class="text-muted">{{ jsa.job_description|truncatechars:80 }}</small>
+                                                {% endif %}
+                                                {% if jsa.estimated_duration %}
+                                                    <br><small class="badge bg-info">{{ jsa.estimated_duration }} min</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if jsa.overall_risk_level == 'high' %}
+                                                <span class="badge bg-danger">HIGH RISK</span>
+                                            {% elif jsa.overall_risk_level == 'medium' %}
+                                                <span class="badge bg-warning text-dark">MEDIUM RISK</span>
+                                            {% elif jsa.overall_risk_level == 'low' %}
+                                                <span class="badge bg-success">LOW RISK</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ jsa.get_overall_risk_level_display|upper }}</span>
+                                            {% endif %}
+                                            {% if jsa.job_category %}
+                                                <br><span class="badge bg-info mt-1">{{ jsa.get_job_category_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if jsa.personnel_involved %}
+                                                    <strong>{{ jsa.personnel_involved|truncatechars:30 }}</strong><br>
+                                                {% endif %}
+                                                {% if jsa.job_location %}
+                                                    <small class="text-muted">{{ jsa.job_location }}</small><br>
+                                                {% endif %}
+                                                {% if jsa.supervisor %}
+                                                    <small class="text-primary">Supervisor: {{ jsa.supervisor.get_full_name|default:jsa.supervisor.email|truncatechars:20 }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if jsa.status %}
+                                                    {% if jsa.status == 'draft' %}
+                                                        <span class="badge bg-secondary">{{ jsa.get_status_display }}</span>
+                                                    {% elif jsa.status == 'pending_review' %}
+                                                        <span class="badge bg-warning text-dark">{{ jsa.get_status_display }}</span>
+                                                    {% elif jsa.status == 'approved' %}
+                                                        <span class="badge bg-success">{{ jsa.get_status_display }}</span>
+                                                    {% elif jsa.status == 'completed' %}
+                                                        <span class="badge bg-primary">{{ jsa.get_status_display }}</span>
+                                                    {% elif jsa.status == 'expired' %}
+                                                        <span class="badge bg-danger">{{ jsa.get_status_display }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ jsa.get_status_display }}</span>
+                                                    {% endif %}
+                                                    <br>
+                                                {% endif %}
+                                                <small class="text-muted">
+                                                    Created: {{ jsa.assessment_date|date:"M d, Y" }}<br>
+                                                    {% if jsa.expiry_date %}
+                                                        Expires: {{ jsa.expiry_date|date:"M d, Y" }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                <a href="{% url 'flight_operations:jsa_detail' jsa.pk %}" class="btn btn-outline-info btn-sm" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'flight_operations:jsa_update' jsa.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-success btn-sm" title="Export JSA">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-btn" title="Delete" 
+                                                        data-jsa-id="{{ jsa.pk }}" 
+                                                        data-jsa-name="{{ jsa.job_title|truncatechars:40|escapejs }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <div class="card-footer">
+                            <nav aria-label="JSA pagination">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-hard-hat fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Job Safety Assessments Found</h5>
+                            <p class="text-muted">Start creating safety assessments for operational tasks.</p>
+                            <a href="{% url 'flight_operations:jsa_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First JSA
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this Job Safety Assessment?</p>
+                <p><strong id="deleteItemName"></strong></p>
+                <p class="text-danger"><small>This action cannot be undone and will remove all safety assessment data.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete JSA</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Selection functionality
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.jsa-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = source.checked;
+    });
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.jsa-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.jsa-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+}
+
+// Export functions
+function exportSelected(format) {
+    const selected = Array.from(document.querySelectorAll('.jsa-checkbox:checked')).map(cb => cb.value);
+    if (selected.length === 0) {
+        alert('Please select at least one JSA to export.');
+        return;
+    }
+    console.log('Export selected:', selected, 'Format:', format);
+}
+
+function exportAll(format) {
+    console.log('Export all JSAs, Format:', format);
+}
+
+function generateSafetyReport() {
+    console.log('Generate safety analysis report');
+    alert('Safety analysis report generation will be implemented.');
+}
+
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Handle delete button clicks
+    $('.delete-btn').on('click', function() {
+        const jsaId = $(this).data('jsa-id');
+        const jsaName = $(this).data('jsa-name');
+        document.getElementById('deleteItemName').textContent = jsaName;
+        document.getElementById('deleteForm').action = `/flight_operations/jsa/${jsaId}/delete/`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    });
+});
+</script>
+{% endblock %}

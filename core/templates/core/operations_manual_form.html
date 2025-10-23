@@ -1,0 +1,366 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Operations Manual{% else %}Create Operations Manual{% endif %} - Core Operations
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-book"></i>
+                    {% if form.instance.pk %}Edit Operations Manual{% else %}Create New Operations Manual{% endif %}
+                </h2>
+                <div>
+                    <a href="{% url 'core:operations_manual_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    {% if form.instance.pk %}
+                        <a href="{% url 'core:operations_manual_detail' form.instance.pk %}" class="btn btn-info">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Information -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Manual Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Title *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.version_number.id_for_label }}" class="form-label">Version</label>
+                                {{ form.version_number }}
+                                {% if form.version_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.version_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                                {{ form.section }}
+                                {% if form.section.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.section.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.manual_type.id_for_label }}" class="form-label">Manual Type</label>
+                                {{ form.manual_type }}
+                                {% if form.manual_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.manual_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.approval_authority.id_for_label }}" class="form-label">Approval Authority</label>
+                                {{ form.approval_authority }}
+                                {% if form.approval_authority.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.approval_authority.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-file-text"></i> Manual Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.purpose.id_for_label }}" class="form-label">Purpose</label>
+                            {{ form.purpose }}
+                            {% if form.purpose.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.purpose.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.scope.id_for_label }}" class="form-label">Scope</label>
+                            {{ form.scope }}
+                            {% if form.scope.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.scope.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.content.id_for_label }}" class="form-label">Content *</label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.content.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.procedures.id_for_label }}" class="form-label">Procedures</label>
+                            {{ form.procedures }}
+                            {% if form.procedures.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.procedures.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.responsibilities.id_for_label }}" class="form-label">Responsibilities</label>
+                            {{ form.responsibilities }}
+                            {% if form.responsibilities.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.responsibilities.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance & References -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-check"></i> Compliance & References</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.regulatory_references.id_for_label }}" class="form-label">Regulatory References</label>
+                            {{ form.regulatory_references }}
+                            {% if form.regulatory_references.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.regulatory_references.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Include relevant CASA regulations, standards, and other regulatory references
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.related_documents.id_for_label }}" class="form-label">Related Documents</label>
+                            {{ form.related_documents }}
+                            {% if form.related_documents.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.related_documents.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.effective_date.id_for_label }}" class="form-label">Effective Date</label>
+                                {{ form.effective_date }}
+                                {% if form.effective_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.effective_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.review_date.id_for_label }}" class="form-label">Review Date</label>
+                                {{ form.review_date }}
+                                {% if form.review_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.review_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if form.instance.pk %}Update Manual{% else %}Create Manual{% endif %}
+                            </button>
+                            
+                            {% if form.instance.pk %}
+                                <a href="{% url 'core:operations_manual_detail' form.instance.pk %}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                <a href="{% url 'core:operations_manual_export' form.instance.pk %}" class="btn btn-success">
+                                    <i class="fas fa-download"></i> Export PDF
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'core:operations_manual_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Information -->
+                {% if form.instance.pk %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-check-circle"></i> Status Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Current Status:</strong><br>
+                            {% if form.instance.status == 'active' %}
+                                <span class="badge bg-success fs-6">{{ form.instance.get_status_display|default:"Active" }}</span>
+                            {% elif form.instance.status == 'draft' %}
+                                <span class="badge bg-secondary fs-6">{{ form.instance.get_status_display|default:"Draft" }}</span>
+                            {% elif form.instance.status == 'under_review' %}
+                                <span class="badge bg-warning fs-6">{{ form.instance.get_status_display|default:"Under Review" }}</span>
+                            {% elif form.instance.status == 'approved' %}
+                                <span class="badge bg-primary fs-6">{{ form.instance.get_status_display|default:"Approved" }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark fs-6">{{ form.instance.get_status_display|default:"Archived" }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.instance.effective_date %}
+                        <div class="mb-3">
+                            <strong>Effective Date:</strong><br>
+                            <small class="text-muted">{{ form.instance.effective_date|date:"M d, Y" }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        {% if form.instance.review_date %}
+                        <div class="mb-3">
+                            <strong>Review Date:</strong><br>
+                            <small class="text-muted">{{ form.instance.review_date|date:"M d, Y" }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <strong>Created:</strong><br>
+                            <small class="text-muted">{{ form.instance.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Last Updated:</strong><br>
+                            <small class="text-muted">{{ form.instance.updated_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Help -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-question-circle"></i> Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <strong>Manual Guidelines:</strong><br>
+                            • Clearly define purpose and scope<br>
+                            • Include detailed procedures<br>
+                            • Specify responsibilities<br>
+                            • Reference applicable regulations<br>
+                            • Set appropriate review dates<br><br>
+                            
+                            <strong>Status Meanings:</strong><br>
+                            • Draft: Under development<br>
+                            • Under Review: Pending approval<br>
+                            • Approved: Approved for use<br>
+                            • Active: Currently in effect<br>
+                            • Archived: No longer active<br>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Form validation
+    $('form').on('submit', function(e) {
+        var isValid = true;
+        var requiredFields = ['title', 'content', 'status'];
+        
+        requiredFields.forEach(function(field) {
+            var input = $('#id_' + field);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+    
+    // Remove validation classes on input
+    $('input, select, textarea').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,615 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Standard Operating Procedure - RPAS Operations{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .section-title {
+        color: #495057;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .required-field label:after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .form-check {
+        margin-bottom: 0;
+    }
+    
+    .btn-group-custom {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .auto-resize {
+        min-height: 80px;
+        resize: vertical;
+    }
+    
+    .character-count {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-align: right;
+        margin-top: 5px;
+    }
+    
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+    }
+    
+    .error-list li {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Standard Operating Procedure</h2>
+            <p class="text-muted">
+                {% if form.instance.pk %}
+                    Update SOP details and procedures
+                {% else %}
+                    Create a new Standard Operating Procedure for CASA compliance
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'core:sop_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to SOPs
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="sop-form">
+        {% csrf_token %}
+        
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h4 class="section-title">Basic Information</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group {% if form.sop_id.errors %}required-field{% endif %}">
+                        <label for="{{ form.sop_id.id_for_label }}" class="form-label">{{ form.sop_id.label }}</label>
+                        {{ form.sop_id }}
+                        {% if form.sop_id.help_text %}
+                            <div class="help-text">{{ form.sop_id.help_text }}</div>
+                        {% endif %}
+                        {% if form.sop_id.errors %}
+                            <ul class="error-list">
+                                {% for error in form.sop_id.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group required-field">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% if form.title.help_text %}
+                            <div class="help-text">{{ form.title.help_text }}</div>
+                        {% endif %}
+                        {% if form.title.errors %}
+                            <ul class="error-list">
+                                {% for error in form.title.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group required-field">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                        {{ form.category }}
+                        {% if form.category.help_text %}
+                            <div class="help-text">{{ form.category.help_text }}</div>
+                        {% endif %}
+                        {% if form.category.errors %}
+                            <ul class="error-list">
+                                {% for error in form.category.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group required-field">
+                        <label for="{{ form.version.id_for_label }}" class="form-label">{{ form.version.label }}</label>
+                        {{ form.version }}
+                        {% if form.version.help_text %}
+                            <div class="help-text">{{ form.version.help_text }}</div>
+                        {% endif %}
+                        {% if form.version.errors %}
+                            <ul class="error-list">
+                                {% for error in form.version.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="{{ form.supersedes.id_for_label }}" class="form-label">{{ form.supersedes.label }}</label>
+                        {{ form.supersedes }}
+                        {% if form.supersedes.help_text %}
+                            <div class="help-text">{{ form.supersedes.help_text }}</div>
+                        {% endif %}
+                        {% if form.supersedes.errors %}
+                            <ul class="error-list">
+                                {% for error in form.supersedes.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="form-section">
+            <h4 class="section-title">SOP Content</h4>
+            
+            <div class="form-group required-field">
+                <label for="{{ form.purpose.id_for_label }}" class="form-label">{{ form.purpose.label }}</label>
+                {{ form.purpose }}
+                <div class="character-count" data-target="{{ form.purpose.id_for_label }}"></div>
+                {% if form.purpose.help_text %}
+                    <div class="help-text">{{ form.purpose.help_text }}</div>
+                {% endif %}
+                {% if form.purpose.errors %}
+                    <ul class="error-list">
+                        {% for error in form.purpose.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group required-field">
+                <label for="{{ form.scope.id_for_label }}" class="form-label">{{ form.scope.label }}</label>
+                {{ form.scope }}
+                <div class="character-count" data-target="{{ form.scope.id_for_label }}"></div>
+                {% if form.scope.help_text %}
+                    <div class="help-text">{{ form.scope.help_text }}</div>
+                {% endif %}
+                {% if form.scope.errors %}
+                    <ul class="error-list">
+                        {% for error in form.scope.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group required-field">
+                <label for="{{ form.responsibilities.id_for_label }}" class="form-label">{{ form.responsibilities.label }}</label>
+                {{ form.responsibilities }}
+                <div class="character-count" data-target="{{ form.responsibilities.id_for_label }}"></div>
+                {% if form.responsibilities.help_text %}
+                    <div class="help-text">{{ form.responsibilities.help_text }}</div>
+                {% endif %}
+                {% if form.responsibilities.errors %}
+                    <ul class="error-list">
+                        {% for error in form.responsibilities.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.definitions.id_for_label }}" class="form-label">{{ form.definitions.label }}</label>
+                        {{ form.definitions }}
+                        {% if form.definitions.help_text %}
+                            <div class="help-text">{{ form.definitions.help_text }}</div>
+                        {% endif %}
+                        {% if form.definitions.errors %}
+                            <ul class="error-list">
+                                {% for error in form.definitions.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.references.id_for_label }}" class="form-label">{{ form.references.label }}</label>
+                        {{ form.references }}
+                        {% if form.references.help_text %}
+                            <div class="help-text">{{ form.references.help_text }}</div>
+                        {% endif %}
+                        {% if form.references.errors %}
+                            <ul class="error-list">
+                                {% for error in form.references.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applicability and Priority -->
+        <div class="form-section">
+            <h4 class="section-title">Applicability & Classification</h4>
+            
+            {% if form.aircraft_types %}
+                <div class="form-group">
+                    <label class="form-label">{{ form.aircraft_types.label }}</label>
+                    <div class="checkbox-grid">
+                        {{ form.aircraft_types }}
+                    </div>
+                    {% if form.aircraft_types.help_text %}
+                        <div class="help-text">{{ form.aircraft_types.help_text }}</div>
+                    {% endif %}
+                    {% if form.aircraft_types.errors %}
+                        <ul class="error-list">
+                            {% for error in form.aircraft_types.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group required-field">
+                        <label for="{{ form.priority.id_for_label }}" class="form-label">{{ form.priority.label }}</label>
+                        {{ form.priority }}
+                        {% if form.priority.help_text %}
+                            <div class="help-text">{{ form.priority.help_text }}</div>
+                        {% endif %}
+                        {% if form.priority.errors %}
+                            <ul class="error-list">
+                                {% for error in form.priority.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="{{ form.frequency_of_use.id_for_label }}" class="form-label">{{ form.frequency_of_use.label }}</label>
+                        {{ form.frequency_of_use }}
+                        {% if form.frequency_of_use.help_text %}
+                            <div class="help-text">{{ form.frequency_of_use.help_text }}</div>
+                        {% endif %}
+                        {% if form.frequency_of_use.errors %}
+                            <ul class="error-list">
+                                {% for error in form.frequency_of_use.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group required-field">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                        {{ form.status }}
+                        {% if form.status.help_text %}
+                            <div class="help-text">{{ form.status.help_text }}</div>
+                        {% endif %}
+                        {% if form.status.errors %}
+                            <ul class="error-list">
+                                {% for error in form.status.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval and Review -->
+        <div class="form-section">
+            <h4 class="section-title">Approval & Review Information</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.reviewed_by.id_for_label }}" class="form-label">{{ form.reviewed_by.label }}</label>
+                        {{ form.reviewed_by }}
+                        {% if form.reviewed_by.help_text %}
+                            <div class="help-text">{{ form.reviewed_by.help_text }}</div>
+                        {% endif %}
+                        {% if form.reviewed_by.errors %}
+                            <ul class="error-list">
+                                {% for error in form.reviewed_by.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.approved_by.id_for_label }}" class="form-label">{{ form.approved_by.label }}</label>
+                        {{ form.approved_by }}
+                        {% if form.approved_by.help_text %}
+                            <div class="help-text">{{ form.approved_by.help_text }}</div>
+                        {% endif %}
+                        {% if form.approved_by.errors %}
+                            <ul class="error-list">
+                                {% for error in form.approved_by.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="{{ form.reviewed_date.id_for_label }}" class="form-label">{{ form.reviewed_date.label }}</label>
+                        {{ form.reviewed_date }}
+                        {% if form.reviewed_date.help_text %}
+                            <div class="help-text">{{ form.reviewed_date.help_text }}</div>
+                        {% endif %}
+                        {% if form.reviewed_date.errors %}
+                            <ul class="error-list">
+                                {% for error in form.reviewed_date.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="{{ form.approved_date.id_for_label }}" class="form-label">{{ form.approved_date.label }}</label>
+                        {{ form.approved_date }}
+                        {% if form.approved_date.help_text %}
+                            <div class="help-text">{{ form.approved_date.help_text }}</div>
+                        {% endif %}
+                        {% if form.approved_date.errors %}
+                            <ul class="error-list">
+                                {% for error in form.approved_date.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="{{ form.effective_date.id_for_label }}" class="form-label">{{ form.effective_date.label }}</label>
+                        {{ form.effective_date }}
+                        {% if form.effective_date.help_text %}
+                            <div class="help-text">{{ form.effective_date.help_text }}</div>
+                        {% endif %}
+                        {% if form.effective_date.errors %}
+                            <ul class="error-list">
+                                {% for error in form.effective_date.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="{{ form.next_review_date.id_for_label }}" class="form-label">{{ form.next_review_date.label }}</label>
+                        {{ form.next_review_date }}
+                        {% if form.next_review_date.help_text %}
+                            <div class="help-text">{{ form.next_review_date.help_text }}</div>
+                        {% endif %}
+                        {% if form.next_review_date.errors %}
+                            <ul class="error-list">
+                                {% for error in form.next_review_date.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <h6>Please correct the following errors:</h6>
+                <ul class="mb-0">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="form-section">
+            <div class="btn-group-custom">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>{% if form.instance.pk %}Update SOP{% else %}Create SOP{% endif %}
+                </button>
+                
+                {% if form.instance.pk %}
+                    <a href="{% url 'core:sop_detail' form.instance.pk %}" class="btn btn-outline-info btn-lg">
+                        <i class="fas fa-eye me-2"></i>View SOP
+                    </a>
+                    <a href="{% url 'core:sop_steps_list' form.instance.pk %}" class="btn btn-outline-success btn-lg">
+                        <i class="fas fa-list-ol me-2"></i>Manage Steps
+                    </a>
+                {% endif %}
+                
+                <a href="{% url 'core:sop_list' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Character count for textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            const countElement = document.querySelector(`[data-target="${textarea.id}"]`);
+            if (countElement) {
+                function updateCount() {
+                    const length = textarea.value.length;
+                    countElement.textContent = `${length} characters`;
+                }
+                
+                textarea.addEventListener('input', updateCount);
+                updateCount(); // Initial count
+            }
+        });
+        
+        // Auto-resize textareas
+        textareas.forEach(textarea => {
+            textarea.classList.add('auto-resize');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        });
+        
+        // Form validation enhancements
+        const form = document.querySelector('.sop-form');
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let hasErrors = false;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    hasErrors = true;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                showAlert('Please fill in all required fields.', 'warning');
+            }
+        });
+        
+        // Real-time validation for SOP ID format
+        const sopIdField = document.getElementById('id_sop_id');
+        if (sopIdField) {
+            sopIdField.addEventListener('input', function() {
+                const value = this.value.toUpperCase();
+                this.value = value;
+                
+                const pattern = /^[A-Z]{3}-[0-9]{3}-SOP$/;
+                if (value && !pattern.test(value)) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        // Auto-suggest next review date (1 year from effective date)
+        const effectiveDate = document.getElementById('id_effective_date');
+        const nextReviewDate = document.getElementById('id_next_review_date');
+        
+        if (effectiveDate && nextReviewDate) {
+            effectiveDate.addEventListener('change', function() {
+                if (this.value && !nextReviewDate.value) {
+                    const date = new Date(this.value);
+                    date.setFullYear(date.getFullYear() + 1);
+                    nextReviewDate.value = date.toISOString().split('T')[0];
+                }
+            });
+        }
+        
+        // Utility function to show alerts
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

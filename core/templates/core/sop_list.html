@@ -1,0 +1,386 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Standard Operating Procedures - RPAS Operations{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sop-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-draft { background-color: #f8f9fa; color: #6c757d; }
+    .status-under-review { background-color: #fff3cd; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-superseded { background-color: #f8d7da; color: #721c24; }
+    
+    .priority-badge {
+        padding: 3px 6px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .priority-critical { background-color: #f8d7da; color: #721c24; }
+    .priority-high { background-color: #fff3cd; color: #856404; }
+    .priority-medium { background-color: #d1ecf1; color: #0c5460; }
+    .priority-low { background-color: #d4edda; color: #155724; }
+    
+    .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .action-buttons .btn {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Standard Operating Procedures</h2>
+            <p class="text-muted">Manage organizational SOPs and procedures</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'core:sop_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create New SOP
+            </a>
+            <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search SOPs</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.GET.search }}" placeholder="SOP ID, title, or description...">
+            </div>
+            <div class="col-md-2">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for key, value in category_choices %}
+                        <option value="{{ key }}" {% if request.GET.category == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    {% for key, value in status_choices %}
+                        <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="priority" class="form-label">Priority</label>
+                <select class="form-select" id="priority" name="priority">
+                    <option value="">All Priorities</option>
+                    {% for key, value in priority_choices %}
+                        <option value="{{ key }}" {% if request.GET.priority == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'core:sop_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <p class="text-muted">
+                Showing {{ sops.start_index }}–{{ sops.end_index }} of {{ paginator.count }} SOPs
+                {% if request.GET.search %}<em>(filtered by "{{ request.GET.search }}")</em>{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- SOPs Table -->
+    <div class="sop-table">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th width="15%">SOP ID</th>
+                        <th width="25%">Title</th>
+                        <th width="15%">Category</th>
+                        <th width="10%">Version</th>
+                        <th width="10%">Priority</th>
+                        <th width="10%">Status</th>
+                        <th width="15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sop in sops %}
+                        <tr>
+                            <td>
+                                <strong>{{ sop.sop_id }}</strong>
+                                {% if sop.supersedes %}
+                                    <br><small class="text-muted">Supersedes: {{ sop.supersedes.sop_id }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'core:sop_detail' sop.pk %}" class="text-decoration-none">
+                                    {{ sop.title }}
+                                </a>
+                                <br><small class="text-muted">{{ sop.purpose|truncatechars:80 }}</small>
+                            </td>
+                            <td>
+                                {{ sop.get_category_display }}
+                                {% if sop.aircraft_types.exists %}
+                                    <br><small class="text-muted">
+                                        Aircraft: {% for aircraft_type in sop.aircraft_types.all %}{{ aircraft_type.type_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-bold">v{{ sop.version }}</span>
+                                {% if sop.effective_date %}
+                                    <br><small class="text-muted">Effective: {{ sop.effective_date|date:"M d, Y" }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-{{ sop.priority|lower }}">
+                                    {{ sop.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ sop.status|lower|cut:' '|cut:'-' }}">
+                                    {{ sop.get_status_display }}
+                                </span>
+                                {% if sop.approved_by and sop.approved_date %}
+                                    <br><small class="text-muted">By: {{ sop.approved_by.user.get_full_name|default:sop.approved_by.user.username }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'core:sop_detail' sop.pk %}" 
+                                       class="btn btn-outline-info btn-sm" 
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'core:sop_update' sop.pk %}" 
+                                       class="btn btn-outline-primary btn-sm" 
+                                       title="Edit SOP">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'core:sop_steps_list' sop.pk %}" 
+                                       class="btn btn-outline-success btn-sm" 
+                                       title="Manage Steps">
+                                        <i class="fas fa-list-ol"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger btn-sm delete-sop" 
+                                            data-sop-id="{{ sop.pk }}" 
+                                            data-sop-title="{{ sop.title }}"
+                                            title="Delete SOP">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                                    <h5>No SOPs Found</h5>
+                                    <p>{% if request.GET.search %}No SOPs match your search criteria.{% else %}You haven't created any Standard Operating Procedures yet.{% endif %}</p>
+                                    <a href="{% url 'core:sop_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Create First SOP
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if sops.has_other_pages %}
+        <nav aria-label="SOPs pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if sops.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.priority %}priority={{ request.GET.priority }}&{% endif %}page={{ sops.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in sops.paginator.page_range %}
+                    {% if sops.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > sops.number|add:'-3' and num < sops.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.priority %}priority={{ request.GET.priority }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if sops.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.priority %}priority={{ request.GET.priority }}&{% endif %}page={{ sops.next_page_number }}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteSOPModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm SOP Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this Standard Operating Procedure?</p>
+                <p><strong id="sop-title-to-delete"></strong></p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This action cannot be undone. All associated procedure steps will also be deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-sop">
+                    <i class="fas fa-trash me-2"></i>Delete SOP
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteSOPModal'));
+        let sopToDelete = null;
+
+        // Handle delete button clicks
+        document.querySelectorAll('.delete-sop').forEach(button => {
+            button.addEventListener('click', function() {
+                sopToDelete = this.dataset.sopId;
+                document.getElementById('sop-title-to-delete').textContent = this.dataset.sopTitle;
+                deleteModal.show();
+            });
+        });
+
+        // Handle confirm delete
+        document.getElementById('confirm-delete-sop').addEventListener('click', function() {
+            if (sopToDelete) {
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+                
+                // Get CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                  document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                fetch(`{% url 'core:ajax_sop_delete' 0 %}`.replace('0', sopToDelete), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message and reload
+                        showAlert('SOP deleted successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert(data.error || 'Error deleting SOP', 'danger');
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-trash me-2"></i>Delete SOP';
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete error:', error);
+                    showAlert('Error deleting SOP', 'danger');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-trash me-2"></i>Delete SOP';
+                });
+                
+                deleteModal.hide();
+            }
+        });
+
+        // Utility function to show alerts
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

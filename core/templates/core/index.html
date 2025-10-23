@@ -342,7 +342,7 @@
                     <div class="action-title">{% trans "Aircraft Fleet" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'flight_operations:dashboard' %}" class="action-tile">
                     <div class="action-icon action-red">
                         <i class="fas fa-helicopter"></i>
                     </div>
@@ -363,8 +363,15 @@
                     <div class="action-title">{% trans "Airspace" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'core:dashboard' %}" class="action-tile">
                     <div class="action-icon action-orange">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="action-title">{% trans "Core Operations" %}</div>
+                </a>
+                
+                <a href="#" class="action-tile">
+                    <div class="action-icon action-green">
                         <i class="fas fa-clipboard-check"></i>
                     </div>
                     <div class="action-title">{% trans "Inspections" %}</div>

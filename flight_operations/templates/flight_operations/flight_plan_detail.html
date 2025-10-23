@@ -1,0 +1,379 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Flight Plan Details - Flight Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-route"></i> Flight Plan {{ object.flight_plan_id }}
+                    {% if object.status %}
+                        <span class="badge bg-{{ object.status == 'approved' and 'success' or object.status == 'pending' and 'warning' or 'secondary' }} ms-2">
+                            {{ object.get_status_display|default:object.status|title }}
+                        </span>
+                    {% endif %}
+                </h2>
+                <div>
+                    <a href="{% url 'flight_operations:flight_plan_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <a href="{% url 'flight_operations:flight_plan_update' object.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-success" title="Approve Plan">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <!-- Flight Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-plane"></i> Flight Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Flight Plan ID:</strong><br>
+                            {{ object.flight_plan_id }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Mission:</strong><br>
+                            {% if object.mission %}
+                                <a href="{% url 'flight_operations:mission_detail' object.mission.pk %}" class="text-decoration-none">
+                                    {{ object.mission.mission_name }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <strong>Aircraft:</strong><br>
+                            {% if object.aircraft %}
+                                <a href="{% url 'aircraft:aircraft_detail' object.aircraft.pk %}" class="text-decoration-none">
+                                    {{ object.aircraft.registration }} ({{ object.aircraft.model }})
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Pilot in Command:</strong><br>
+                            {% if object.pilot_in_command %}
+                                {{ object.pilot_in_command.get_full_name|default:object.pilot_in_command.email }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flight Route -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-map-marked-alt"></i> Flight Route</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Departure Location:</strong><br>
+                            {{ object.departure_location|default:"Not specified" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Arrival Location:</strong><br>
+                            {{ object.arrival_location|default:"Not specified" }}
+                        </div>
+                    </div>
+                    
+                    {% if object.waypoints %}
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <strong>Waypoints:</strong><br>
+                            {{ object.waypoints|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <strong>Planned Distance:</strong><br>
+                            {% if object.planned_distance %}
+                                {{ object.planned_distance }} km
+                            {% else %}
+                                <span class="text-muted">Not calculated</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Estimated Duration:</strong><br>
+                            {% if object.estimated_flight_time %}
+                                {{ object.estimated_flight_time }} minutes
+                            {% else %}
+                                <span class="text-muted">Not calculated</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Cruise Altitude:</strong><br>
+                            {% if object.cruise_altitude %}
+                                {{ object.cruise_altitude }} ft AGL
+                            {% else %}
+                                <span class="text-muted">Not specified</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weather & Conditions -->
+            {% if object.weather_conditions or object.wind_speed or object.wind_direction %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-cloud-sun"></i> Weather & Conditions</h5>
+                </div>
+                <div class="card-body">
+                    {% if object.weather_conditions %}
+                    <div class="mb-3">
+                        <strong>Weather Conditions:</strong><br>
+                        {{ object.weather_conditions|linebreaks }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        {% if object.wind_speed %}
+                        <div class="col-md-6">
+                            <strong>Wind Speed:</strong><br>
+                            {{ object.wind_speed }} knots
+                        </div>
+                        {% endif %}
+                        {% if object.wind_direction %}
+                        <div class="col-md-6">
+                            <strong>Wind Direction:</strong><br>
+                            {{ object.wind_direction }}°
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Fuel & Performance -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-gas-pump"></i> Fuel & Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if object.fuel_required %}
+                        <div class="col-md-4">
+                            <strong>Fuel Required:</strong><br>
+                            {{ object.fuel_required }} L
+                        </div>
+                        {% endif %}
+                        {% if object.payload %}
+                        <div class="col-md-4">
+                            <strong>Payload:</strong><br>
+                            {{ object.payload }} kg
+                        </div>
+                        {% endif %}
+                        {% if object.max_takeoff_weight %}
+                        <div class="col-md-4">
+                            <strong>Max Takeoff Weight:</strong><br>
+                            {{ object.max_takeoff_weight }} kg
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency & Safety -->
+            {% if object.emergency_procedures or object.alternate_landing_sites %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-shield-alt"></i> Emergency & Safety</h5>
+                </div>
+                <div class="card-body">
+                    {% if object.emergency_procedures %}
+                    <div class="mb-3">
+                        <strong>Emergency Procedures:</strong><br>
+                        {{ object.emergency_procedures|linebreaks }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if object.alternate_landing_sites %}
+                    <div class="mb-3">
+                        <strong>Alternate Landing Sites:</strong><br>
+                        {{ object.alternate_landing_sites|linebreaks }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Status & Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock"></i> Status & Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Current Status:</strong><br>
+                        {% if object.status == 'approved' %}
+                            <span class="badge bg-success fs-6">{{ object.get_status_display|default:"Approved" }}</span>
+                        {% elif object.status == 'pending' %}
+                            <span class="badge bg-warning fs-6">{{ object.get_status_display|default:"Pending" }}</span>
+                        {% elif object.status == 'rejected' %}
+                            <span class="badge bg-danger fs-6">{{ object.get_status_display|default:"Rejected" }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary fs-6">{{ object.get_status_display|default:"Draft" }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if object.scheduled_departure %}
+                    <div class="mb-3">
+                        <strong>Scheduled Departure:</strong><br>
+                        <small class="text-muted">{{ object.scheduled_departure|date:"M d, Y H:i" }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if object.estimated_arrival %}
+                    <div class="mb-3">
+                        <strong>Estimated Arrival:</strong><br>
+                        <small class="text-muted">{{ object.estimated_arrival|date:"M d, Y H:i" }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Created:</strong><br>
+                        <small class="text-muted">{{ object.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Last Updated:</strong><br>
+                        <small class="text-muted">{{ object.updated_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'flight_operations:flight_plan_update' object.pk %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Edit Flight Plan
+                        </a>
+                        
+                        {% if object.status != 'approved' %}
+                        <button type="button" class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> Approve Plan
+                        </button>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-info btn-sm">
+                            <i class="fas fa-copy"></i> Duplicate Plan
+                        </button>
+                        
+                        <button type="button" class="btn btn-warning btn-sm">
+                            <i class="fas fa-download"></i> Export PDF
+                        </button>
+                        
+                        <hr>
+                        <a href="{% url 'flight_operations:flight_plan_create' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus"></i> Create New Plan
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flight Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Flight Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        {% if object.planned_distance %}
+                        <div class="col-6 mb-2">
+                            <h4 class="text-primary">{{ object.planned_distance }}</h4>
+                            <small class="text-muted">Distance (km)</small>
+                        </div>
+                        {% endif %}
+                        {% if object.estimated_flight_time %}
+                        <div class="col-6 mb-2">
+                            <h4 class="text-success">{{ object.estimated_flight_time }}</h4>
+                            <small class="text-muted">Duration (min)</small>
+                        </div>
+                        {% endif %}
+                        {% if object.cruise_altitude %}
+                        <div class="col-6">
+                            <h4 class="text-info">{{ object.cruise_altitude }}</h4>
+                            <small class="text-muted">Altitude (ft)</small>
+                        </div>
+                        {% endif %}
+                        {% if object.fuel_required %}
+                        <div class="col-6">
+                            <h4 class="text-warning">{{ object.fuel_required }}</h4>
+                            <small class="text-muted">Fuel (L)</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this flight plan?</p>
+                <p><strong>{{ object.flight_plan_id }}</strong></p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'flight_operations:flight_plan_delete' object.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+});
+</script>
+{% endblock %}

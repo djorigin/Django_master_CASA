@@ -72,6 +72,48 @@
                     <span>Areas</span>
                 </a>
             </div>
+            <div class="nav-item nav-divider">
+                <a href="{% url 'core:dashboard' %}">
+                    <i class="fas fa-cogs"></i>
+                    <span>Core Ops</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'core:sop_list' %}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>SOPs</span>
+                </a>
+            </div>
+            <div class="nav-item nav-divider">
+                <a href="{% url 'flight_operations:dashboard' %}">
+                    <i class="fas fa-plane"></i>
+                    <span>Flight Ops</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'flight_operations:mission_list' %}">
+                    <i class="fas fa-tasks"></i>
+                    <span>Missions</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'flight_operations:flight_plan_list' %}">
+                    <i class="fas fa-route"></i>
+                    <span>Flight Plans</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'core:training_syllabus_list' %}">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Training</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'core:operations_manual_list' %}">
+                    <i class="fas fa-book"></i>
+                    <span>Manuals</span>
+                </a>
+            </div>
         </nav>
         <div class="nav-user">
             {% if user.is_authenticated %}

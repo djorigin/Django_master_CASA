@@ -1,0 +1,632 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Edit Job Safety Assessment{% else %}New Job Safety Assessment{% endif %} - Flight Operations
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %}"></i>
+                        {% if object %}
+                            Edit Job Safety Assessment
+                        {% else %}
+                            New Job Safety Assessment
+                        {% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if object %}
+                            Modify safety assessment for {{ object.job_title }}
+                        {% else %}
+                            Create comprehensive safety assessment for operational tasks
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% if object %}{% url 'flight_operations:jsa_detail' object.pk %}{% else %}{% url 'flight_operations:jsa_list' %}{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> 
+                        {% if object %}Back to Details{% else %}Back to List{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Form Content -->
+            <div class="col-md-8">
+                <!-- Basic Job Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-briefcase"></i> Job Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.job_title.id_for_label }}" class="form-label">
+                                {{ form.job_title.label }}
+                                {% if form.job_title.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.job_title }}
+                            {% if form.job_title.help_text %}
+                                <div class="form-text">{{ form.job_title.help_text }}</div>
+                            {% endif %}
+                            {% if form.job_title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.job_title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.job_description.id_for_label }}" class="form-label">
+                                {{ form.job_description.label }}
+                                {% if form.job_description.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.job_description }}
+                            {% if form.job_description.help_text %}
+                                <div class="form-text">{{ form.job_description.help_text }}</div>
+                            {% endif %}
+                            {% if form.job_description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.job_description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.job_category.id_for_label }}" class="form-label">
+                                        {{ form.job_category.label }}
+                                        {% if form.job_category.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.job_category }}
+                                    {% if form.job_category.help_text %}
+                                        <div class="form-text">{{ form.job_category.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.job_category.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.job_category.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.job_location.id_for_label }}" class="form-label">
+                                        {{ form.job_location.label }}
+                                        {% if form.job_location.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.job_location }}
+                                    {% if form.job_location.help_text %}
+                                        <div class="form-text">{{ form.job_location.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.job_location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.job_location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.estimated_duration.id_for_label }}" class="form-label">
+                                        {{ form.estimated_duration.label }}
+                                        {% if form.estimated_duration.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.estimated_duration }}
+                                        <span class="input-group-text">minutes</span>
+                                    </div>
+                                    {% if form.estimated_duration.help_text %}
+                                        <div class="form-text">{{ form.estimated_duration.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.estimated_duration.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.estimated_duration.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.personnel_involved.id_for_label }}" class="form-label">
+                                        {{ form.personnel_involved.label }}
+                                        {% if form.personnel_involved.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.personnel_involved }}
+                                    {% if form.personnel_involved.help_text %}
+                                        <div class="form-text">{{ form.personnel_involved.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.personnel_involved.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.personnel_involved.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hazard Analysis -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle"></i> Hazard Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.identified_hazards.id_for_label }}" class="form-label">
+                                {{ form.identified_hazards.label }}
+                                {% if form.identified_hazards.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.identified_hazards }}
+                            {% if form.identified_hazards.help_text %}
+                                <div class="form-text">{{ form.identified_hazards.help_text }}</div>
+                            {% endif %}
+                            {% if form.identified_hazards.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.identified_hazards.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.potential_consequences.id_for_label }}" class="form-label">
+                                {{ form.potential_consequences.label }}
+                                {% if form.potential_consequences.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.potential_consequences }}
+                            {% if form.potential_consequences.help_text %}
+                                <div class="form-text">{{ form.potential_consequences.help_text }}</div>
+                            {% endif %}
+                            {% if form.potential_consequences.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.potential_consequences.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.risk_probability.id_for_label }}" class="form-label">
+                                        {{ form.risk_probability.label }}
+                                        {% if form.risk_probability.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.risk_probability }}
+                                    <div class="form-text">
+                                        1 = Very Low, 2 = Low, 3 = Medium, 4 = High, 5 = Very High
+                                    </div>
+                                    {% if form.risk_probability.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.risk_probability.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.risk_severity.id_for_label }}" class="form-label">
+                                        {{ form.risk_severity.label }}
+                                        {% if form.risk_severity.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.risk_severity }}
+                                    <div class="form-text">
+                                        1 = Minimal, 2 = Minor, 3 = Moderate, 4 = Major, 5 = Catastrophic
+                                    </div>
+                                    {% if form.risk_severity.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.risk_severity.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Calculated Risk Level</label>
+                            <div class="p-3 border rounded" id="riskLevelDisplay">
+                                <span class="badge bg-secondary" id="riskLevelBadge">Not Calculated</span>
+                                <div class="small text-muted mt-1" id="riskScore">Score: --</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Safety Controls -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt"></i> Safety Controls & PPE
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.safety_controls.id_for_label }}" class="form-label">
+                                {{ form.safety_controls.label }}
+                                {% if form.safety_controls.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.safety_controls }}
+                            {% if form.safety_controls.help_text %}
+                                <div class="form-text">{{ form.safety_controls.help_text }}</div>
+                            {% endif %}
+                            {% if form.safety_controls.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.safety_controls.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.required_ppe.id_for_label }}" class="form-label">
+                                {{ form.required_ppe.label }}
+                                {% if form.required_ppe.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.required_ppe }}
+                            {% if form.required_ppe.help_text %}
+                                <div class="form-text">{{ form.required_ppe.help_text }}</div>
+                            {% endif %}
+                            {% if form.required_ppe.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.required_ppe.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.emergency_procedures.id_for_label }}" class="form-label">
+                                {{ form.emergency_procedures.label }}
+                                {% if form.emergency_procedures.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.emergency_procedures }}
+                            {% if form.emergency_procedures.help_text %}
+                                <div class="form-text">{{ form.emergency_procedures.help_text }}</div>
+                            {% endif %}
+                            {% if form.emergency_procedures.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.emergency_procedures.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assessment Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-check"></i> Assessment Management
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.assessment_date.id_for_label }}" class="form-label">
+                                        {{ form.assessment_date.label }}
+                                        {% if form.assessment_date.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.assessment_date }}
+                                    {% if form.assessment_date.help_text %}
+                                        <div class="form-text">{{ form.assessment_date.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.assessment_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.assessment_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.expiry_date.id_for_label }}" class="form-label">
+                                        {{ form.expiry_date.label }}
+                                        {% if form.expiry_date.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.expiry_date }}
+                                    {% if form.expiry_date.help_text %}
+                                        <div class="form-text">{{ form.expiry_date.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.expiry_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.expiry_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.supervisor.id_for_label }}" class="form-label">
+                                        {{ form.supervisor.label }}
+                                        {% if form.supervisor.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.supervisor }}
+                                    {% if form.supervisor.help_text %}
+                                        <div class="form-text">{{ form.supervisor.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.supervisor.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.supervisor.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">
+                                        {{ form.status.label }}
+                                        {% if form.status.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.status }}
+                                    {% if form.status.help_text %}
+                                        <div class="form-text">{{ form.status.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.status.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.status.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.additional_notes.id_for_label }}" class="form-label">
+                                {{ form.additional_notes.label }}
+                                {% if form.additional_notes.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.additional_notes }}
+                            {% if form.additional_notes.help_text %}
+                                <div class="form-text">{{ form.additional_notes.help_text }}</div>
+                            {% endif %}
+                            {% if form.additional_notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.additional_notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Form Actions -->
+                <div class="card mb-4 position-sticky" style="top: 20px;">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-save"></i> Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {% if object %}Update JSA{% else %}Save JSA{% endif %}
+                            </button>
+                            
+                            <button type="submit" name="action" value="save_and_continue" class="btn btn-success">
+                                <i class="fas fa-plus-circle"></i> Save & Add Another
+                            </button>
+                            
+                            <hr>
+                            
+                            <a href="{% if object %}{% url 'flight_operations:jsa_detail' object.pk %}{% else %}{% url 'flight_operations:jsa_list' %}{% endif %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            
+                            {% if object %}
+                            <a href="{% url 'flight_operations:jsa_detail' object.pk %}" class="btn btn-outline-info">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSA Guidelines -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle"></i> JSA Guidelines
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <h6>Risk Assessment</h6>
+                            <p>Evaluate each hazard using probability (likelihood) and severity (consequence) scales from 1-5.</p>
+                            
+                            <h6>Safety Hierarchy</h6>
+                            <ol>
+                                <li>Eliminate the hazard</li>
+                                <li>Substitute with safer option</li>
+                                <li>Engineering controls</li>
+                                <li>Administrative controls</li>
+                                <li>Personal protective equipment</li>
+                            </ol>
+                            
+                            <h6>Required PPE</h6>
+                            <p>List all personal protective equipment required for safe job completion.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Matrix -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-th"></i> Risk Matrix
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>S\P</th>
+                                        <th class="bg-success text-white">1</th>
+                                        <th class="bg-warning text-dark">2</th>
+                                        <th class="bg-warning text-dark">3</th>
+                                        <th class="bg-danger text-white">4</th>
+                                        <th class="bg-danger text-white">5</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th class="bg-danger text-white">5</th>
+                                        <td class="bg-warning" data-risk="5">5</td>
+                                        <td class="bg-warning" data-risk="10">10</td>
+                                        <td class="bg-danger text-white" data-risk="15">15</td>
+                                        <td class="bg-danger text-white" data-risk="20">20</td>
+                                        <td class="bg-danger text-white" data-risk="25">25</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-danger text-white">4</th>
+                                        <td class="bg-warning" data-risk="4">4</td>
+                                        <td class="bg-warning" data-risk="8">8</td>
+                                        <td class="bg-danger text-white" data-risk="12">12</td>
+                                        <td class="bg-danger text-white" data-risk="16">16</td>
+                                        <td class="bg-danger text-white" data-risk="20">20</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-warning text-dark">3</th>
+                                        <td class="bg-success text-white" data-risk="3">3</td>
+                                        <td class="bg-warning" data-risk="6">6</td>
+                                        <td class="bg-warning" data-risk="9">9</td>
+                                        <td class="bg-danger text-white" data-risk="12">12</td>
+                                        <td class="bg-danger text-white" data-risk="15">15</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-warning text-dark">2</th>
+                                        <td class="bg-success text-white" data-risk="2">2</td>
+                                        <td class="bg-success text-white" data-risk="4">4</td>
+                                        <td class="bg-warning" data-risk="6">6</td>
+                                        <td class="bg-warning" data-risk="8">8</td>
+                                        <td class="bg-danger text-white" data-risk="10">10</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-success text-white">1</th>
+                                        <td class="bg-success text-white" data-risk="1">1</td>
+                                        <td class="bg-success text-white" data-risk="2">2</td>
+                                        <td class="bg-success text-white" data-risk="3">3</td>
+                                        <td class="bg-warning" data-risk="4">4</td>
+                                        <td class="bg-warning" data-risk="5">5</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function calculateRiskLevel() {
+    const probability = parseInt($('select[name="risk_probability"]').val()) || 0;
+    const severity = parseInt($('select[name="risk_severity"]').val()) || 0;
+    
+    if (probability && severity) {
+        const riskScore = probability * severity;
+        let riskLevel, badgeClass;
+        
+        if (riskScore >= 15) {
+            riskLevel = 'HIGH';
+            badgeClass = 'bg-danger';
+        } else if (riskScore >= 6) {
+            riskLevel = 'MEDIUM';
+            badgeClass = 'bg-warning text-dark';
+        } else if (riskScore >= 1) {
+            riskLevel = 'LOW';
+            badgeClass = 'bg-success';
+        } else {
+            riskLevel = 'Not Calculated';
+            badgeClass = 'bg-secondary';
+        }
+        
+        $('#riskLevelBadge').text(riskLevel).attr('class', `badge ${badgeClass}`);
+        $('#riskScore').text(`Score: ${riskScore} (P:${probability} × S:${severity})`);
+        
+        // Highlight the corresponding cell in the risk matrix
+        $('.table-bordered td').removeClass('border-primary border-3');
+        if (riskScore > 0) {
+            $(`.table-bordered td[data-risk="${riskScore}"]`).addClass('border-primary border-3');
+        }
+    } else {
+        $('#riskLevelBadge').text('Not Calculated').attr('class', 'badge bg-secondary');
+        $('#riskScore').text('Score: --');
+        $('.table-bordered td').removeClass('border-primary border-3');
+    }
+}
+
+$(document).ready(function() {
+    // Calculate risk level on page load and when values change
+    calculateRiskLevel();
+    $('select[name="risk_probability"], select[name="risk_severity"]').on('change', calculateRiskLevel);
+    
+    // Set default dates if creating new entry
+    const today = new Date().toISOString().split('T')[0];
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    const futureDate = oneYearFromNow.toISOString().split('T')[0];
+    
+    if (!$('input[name="assessment_date"]').val()) {
+        $('input[name="assessment_date"]').val(today);
+    }
+    if (!$('input[name="expiry_date"]').val()) {
+        $('input[name="expiry_date"]').val(futureDate);
+    }
+    
+    // Form validation feedback
+    $('form').on('submit', function(e) {
+        let isValid = true;
+        
+        // Check required fields
+        $(this).find('[required]').each(function() {
+            if (!$(this).val()) {
+                $(this).addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            $('html, body').animate({
+                scrollTop: $('.is-invalid').first().offset().top - 100
+            }, 500);
+        }
+    });
+    
+    // Clear validation on input
+    $('input, select, textarea').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Training Syllabus{% else %}Create Training Syllabus{% endif %} - Core Operations
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-graduation-cap"></i>
+                    {% if form.instance.pk %}Edit Training Syllabus{% else %}Create New Training Syllabus{% endif %}
+                </h2>
+                <div>
+                    <a href="{% url 'core:training_syllabus_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    {% if form.instance.pk %}
+                        <a href="{% url 'core:training_syllabus_detail' form.instance.pk %}" class="btn btn-info">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Information -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Syllabus Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Title *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.version_number.id_for_label }}" class="form-label">Version</label>
+                                {{ form.version_number }}
+                                {% if form.version_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.version_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.aircraft_type.id_for_label }}" class="form-label">Aircraft Type</label>
+                                {{ form.aircraft_type }}
+                                {% if form.aircraft_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.aircraft_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-file-text"></i> Training Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.objectives.id_for_label }}" class="form-label">Learning Objectives</label>
+                            {{ form.objectives }}
+                            {% if form.objectives.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.objectives.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.content.id_for_label }}" class="form-label">Training Content *</label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.content.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.practical_exercises.id_for_label }}" class="form-label">Practical Exercises</label>
+                            {{ form.practical_exercises }}
+                            {% if form.practical_exercises.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.practical_exercises.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.assessment_criteria.id_for_label }}" class="form-label">Assessment Criteria</label>
+                            {{ form.assessment_criteria }}
+                            {% if form.assessment_criteria.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.assessment_criteria.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requirements & Prerequisites -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-check"></i> Requirements</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.prerequisites.id_for_label }}" class="form-label">Prerequisites</label>
+                            {{ form.prerequisites }}
+                            {% if form.prerequisites.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.prerequisites.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.duration_hours.id_for_label }}" class="form-label">Duration (hours)</label>
+                                {{ form.duration_hours }}
+                                {% if form.duration_hours.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.duration_hours.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.minimum_passing_score.id_for_label }}" class="form-label">Min. Passing Score (%)</label>
+                                {{ form.minimum_passing_score }}
+                                {% if form.minimum_passing_score.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.minimum_passing_score.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if form.instance.pk %}Update Syllabus{% else %}Create Syllabus{% endif %}
+                            </button>
+                            
+                            {% if form.instance.pk %}
+                                <a href="{% url 'core:training_syllabus_detail' form.instance.pk %}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                <a href="{% url 'core:training_syllabus_export' form.instance.pk %}" class="btn btn-success">
+                                    <i class="fas fa-download"></i> Export PDF
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'core:training_syllabus_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation & Status -->
+                {% if form.instance.pk %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-check-circle"></i> Status Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Current Status:</strong><br>
+                            {% if form.instance.status == 'active' %}
+                                <span class="badge bg-success fs-6">{{ form.instance.get_status_display|default:"Active" }}</span>
+                            {% elif form.instance.status == 'draft' %}
+                                <span class="badge bg-warning fs-6">{{ form.instance.get_status_display|default:"Draft" }}</span>
+                            {% elif form.instance.status == 'under_review' %}
+                                <span class="badge bg-primary fs-6">{{ form.instance.get_status_display|default:"Under Review" }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">{{ form.instance.get_status_display|default:"Archived" }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Created:</strong><br>
+                            <small class="text-muted">{{ form.instance.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Last Updated:</strong><br>
+                            <small class="text-muted">{{ form.instance.updated_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Help -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-question-circle"></i> Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <strong>Training Syllabus Guidelines:</strong><br>
+                            • Include clear learning objectives<br>
+                            • Specify prerequisite knowledge<br>
+                            • Detail practical exercises<br>
+                            • Define assessment criteria<br>
+                            • Set appropriate duration<br><br>
+                            
+                            <strong>Status Meanings:</strong><br>
+                            • Draft: Under development<br>
+                            • Under Review: Pending approval<br>
+                            • Active: Currently in use<br>
+                            • Archived: No longer active<br>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Form validation
+    $('form').on('submit', function(e) {
+        var isValid = true;
+        var requiredFields = ['title', 'content', 'status'];
+        
+        requiredFields.forEach(function(field) {
+            var input = $('#id_' + field);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+    
+    // Remove validation classes on input
+    $('input, select, textarea').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+});
+</script>
+{% endblock %}

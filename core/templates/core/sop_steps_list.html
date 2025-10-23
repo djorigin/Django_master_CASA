@@ -1,0 +1,367 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}SOP Steps - {{ sop.title }} - Core Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-list-ol"></i> Procedure Steps
+                    <small class="text-muted">{{ sop.title }}</small>
+                </h2>
+                <div>
+                    <a href="{% url 'core:sop_detail' sop.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to SOP
+                    </a>
+                    <a href="{% url 'core:sop_step_create' sop.pk %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Step
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOP Info Banner -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-1">{{ sop.title }}</h5>
+                            <p class="mb-0 text-muted">{{ sop.description|default:"No description available" }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="badge bg-{{ sop.status == 'active' and 'success' or sop.status == 'draft' and 'warning' or 'secondary' }} fs-6">
+                                {{ sop.get_status_display|default:sop.status|title }}
+                            </span>
+                            <br><small class="text-muted">Version {{ sop.version_number|default:"1.0" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Steps Management -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-steps"></i> Procedure Steps
+                            {% if steps %}
+                                <small class="text-muted">({{ steps.count }} step{{ steps.count|pluralize }})</small>
+                            {% endif %}
+                        </h5>
+                        <div>
+                            {% if steps %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="reorderSteps()">
+                                    <i class="fas fa-sort"></i> Reorder
+                                </button>
+                            {% endif %}
+                            <a href="{% url 'core:sop_step_create' sop.pk %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus"></i> Add Step
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if steps %}
+                        <div id="steps-container" class="sortable-container">
+                            {% for step in steps %}
+                                <div class="step-item p-3 border-bottom" data-step-id="{{ step.pk }}" data-step-number="{{ step.step_number }}">
+                                    <div class="row align-items-start">
+                                        <div class="col-md-1">
+                                            <div class="step-number-container text-center">
+                                                <span class="badge bg-primary fs-6">{{ step.step_number }}</span>
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary drag-handle" title="Drag to reorder">
+                                                        <i class="fas fa-grip-vertical"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <h6 class="mb-2">{{ step.title }}</h6>
+                                            <p class="mb-2 text-muted">{{ step.description|truncatewords:30|linebreaks }}</p>
+                                            
+                                            <div class="row">
+                                                {% if step.estimated_duration %}
+                                                    <div class="col-md-4">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock"></i> {{ step.estimated_duration }} min
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                                {% if step.warnings %}
+                                                    <div class="col-md-4">
+                                                        <small class="text-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i> Has warnings
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                                {% if step.safety_notes %}
+                                                    <div class="col-md-4">
+                                                        <small class="text-info">
+                                                            <i class="fas fa-shield-alt"></i> Safety notes
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if step.warnings %}
+                                                <div class="alert alert-warning alert-sm mt-2 mb-2">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    <strong>Warning:</strong> {{ step.warnings|truncatewords:20 }}
+                                                </div>
+                                            {% endif %}
+                                            
+                                            {% if step.safety_notes %}
+                                                <div class="alert alert-info alert-sm mt-2 mb-0">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                    <strong>Safety:</strong> {{ step.safety_notes|truncatewords:20 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                <a href="{% url 'core:sop_step_update' sop.pk step.pk %}" class="btn btn-outline-primary btn-sm" title="Edit Step">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-info btn-sm view-details-btn" title="View Details" 
+                                                        data-step-id="{{ step.pk }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-step-btn" title="Delete Step" 
+                                                        data-step-id="{{ step.pk }}" 
+                                                        data-step-title="{{ step.title|escapejs }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-list-ol fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Procedure Steps Defined</h5>
+                            <p class="text-muted">Start by adding the first step to this SOP.</p>
+                            <a href="{% url 'core:sop_step_create' sop.pk %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add First Step
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if steps %}
+                    <div class="card-footer bg-light">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <strong>Total Steps:</strong> {{ steps.count }}
+                                </small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {% if steps.aggregate.estimated_duration__sum %}
+                                    <small class="text-muted">
+                                        <strong>Estimated Total Duration:</strong> {{ steps.aggregate.estimated_duration__sum }} minutes
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Step Details Modal -->
+<div class="modal fade" id="stepDetailsModal" tabindex="-1" aria-labelledby="stepDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stepDetailsModalLabel">Step Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="stepDetailsContent">
+                <!-- Step details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editStepBtn">Edit Step</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteStepModal" tabindex="-1" aria-labelledby="deleteStepModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteStepModalLabel">Confirm Step Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this procedure step?</p>
+                <p><strong id="deleteStepName"></strong></p>
+                <p class="text-danger"><small>This action cannot be undone. Step numbers will be automatically adjusted.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteStepForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Step</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+let sortable = null;
+
+// Initialize sortable functionality
+function initSortable() {
+    const container = document.getElementById('steps-container');
+    if (container) {
+        sortable = Sortable.create(container, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: function(evt) {
+                updateStepOrder();
+            }
+        });
+    }
+}
+
+// Update step order after drag and drop
+function updateStepOrder() {
+    const steps = Array.from(document.querySelectorAll('.step-item'));
+    const stepOrder = steps.map((step, index) => ({
+        id: step.dataset.stepId,
+        order: index + 1
+    }));
+    
+    // Send AJAX request to update order
+    fetch('/ajax/update-step-order/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({stepOrder: stepOrder})
+    }).then(response => {
+        if (response.ok) {
+            // Update step number badges
+            steps.forEach((step, index) => {
+                const badge = step.querySelector('.badge');
+                if (badge) badge.textContent = index + 1;
+                step.dataset.stepNumber = index + 1;
+            });
+        }
+    });
+}
+
+// Toggle reorder mode
+function reorderSteps() {
+    const container = document.getElementById('steps-container');
+    container.classList.toggle('reorder-mode');
+    
+    if (!sortable) {
+        initSortable();
+    }
+}
+
+// View step details
+function viewStepDetails(stepId) {
+    fetch(`/ajax/sop-step/details/${stepId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('stepDetailsContent').innerHTML = data.html;
+            document.getElementById('editStepBtn').onclick = () => {
+                window.location.href = data.edit_url;
+            };
+            new bootstrap.Modal(document.getElementById('stepDetailsModal')).show();
+        });
+}
+
+// Confirm step deletion
+function confirmStepDelete(stepId, stepTitle) {
+    document.getElementById('deleteStepName').textContent = stepTitle;
+    document.getElementById('deleteStepForm').action = `{% url 'core:sop_step_delete' sop.pk 0 %}`.replace('0', stepId);
+    new bootstrap.Modal(document.getElementById('deleteStepModal')).show();
+}
+
+$(document).ready(function() {
+    // Auto-hide alerts
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Handle view details button clicks
+    $('.view-details-btn').on('click', function() {
+        const stepId = $(this).data('step-id');
+        viewStepDetails(stepId);
+    });
+    
+    // Handle delete button clicks
+    $('.delete-step-btn').on('click', function() {
+        const stepId = $(this).data('step-id');
+        const stepTitle = $(this).data('step-title');
+        confirmStepDelete(stepId, stepTitle);
+    });
+});
+</script>
+
+<style>
+.step-item {
+    transition: all 0.2s ease;
+}
+
+.step-item:hover {
+    background-color: #f8f9fa;
+}
+
+.reorder-mode .step-item {
+    cursor: move;
+}
+
+.drag-handle {
+    cursor: grab;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.step-number-container {
+    position: sticky;
+    top: 20px;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-chosen {
+    background-color: #e3f2fd;
+}
+</style>
+{% endblock %}

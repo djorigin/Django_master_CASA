@@ -1,0 +1,542 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Edit Flight Log - {{ object.flight_id|default:"Flight Log #"|add:object.pk }}{% else %}New Flight Log Entry{% endif %} - Flight Operations
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %}"></i>
+                        {% if object %}
+                            Edit Flight Log
+                        {% else %}
+                            New Flight Log Entry
+                        {% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if object %}
+                            Modify flight log details for {{ object.flight_id|default:"Flight Log #"|add:object.pk }}
+                        {% else %}
+                            Record flight operations data and performance metrics
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% if object %}{% url 'flight_operations:flight_log_detail' object.pk %}{% else %}{% url 'flight_operations:flight_log_list' %}{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> 
+                        {% if object %}Back to Details{% else %}Back to List{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Form Content -->
+            <div class="col-md-8">
+                <!-- Basic Flight Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plane"></i> Basic Flight Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.flight_id.id_for_label }}" class="form-label">
+                                        {{ form.flight_id.label }}
+                                        {% if form.flight_id.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.flight_id }}
+                                    {% if form.flight_id.help_text %}
+                                        <div class="form-text">{{ form.flight_id.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.flight_id.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.flight_id.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.flight_type.id_for_label }}" class="form-label">
+                                        {{ form.flight_type.label }}
+                                        {% if form.flight_type.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.flight_type }}
+                                    {% if form.flight_type.help_text %}
+                                        <div class="form-text">{{ form.flight_type.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.flight_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.flight_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.aircraft.id_for_label }}" class="form-label">
+                                        {{ form.aircraft.label }}
+                                        {% if form.aircraft.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.aircraft }}
+                                    {% if form.aircraft.help_text %}
+                                        <div class="form-text">{{ form.aircraft.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.aircraft.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.aircraft.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.pilot_in_command.id_for_label }}" class="form-label">
+                                        {{ form.pilot_in_command.label }}
+                                        {% if form.pilot_in_command.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.pilot_in_command }}
+                                    {% if form.pilot_in_command.help_text %}
+                                        <div class="form-text">{{ form.pilot_in_command.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.pilot_in_command.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.pilot_in_command.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.flight_plan.id_for_label }}" class="form-label">
+                                {{ form.flight_plan.label }}
+                                {% if form.flight_plan.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.flight_plan }}
+                            {% if form.flight_plan.help_text %}
+                                <div class="form-text">{{ form.flight_plan.help_text }}</div>
+                            {% endif %}
+                            {% if form.flight_plan.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.flight_plan.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Route & Times -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-route"></i> Flight Route & Timing
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.departure_location.id_for_label }}" class="form-label">
+                                        {{ form.departure_location.label }}
+                                        {% if form.departure_location.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.departure_location }}
+                                    {% if form.departure_location.help_text %}
+                                        <div class="form-text">{{ form.departure_location.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.departure_location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.departure_location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.arrival_location.id_for_label }}" class="form-label">
+                                        {{ form.arrival_location.label }}
+                                        {% if form.arrival_location.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.arrival_location }}
+                                    {% if form.arrival_location.help_text %}
+                                        <div class="form-text">{{ form.arrival_location.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.arrival_location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.arrival_location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.actual_departure_time.id_for_label }}" class="form-label">
+                                        {{ form.actual_departure_time.label }}
+                                        {% if form.actual_departure_time.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.actual_departure_time }}
+                                    {% if form.actual_departure_time.help_text %}
+                                        <div class="form-text">{{ form.actual_departure_time.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.actual_departure_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.actual_departure_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.actual_arrival_time.id_for_label }}" class="form-label">
+                                        {{ form.actual_arrival_time.label }}
+                                        {% if form.actual_arrival_time.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.actual_arrival_time }}
+                                    {% if form.actual_arrival_time.help_text %}
+                                        <div class="form-text">{{ form.actual_arrival_time.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.actual_arrival_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.actual_arrival_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Performance Metrics -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tachometer-alt"></i> Performance Metrics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.flight_duration.id_for_label }}" class="form-label">
+                                        {{ form.flight_duration.label }}
+                                        {% if form.flight_duration.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.flight_duration }}
+                                        <span class="input-group-text">minutes</span>
+                                    </div>
+                                    {% if form.flight_duration.help_text %}
+                                        <div class="form-text">{{ form.flight_duration.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.flight_duration.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.flight_duration.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.distance_flown.id_for_label }}" class="form-label">
+                                        {{ form.distance_flown.label }}
+                                        {% if form.distance_flown.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.distance_flown }}
+                                        <span class="input-group-text">km</span>
+                                    </div>
+                                    {% if form.distance_flown.help_text %}
+                                        <div class="form-text">{{ form.distance_flown.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.distance_flown.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.distance_flown.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.max_altitude_reached.id_for_label }}" class="form-label">
+                                        {{ form.max_altitude_reached.label }}
+                                        {% if form.max_altitude_reached.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.max_altitude_reached }}
+                                        <span class="input-group-text">feet</span>
+                                    </div>
+                                    {% if form.max_altitude_reached.help_text %}
+                                        <div class="form-text">{{ form.max_altitude_reached.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.max_altitude_reached.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.max_altitude_reached.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.fuel_used.id_for_label }}" class="form-label">
+                                        {{ form.fuel_used.label }}
+                                        {% if form.fuel_used.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.fuel_used }}
+                                        <span class="input-group-text">liters</span>
+                                    </div>
+                                    {% if form.fuel_used.help_text %}
+                                        <div class="form-text">{{ form.fuel_used.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.fuel_used.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.fuel_used.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.weather_conditions.id_for_label }}" class="form-label">
+                                        {{ form.weather_conditions.label }}
+                                        {% if form.weather_conditions.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.weather_conditions }}
+                                    {% if form.weather_conditions.help_text %}
+                                        <div class="form-text">{{ form.weather_conditions.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.weather_conditions.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.weather_conditions.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Log Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-alt"></i> Flight Log Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.log_entries.id_for_label }}" class="form-label">
+                                {{ form.log_entries.label }}
+                                {% if form.log_entries.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.log_entries }}
+                            {% if form.log_entries.help_text %}
+                                <div class="form-text">{{ form.log_entries.help_text }}</div>
+                            {% endif %}
+                            {% if form.log_entries.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.log_entries.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Issues & Maintenance -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle"></i> Issues & Maintenance
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.issues_noted.id_for_label }}" class="form-label">
+                                {{ form.issues_noted.label }}
+                                {% if form.issues_noted.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.issues_noted }}
+                            {% if form.issues_noted.help_text %}
+                                <div class="form-text">{{ form.issues_noted.help_text }}</div>
+                            {% endif %}
+                            {% if form.issues_noted.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.issues_noted.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.maintenance_notes.id_for_label }}" class="form-label">
+                                {{ form.maintenance_notes.label }}
+                                {% if form.maintenance_notes.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.maintenance_notes }}
+                            {% if form.maintenance_notes.help_text %}
+                                <div class="form-text">{{ form.maintenance_notes.help_text }}</div>
+                            {% endif %}
+                            {% if form.maintenance_notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.maintenance_notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Form Actions -->
+                <div class="card mb-4 position-sticky" style="top: 20px;">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-save"></i> Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {% if object %}Update Flight Log{% else %}Save Flight Log{% endif %}
+                            </button>
+                            
+                            <button type="submit" name="action" value="save_and_continue" class="btn btn-success">
+                                <i class="fas fa-plus-circle"></i> Save & Add Another
+                            </button>
+                            
+                            <hr>
+                            
+                            <a href="{% if object %}{% url 'flight_operations:flight_log_detail' object.pk %}{% else %}{% url 'flight_operations:flight_log_list' %}{% endif %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            
+                            {% if object %}
+                            <a href="{% url 'flight_operations:flight_log_detail' object.pk %}" class="btn btn-outline-info">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Help -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-question-circle"></i> Form Guidelines
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <h6>Required Fields</h6>
+                            <p>Fields marked with <span class="text-danger">*</span> are required for CASA compliance.</p>
+                            
+                            <h6>Flight Duration</h6>
+                            <p>Enter total flight time in minutes from engine start to engine stop.</p>
+                            
+                            <h6>Performance Data</h6>
+                            <p>Accurate performance metrics help with future flight planning and aircraft maintenance scheduling.</p>
+                            
+                            <h6>Log Entries</h6>
+                            <p>Record significant events, weather changes, or operational notes during the flight.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Flight Plans -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-clock"></i> Recent Flight Plans
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <!-- This would be populated by the view context -->
+                            <div class="list-group-item px-0">
+                                <small class="text-muted">Recent flight plans will appear here for quick selection.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-calculate duration when departure and arrival times are entered
+    $('#{{ form.actual_departure_time.id_for_label }}, #{{ form.actual_arrival_time.id_for_label }}').on('change', function() {
+        const departureTime = $('#{{ form.actual_departure_time.id_for_label }}').val();
+        const arrivalTime = $('#{{ form.actual_arrival_time.id_for_label }}').val();
+        
+        if (departureTime && arrivalTime) {
+            const departure = new Date(departureTime);
+            const arrival = new Date(arrivalTime);
+            const durationMinutes = Math.round((arrival - departure) / 1000 / 60);
+            
+            if (durationMinutes > 0) {
+                $('#{{ form.flight_duration.id_for_label }}').val(durationMinutes);
+            }
+        }
+    });
+    
+    // Form validation feedback
+    $('form').on('submit', function(e) {
+        let isValid = true;
+        
+        // Check required fields
+        $(this).find('[required]').each(function() {
+            if (!$(this).val()) {
+                $(this).addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            $('html, body').animate({
+                scrollTop: $('.is-invalid').first().offset().top - 100
+            }, 500);
+        }
+    });
+    
+    // Clear validation on input
+    $('input, select, textarea').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+});
+</script>
+{% endblock %}
