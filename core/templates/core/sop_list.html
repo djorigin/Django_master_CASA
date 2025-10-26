@@ -189,7 +189,7 @@
                                     {{ sop.get_status_display }}
                                 </span>
                                 {% if sop.approved_by and sop.approved_date %}
-                                    <br><small class="text-muted">By: {{ sop.approved_by.user.get_full_name|default:sop.approved_by.user.username }}</small>
+                                    <br><small class="text-muted">By: {{ sop.approved_by.user.get_full_name|default:sop.approved_by.user.email }}</small>
                                 {% endif %}
                             </td>
                             <td>

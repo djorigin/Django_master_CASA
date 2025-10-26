@@ -269,14 +269,36 @@ class SOPProcedureStepForm(forms.ModelForm):
     class Meta:
         model = SOPProcedureStep
         fields = [
+            # Basic Information
             "step_number",
             "step_type",
             "title",
             "description",
             "responsible_role",
             "duration_estimate",
+            # JSA (Job Safety Analysis) - Australian Compliance
+            "jsa_hazard_identification",
+            "jsa_risk_rating",
+            "jsa_control_measures",
+            # Risk Assessment
+            "risk_likelihood",
+            "risk_consequence",
+            # Safety & Warnings
+            "safety_warnings",
+            "emergency_procedures",
             "safety_critical",
+            # Equipment & Resources
+            "required_equipment",
+            "required_personnel",
+            "environmental_conditions",
+            # Quality & Verification
+            "quality_standards",
+            "verification_method",
+            "acceptance_criteria",
             "verification_required",
+            "sign_off_required",
+            # Compliance & Additional
+            "regulatory_references",
             "notes",
             "prerequisite_steps",
         ]
@@ -324,6 +346,95 @@ class SOPProcedureStepForm(forms.ModelForm):
                     "class": "form-control",
                     "rows": 3,
                     "placeholder": "Additional notes, warnings, or references",
+                }
+            ),
+            # JSA Fields
+            "jsa_hazard_identification": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Identify all potential hazards: equipment failure, human error, environmental factors...",
+                }
+            ),
+            "jsa_risk_rating": forms.Select(attrs={"class": "form-select"}),
+            "jsa_control_measures": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Describe specific control measures to mitigate each identified risk...",
+                }
+            ),
+            # Risk Assessment Fields
+            "risk_likelihood": forms.Select(attrs={"class": "form-select"}),
+            "risk_consequence": forms.Select(attrs={"class": "form-select"}),
+            # Safety & Warnings
+            "safety_warnings": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Critical safety warnings and precautions...",
+                }
+            ),
+            "emergency_procedures": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Emergency response procedures if something goes wrong...",
+                }
+            ),
+            # Equipment & Resources
+            "required_equipment": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "List all equipment, tools, PPE required...",
+                }
+            ),
+            "required_personnel": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "Personnel qualifications and numbers required...",
+                }
+            ),
+            "environmental_conditions": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "Weather, lighting, temperature requirements...",
+                }
+            ),
+            # Quality & Verification
+            "quality_standards": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Quality criteria and standards that must be met...",
+                }
+            ),
+            "verification_method": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "How completion will be verified (inspection, testing, etc.)...",
+                }
+            ),
+            "acceptance_criteria": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Specific criteria that define successful completion...",
+                }
+            ),
+            "sign_off_required": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),
+            # Compliance
+            "regulatory_references": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "CASA regulations, Australian standards, other requirements...",
                 }
             ),
             "prerequisite_steps": forms.CheckboxSelectMultiple(),

@@ -128,6 +128,7 @@ def sop_list(request):
 
     context = {
         "page_obj": page_obj,
+        "sops": page_obj,  # Template expects 'sops' - adding alias for compatibility
         "search_query": search_query,
         "category": category,
         "status": status,
@@ -166,11 +167,56 @@ def sop_create(request):
     if request.method == "POST":
         form = StandardOperatingProcedureForm(request.POST)
         if form.is_valid():
-            sop = form.save(commit=False)
-            sop.created_by = request.user.staffprofile
-            sop = form.save()
-            messages.success(request, f"SOP '{sop.sop_id}' created successfully.")
-            return redirect("core:sop_detail", pk=sop.pk)
+            try:
+                # Check if user has proper access (staff profile required even for superusers for audit trail)
+                if (
+                    hasattr(request.user, 'staff_profile')
+                    and request.user.staff_profile
+                ):
+                    sop = form.save(commit=False)
+                    sop.created_by = request.user.staff_profile
+                    sop.save()
+
+                    # Different success message for superusers
+                    if request.user.is_superuser:
+                        messages.success(
+                            request,
+                            f"SOP '{sop.sop_id}' created successfully (Administrator access).",
+                        )
+                    else:
+                        messages.success(
+                            request, f"SOP '{sop.sop_id}' created successfully."
+                        )
+
+                    return redirect("core:sop_detail", pk=sop.pk)
+                else:
+                    # Handle different error messages for superuser vs regular user
+                    if request.user.is_superuser:
+                        messages.error(
+                            request,
+                            "Administrator Profile Required - Please create a Staff Profile for your administrator account to maintain proper audit trails for SOPs.",
+                        )
+                    else:
+                        messages.error(
+                            request,
+                            "SOP Creation Error - User Not Authorised. Staff profile required to create SOPs.",
+                        )
+                    return render(
+                        request,
+                        "core/sop_form.html",
+                        {"form": form, "title": "Create Standard Operating Procedure"},
+                    )
+            except AttributeError:
+                # Catch any attribute errors gracefully
+                messages.error(
+                    request,
+                    "SOP Creation Error - User Not Authorised. Please contact administrator.",
+                )
+                return render(
+                    request,
+                    "core/sop_form.html",
+                    {"form": form, "title": "Create Standard Operating Procedure"},
+                )
     else:
         form = StandardOperatingProcedureForm()
 
@@ -244,7 +290,7 @@ def sop_step_create(request, sop_pk):
             messages.success(
                 request, f"Procedure step {step.step_number} created successfully."
             )
-            return redirect("core:sop_detail", pk=sop.pk)
+            return redirect("core:sop_steps_list", sop_pk=sop.pk)
     else:
         # Auto-increment step number
         last_step = sop.procedure_steps.order_by("step_number").last()
@@ -640,31 +686,7 @@ def sop_steps_list(request, sop_pk):
     return render(request, "core/sop_steps_list.html", context)
 
 
-@login_required
-def sop_step_create(request, sop_pk):
-    """Create new SOP procedure step"""
-    sop = get_object_or_404(StandardOperatingProcedure, pk=sop_pk)
-
-    if request.method == "POST":
-        form = SOPProcedureStepForm(request.POST)
-        if form.is_valid():
-            step = form.save(commit=False)
-            step.sop = sop
-            step.save()
-            form.save_m2m()
-            messages.success(
-                request, f"Procedure step {step.step_number} created successfully!"
-            )
-            return redirect("core:sop_steps_list", sop_pk=sop.pk)
-    else:
-        form = SOPProcedureStepForm()
-
-    context = {
-        "form": form,
-        "sop": sop,
-        "title": "Create SOP Step",
-    }
-    return render(request, "core/sop_step_form.html", context)
+# Duplicate function removed - using the version with auto-increment logic above
 
 
 @login_required

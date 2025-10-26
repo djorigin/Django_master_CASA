@@ -11,9 +11,13 @@
                 <h2>
                     <i class="fas fa-route"></i> Flight Plan {{ object.flight_plan_id }}
                     {% if object.status %}
-                        <span class="badge bg-{{ object.status == 'approved' and 'success' or object.status == 'pending' and 'warning' or 'secondary' }} ms-2">
-                            {{ object.get_status_display|default:object.status|title }}
-                        </span>
+                        {% if object.status == 'approved' %}
+                            <span class="badge bg-success ms-2">{{ object.get_status_display|default:"Approved" }}</span>
+                        {% elif object.status == 'pending' %}
+                            <span class="badge bg-warning ms-2">{{ object.get_status_display|default:"Pending" }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary ms-2">{{ object.get_status_display|default:object.status|title }}</span>
+                        {% endif %}
                     {% endif %}
                 </h2>
                 <div>
