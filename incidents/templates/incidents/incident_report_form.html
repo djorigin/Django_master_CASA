@@ -1,0 +1,212 @@
+{% extends 'incidents/base.html' %}
+{% load static %}
+
+{% block title %}Report New Incident{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'incidents:incident_report_list' %}">Incident Reports</a></li>
+<li class="breadcrumb-item active">Report New Incident</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-section {
+    border-left: 4px solid #007bff;
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4><i class="fas fa-exclamation-triangle"></i> Report New Incident</h4>
+                <small>Complete all required fields to report a new aviation incident</small>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Basic Information Section -->
+                    <div class="form-section p-3 mb-4">
+                        <h5><i class="fas fa-info-circle"></i> Basic Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.incident_date.label }}</label>
+                                    {{ form.incident_date }}
+                                    {% if form.incident_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.incident_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.incident_type.label }}</label>
+                                    {{ form.incident_type }}
+                                    {% if form.incident_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.incident_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.severity.label }}</label>
+                                    {{ form.severity }}
+                                    {% if form.severity.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.severity.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.aircraft.label }}</label>
+                                    {{ form.aircraft }}
+                                    {% if form.aircraft.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.aircraft.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location and Personnel Section -->
+                    <div class="form-section p-3 mb-4">
+                        <h5><i class="fas fa-map-marker-alt"></i> Location & Personnel</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.location.label }}</label>
+                                    {{ form.location }}
+                                    {% if form.location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.reported_by.label }}</label>
+                                    {{ form.reported_by }}
+                                    {% if form.reported_by.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.reported_by.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.pilot_in_command.label }}</label>
+                                    {{ form.pilot_in_command }}
+                                    {% if form.pilot_in_command.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.pilot_in_command.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.weather_conditions.label }}</label>
+                                    {{ form.weather_conditions }}
+                                    {% if form.weather_conditions.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.weather_conditions.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Incident Details Section -->
+                    <div class="form-section p-3 mb-4">
+                        <h5><i class="fas fa-file-alt"></i> Incident Details</h5>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.immediate_actions_taken.label }}</label>
+                            {{ form.immediate_actions_taken }}
+                            {% if form.immediate_actions_taken.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.immediate_actions_taken.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.injuries_sustained.label }}</label>
+                                    {{ form.injuries_sustained }}
+                                    {% if form.injuries_sustained.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.injuries_sustained.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.property_damage.label }}</label>
+                                    {{ form.property_damage }}
+                                    {% if form.property_damage.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.property_damage.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'incidents:incident_report_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Report Incident
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-set current date/time if not already set
+document.addEventListener('DOMContentLoaded', function() {
+    const dateField = document.getElementById('id_incident_date');
+    if (dateField && !dateField.value) {
+        const now = new Date();
+        dateField.value = now.toISOString().slice(0, 16);
+    }
+});
+</script>
+{% endblock %}

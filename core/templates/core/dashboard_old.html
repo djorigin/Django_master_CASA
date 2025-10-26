@@ -377,7 +377,7 @@
                     <div class="action-title">{% trans "Inspections" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'incidents:dashboard' %}" class="action-tile">
                     <div class="action-icon action-purple">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
@@ -412,7 +412,7 @@
                     <div class="action-title">{% trans "User Management" %}</div>
                 </a>
                 
-                <a href="#" class="action-tile">
+                <a href="{% url 'maintenance:dashboard' %}" class="action-tile">
                     <div class="action-icon action-teal">
                         <i class="fas fa-tools"></i>
                     </div>

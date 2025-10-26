@@ -12,6 +12,59 @@ from .models import (
 )
 
 
+class CustomUserCreationForm(UserCreationForm):
+    """
+    Registration form for new aviation professionals
+    Implements enterprise business rule: new users get basic access only
+    """
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter your email address'}
+        ),
+    )
+    first_name = forms.CharField(
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter your first name'}
+        ),
+    )
+    last_name = forms.CharField(
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter your last name'}
+        ),
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Style password fields
+        self.fields['password1'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Enter password'}
+        )
+        self.fields['password2'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Confirm password'}
+        )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        # Business Rule: New users start with basic access only
+        user.role = 'basic'
+        if commit:
+            user.save()
+        return user
+
+
 class CustomUserForm(forms.ModelForm):
     password1 = forms.CharField(
         label="Password",

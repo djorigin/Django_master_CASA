@@ -1,0 +1,205 @@
+{% extends 'maintenance/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Update Maintenance{% else %}New Maintenance Record{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'maintenance:maintenance_record_list' %}">Maintenance Records</a></li>
+<li class="breadcrumb-item active">{% if object %}Update{% else %}New Record{% endif %}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-section {
+    border-left: 4px solid #28a745;
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4>
+                    <i class="fas fa-wrench"></i> 
+                    {% if object %}Update Maintenance Record{% else %}New Maintenance Record{% endif %}
+                </h4>
+                <small>Schedule or update aircraft maintenance</small>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Basic Information Section -->
+                    <div class="form-section p-3 mb-4">
+                        <h5><i class="fas fa-info-circle"></i> Basic Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.aircraft.label }}</label>
+                                    {{ form.aircraft }}
+                                    {% if form.aircraft.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.aircraft.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.maintenance_type.label }}</label>
+                                    {{ form.maintenance_type }}
+                                    {% if form.maintenance_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.maintenance_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.scheduled_date.label }}</label>
+                                    {{ form.scheduled_date }}
+                                    {% if form.scheduled_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.scheduled_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.pre_maintenance_hours.label }}</label>
+                                    {{ form.pre_maintenance_hours }}
+                                    {% if form.pre_maintenance_hours.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.pre_maintenance_hours.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personnel Section -->
+                    <div class="form-section p-3 mb-4">
+                        <h5><i class="fas fa-users"></i> Personnel</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.performed_by.label }}</label>
+                                    {{ form.performed_by }}
+                                    {% if form.performed_by.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.performed_by.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.supervised_by.label }}</label>
+                                    {{ form.supervised_by }}
+                                    {% if form.supervised_by.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.supervised_by.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Work Details Section -->
+                    <div class="form-section p-3 mb-4">
+                        <h5><i class="fas fa-clipboard-list"></i> Work Details</h5>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.work_performed.label }}</label>
+                            {{ form.work_performed }}
+                            {% if form.work_performed.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.work_performed.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.defects_found.label }}</label>
+                                    {{ form.defects_found }}
+                                    {% if form.defects_found.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.defects_found.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.corrective_actions.label }}</label>
+                                    {{ form.corrective_actions }}
+                                    {% if form.corrective_actions.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.corrective_actions.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.parts_used.label }}</label>
+                                    {{ form.parts_used }}
+                                    {% if form.parts_used.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.parts_used.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.labor_hours.label }}</label>
+                                    {{ form.labor_hours }}
+                                    {% if form.labor_hours.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.labor_hours.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.parts_cost.label }}</label>
+                                    {{ form.parts_cost }}
+                                    {% if form.parts_cost.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.parts_cost.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'maintenance:maintenance_record_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> 
+                            {% if object %}Update Record{% else %}Create Record{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

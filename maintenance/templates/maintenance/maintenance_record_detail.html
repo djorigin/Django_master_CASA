@@ -1,0 +1,215 @@
+{% extends 'maintenance/base.html' %}
+{% load static %}
+
+{% block title %}Maintenance Record {{ record.maintenance_id }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'maintenance:maintenance_record_list' %}">Maintenance Records</a></li>
+<li class="breadcrumb-item active">{{ record.maintenance_id }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-wrench text-success"></i> 
+                Maintenance Record {{ record.maintenance_id }}
+            </h2>
+            <div class="btn-group">
+                <a href="{% url 'maintenance:maintenance_record_update' record.pk %}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                {% if record.status != 'completed' %}
+                    <a href="{% url 'maintenance:maintenance_record_complete' record.pk %}" class="btn btn-outline-success">
+                        <i class="fas fa-check"></i> Complete
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Maintenance Information -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Maintenance Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Aircraft:</strong> {{ record.aircraft.registration_mark }}</p>
+                                <p><strong>Maintenance Type:</strong> {{ record.maintenance_type.name }}</p>
+                                <p><strong>Category:</strong> {{ record.maintenance_type.get_type_category_display }}</p>
+                                <p><strong>Scheduled Date:</strong> {{ record.scheduled_date|date:"d/m/Y" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Pre-Maintenance Hours:</strong> {{ record.pre_maintenance_hours }} hrs</p>
+                                {% if record.post_maintenance_hours %}
+                                    <p><strong>Post-Maintenance Hours:</strong> {{ record.post_maintenance_hours }} hrs</p>
+                                {% endif %}
+                                <p><strong>Status:</strong> 
+                                    <span class="badge bg-{% if record.status == 'completed' %}success{% elif record.status == 'in_progress' %}warning{% elif record.status == 'scheduled' %}primary{% else %}secondary{% endif %}">
+                                        {{ record.get_status_display }}
+                                    </span>
+                                </p>
+                                {% if record.completion_status %}
+                                    <p><strong>Completion Status:</strong> 
+                                        <span class="badge bg-{% if record.completion_status == 'satisfactory' %}success{% else %}warning{% endif %}">
+                                            {{ record.get_completion_status_display }}
+                                        </span>
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list"></i> Work Performed</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ record.work_performed|linebreaks }}</p>
+                    </div>
+                </div>
+
+                {% if record.defects_found %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Defects Found</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ record.defects_found|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if record.corrective_actions %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> Corrective Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ record.corrective_actions|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if record.parts_used %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Parts Used</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ record.parts_used|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar Information -->
+            <div class="col-lg-4">
+                <!-- Personnel Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6><i class="fas fa-users"></i> Personnel</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Performed By:</strong><br>
+                            {% if record.performed_by %}
+                                {{ record.performed_by.user.get_full_name }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </p>
+                        {% if record.supervised_by %}
+                            <p><strong>Supervised By:</strong><br>
+                                {{ record.supervised_by.user.get_full_name }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Timing Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6><i class="fas fa-clock"></i> Timing</h6>
+                    </div>
+                    <div class="card-body">
+                        <small>
+                            {% if record.started_date %}
+                                <p><strong>Started:</strong> {{ record.started_date|date:"d/m/Y H:i" }}</p>
+                            {% endif %}
+                            {% if record.completed_date %}
+                                <p><strong>Completed:</strong> {{ record.completed_date|date:"d/m/Y H:i" }}</p>
+                            {% endif %}
+                            {% if record.next_maintenance_due %}
+                                <p><strong>Next Due:</strong> {{ record.next_maintenance_due|date:"d/m/Y" }}</p>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Cost Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6><i class="fas fa-dollar-sign"></i> Cost Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Labor Hours:</strong> {{ record.labor_hours }} hrs</p>
+                        <p><strong>Parts Cost:</strong> ${{ record.parts_cost|floatformat:2 }}</p>
+                        {% if record.labor_hours and record.parts_cost %}
+                            <hr>
+                            <p><strong>Total Cost:</strong> ${{ record.parts_cost|floatformat:2 }} + labor</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- CASA Compliance -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6><i class="fas fa-certificate"></i> CASA Compliance</h6>
+                    </div>
+                    <div class="card-body">
+                        <small>
+                            {% if record.maintenance_type.casa_required %}
+                                <p><span class="badge bg-info">CASA Required</span></p>
+                            {% endif %}
+                            {% if record.maintenance_type.licensed_engineer_required %}
+                                <p><span class="badge bg-warning">Licensed Engineer Required</span></p>
+                            {% endif %}
+                            {% if record.casa_form_completed %}
+                                <p><span class="badge bg-success">CASA Form Completed</span></p>
+                            {% endif %}
+                            {% if record.return_to_service_authorization %}
+                                <p><strong>Return to Service:</strong><br>
+                                   {{ record.return_to_service_authorization }}
+                                </p>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Record Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-info"></i> Record Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <p><strong>Created:</strong> {{ record.created_at|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Last Updated:</strong> {{ record.updated_at|date:"d/m/Y H:i" }}</p>
+                            {% if record.followup_required %}
+                                <p><strong>Follow-up:</strong> 
+                                    <span class="badge bg-warning">Required</span>
+                                </p>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

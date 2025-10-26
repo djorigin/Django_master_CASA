@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation Management System - Professional RPAS Operations</title>
+    
+    <!-- Bootstrap 5.3.0 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --aviation-blue: #003366;
+            --aviation-gold: #FFD700;
+            --safety-orange: #FF6B35;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--aviation-blue) 0%, #0066cc 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        
+        .aviation-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .aviation-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            color: var(--aviation-blue);
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-aviation {
+            background: var(--aviation-gold);
+            color: var(--aviation-blue);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-aviation:hover {
+            background: var(--safety-orange);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .compliance-badge {
+            background: var(--safety-orange);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .aircraft-silhouette {
+            opacity: 0.1;
+            position: absolute;
+            right: -50px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 15rem;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section position-relative">
+        <i class="fas fa-plane aircraft-silhouette"></i>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <span class="compliance-badge">
+                            <i class="fas fa-certificate"></i> CASA Part 101 Compliant
+                        </span>
+                    </div>
+                    <h1 class="display-3 fw-bold mb-4">
+                        Professional Aviation Management System
+                    </h1>
+                    <p class="lead mb-4">
+                        Comprehensive RPAS operations management platform designed for Australian aviation professionals. 
+                        Streamline incident reporting, maintenance scheduling, and regulatory compliance.
+                    </p>
+                    <div class="d-grid d-md-flex gap-3">
+                        <a href="{% url 'accounts:login' %}" class="btn btn-aviation btn-lg">
+                            <i class="fas fa-sign-in-alt"></i> Access System
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus"></i> Register Account
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="aviation-card p-5 text-dark">
+                        <i class="fas fa-helicopter feature-icon"></i>
+                        <h3>Enterprise Aviation Solutions</h3>
+                        <p class="mb-4">
+                            Built for professional pilots, maintenance teams, and aviation operators 
+                            requiring comprehensive operational oversight.
+                        </p>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <i class="fas fa-exclamation-triangle text-warning mb-2" style="font-size: 2rem;"></i>
+                                <h6>Incident<br>Management</h6>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-tools text-success mb-2" style="font-size: 2rem;"></i>
+                                <h6>Maintenance<br>Tracking</h6>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-clipboard-check text-info mb-2" style="font-size: 2rem;"></i>
+                                <h6>Compliance<br>Reporting</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-12">
+                    <h2 class="display-5 fw-bold text-dark mb-3">Aviation Management Features</h2>
+                    <p class="lead text-muted">Professional tools for comprehensive aviation operations oversight</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="aviation-card p-4 h-100 text-center">
+                        <i class="fas fa-plane-departure feature-icon"></i>
+                        <h4 class="text-dark">Flight Operations</h4>
+                        <p class="text-muted">
+                            Comprehensive flight planning, crew management, and operational oversight 
+                            for commercial RPAS operations.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="aviation-card p-4 h-100 text-center">
+                        <i class="fas fa-wrench feature-icon"></i>
+                        <h4 class="text-dark">Aircraft Maintenance</h4>
+                        <p class="text-muted">
+                            Detailed maintenance scheduling, technical log management, and 
+                            airworthiness compliance tracking.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="aviation-card p-4 h-100 text-center">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <h4 class="text-dark">Safety Management</h4>
+                        <p class="text-muted">
+                            Incident reporting, investigation tracking, and comprehensive 
+                            safety management system integration.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="aviation-card p-4 h-100">
+                        <i class="fas fa-map feature-icon"></i>
+                        <h4 class="text-dark">Airspace Management</h4>
+                        <p class="text-muted">
+                            Controlled and restricted airspace tracking, NOTAMs integration, 
+                            and operational area management for compliant RPAS operations.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="aviation-card p-4 h-100">
+                        <i class="fas fa-users feature-icon"></i>
+                        <h4 class="text-dark">Personnel Management</h4>
+                        <p class="text-muted">
+                            Pilot certification tracking, staff role management, and 
+                            comprehensive user access control for aviation professionals.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-5" style="background: var(--aviation-blue); color: white;">
+        <div class="container text-center">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="display-5 fw-bold mb-4">Ready to Streamline Your Aviation Operations?</h2>
+                    <p class="lead mb-4">
+                        Join aviation professionals already using our comprehensive management platform 
+                        for safer, more efficient operations.
+                    </p>
+                    <div class="d-grid d-md-flex justify-content-center gap-3">
+                        <a href="{% url 'accounts:login' %}" class="btn btn-aviation btn-lg">
+                            <i class="fas fa-rocket"></i> Access System Now
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus"></i> New User? Register
+                        </a>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-question-circle"></i> Need Help?
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-book"></i> User Guide</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-phone"></i> Support Contact</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-certificate"></i> CASA Compliance</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-helicopter"></i> Aviation Management System</h5>
+                    <p class="mb-0">Professional RPAS operations management platform.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-certificate text-warning"></i> CASA Part 101 Compliant | 
+                        Built for Australian Aviation Professionals
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -169,5 +169,44 @@
   </div>
 </form>
 
+<!-- Aviation System Return Button -->
+<div style="text-align: center; margin: 20px 0; padding-top: 20px; border-top: 1px solid #eee;">
+    <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
+        <strong><i class="fas fa-info-circle"></i> Access Notice:</strong> 
+        Admin access restricted to Staff users only. Basic users should use the main dashboard.
+    </div>
+    <a href="{% url 'accounts:dashboard' %}" style="
+        background: #003366;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    " onmouseover="this.style.background='#FF6B35'" onmouseout="this.style.background='#003366'">
+        <i class="fas fa-arrow-left"></i> Return to Aviation Dashboard
+    </a>
 </div>
+
+</div>
+
+<script>
+// Auto-redirect denied users after showing message
+document.addEventListener('DOMContentLoaded', function() {
+    const errorMsg = document.querySelector('.errornote');
+    if (errorMsg && errorMsg.textContent.includes('not authorised')) {
+        setTimeout(function() {
+            const redirectMsg = document.createElement('div');
+            redirectMsg.innerHTML = '<div style="color: #FF6B35; font-weight: bold; text-align: center; margin: 15px 0; background: #fff3cd; padding: 10px; border-radius: 5px;"><i class="fas fa-clock"></i> Auto-redirecting to dashboard in 5 seconds...</div>';
+            errorMsg.parentNode.insertBefore(redirectMsg, errorMsg.nextSibling);
+            
+            setTimeout(function() {
+                window.location.href = "{% url 'accounts:dashboard' %}";
+            }, 5000);
+        }, 2000);
+    }
+});
+</script>
+
 {% endblock %}
