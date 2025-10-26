@@ -49,4 +49,5 @@ urlpatterns = [
     # Authentication
     path("logout/", views.logout_view, name="logout"),
     path("login/", views.custom_login_view, name="login"),
+    path("register/", views.register_view, name="register"),
 ]

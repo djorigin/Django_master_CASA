@@ -1,0 +1,368 @@
+{% extends 'maintenance/base.html' %}
+{% load static %}
+
+{% block title %}Maintenance Management Dashboard{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+.stat-card {
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+.stat-card.danger {
+    border-left-color: #dc3545;
+}
+.stat-card.warning {
+    border-left-color: #ffc107;
+}
+.stat-card.success {
+    border-left-color: #28a745;
+}
+.stat-card.info {
+    border-left-color: #17a2b8;
+}
+.maintenance-priority-low { background-color: #d4edda; }
+.maintenance-priority-medium { background-color: #fff3cd; }
+.maintenance-priority-high { background-color: #f8d7da; }
+.maintenance-priority-critical { background-color: #f5c6cb; }
+.maintenance-status-scheduled { color: #6c757d; }
+.maintenance-status-in_progress { color: #fd7e14; }
+.maintenance-status-completed { color: #198754; }
+.maintenance-status-overdue { color: #dc3545; font-weight: bold; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-wrench text-primary"></i> Maintenance Management Dashboard</h1>
+        <div>
+            <a href="{% url 'maintenance:maintenance_record_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Maintenance Record
+            </a>
+            <a href="{% url 'maintenance:maintenance_type_create' %}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-plus"></i> New Maintenance Type
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total Maintenance Records</h6>
+                            <h2 class="card-title">{{ total_maintenance_records }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clipboard-list fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Active Maintenance</h6>
+                            <h2 class="card-title text-warning">{{ active_maintenance }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tools fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Completed Maintenance</h6>
+                            <h2 class="card-title text-success">{{ completed_maintenance }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card {% if overdue_maintenance > 0 %}danger{% else %}success{% endif %} h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Overdue Maintenance</h6>
+                            <h2 class="card-title {% if overdue_maintenance > 0 %}text-danger{% else %}text-success{% endif %}">{{ overdue_maintenance }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x {% if overdue_maintenance > 0 %}text-danger{% else %}text-success{% endif %}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Aircraft Requiring Maintenance</h6>
+                            <h2 class="card-title text-info">{{ aircraft_requiring_maintenance }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-plane fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Avg Completion Time (Hours)</h6>
+                            <h2 class="card-title text-primary">{{ avg_completion_time }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-stopwatch fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-chart-pie"></i> Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'maintenance:maintenance_record_list' %}?status=scheduled" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-calendar"></i> Scheduled Maintenance
+                        </a>
+                        <a href="{% url 'maintenance:maintenance_record_list' %}?overdue=true" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-exclamation-triangle"></i> Overdue Maintenance
+                        </a>
+                        <a href="{% url 'maintenance:technical_log_part_a_list' %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-book"></i> Technical Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie"></i> Maintenance by Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for status, count in maintenance_status_breakdown.items %}
+                        <div class="col-6 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ status }}:</span>
+                                <strong>{{ count }}</strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Maintenance by Type</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for type, count in maintenance_type_breakdown.items %}
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-truncate">{{ type }}:</span>
+                                <strong>{{ count }}</strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Maintenance and Alerts -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5><i class="fas fa-clock"></i> Recent Maintenance Records</h5>
+                    <a href="{% url 'maintenance:maintenance_record_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_maintenance %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Maintenance ID</th>
+                                        <th>Aircraft</th>
+                                        <th>Type</th>
+                                        <th>Scheduled Date</th>
+                                        <th>Status</th>
+                                        <th>Technician</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for maintenance in recent_maintenance %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'maintenance:maintenance_record_detail' maintenance.pk %}">
+                                                {{ maintenance.maintenance_id }}
+                                            </a>
+                                        </td>
+                                        <td>{{ maintenance.aircraft.registration }}</td>
+                                        <td>
+                                            <span class="badge maintenance-priority-{{ maintenance.maintenance_type.priority }}">
+                                                {{ maintenance.maintenance_type.name }}
+                                            </span>
+                                        </td>
+                                        <td>{{ maintenance.scheduled_date|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary maintenance-status-{{ maintenance.status }}">
+                                                {{ maintenance.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ maintenance.performed_by.user.get_full_name|default:"Not assigned" }}</td>
+                                        <td>
+                                            <a href="{% url 'maintenance:maintenance_record_detail' maintenance.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if maintenance.status == 'in_progress' %}
+                                                <a href="{% url 'maintenance:maintenance_record_complete' maintenance.pk %}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <p>No recent maintenance records found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-exclamation-triangle text-danger"></i> Maintenance Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Overdue Maintenance -->
+                    {% if overdue_maintenance_records %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-clock"></i> Overdue Maintenance</h6>
+                            {% for record in overdue_maintenance_records %}
+                                <div class="mb-2">
+                                    <a href="{% url 'maintenance:maintenance_record_detail' record.pk %}" class="text-decoration-none">
+                                        {{ record.aircraft.registration }} - {{ record.maintenance_type.name }}
+                                    </a>
+                                    <small class="text-muted d-block">Due: {{ record.scheduled_date|date:"d/m/Y" }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Active Maintenance -->
+                    {% if active_maintenance > 0 %}
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-tools"></i> Active Maintenance</h6>
+                            <p class="mb-0">{{ active_maintenance }} maintenance task(s) currently active.</p>
+                            <a href="{% url 'maintenance:maintenance_record_list' %}?status=in_progress" class="btn btn-sm btn-outline-primary mt-2">
+                                View Active Tasks
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {% if overdue_maintenance_records|length == 0 and active_maintenance == 0 %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p>No critical maintenance alerts at this time.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Maintenance Modules</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'maintenance:maintenance_record_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-clipboard-list"></i> Maintenance Records
+                        </a>
+                        <a href="{% url 'maintenance:maintenance_type_list' %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-cogs"></i> Maintenance Types
+                        </a>
+                        <a href="{% url 'maintenance:technical_log_part_a_list' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-book"></i> Technical Log Part A
+                        </a>
+                        <a href="{% url 'maintenance:technical_log_part_b_list' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-book-open"></i> Technical Log Part B
+                        </a>
+                        <a href="{% url 'maintenance:rpas_maintenance_entry_list' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-wrench"></i> RPAS Maintenance Entries
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh dashboard every 5 minutes
+setTimeout(function() {
+    location.reload();
+}, 300000);
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(function(tooltip) {
+        new bootstrap.Tooltip(tooltip);
+    });
+});
+</script>
+{% endblock %}
