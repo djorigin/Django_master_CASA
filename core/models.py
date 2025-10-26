@@ -381,6 +381,124 @@ class SOPProcedureStep(models.Model):
         help_text="Additional notes, warnings, or references for this step",
     )
 
+    # === AUSTRALIAN COMPLIANCE FIELDS ===
+    # JSA (Job Safety Analysis) Fields - Mandatory for Australian Standards
+    jsa_hazard_identification = models.TextField(
+        verbose_name="JSA: Hazard Identification",
+        help_text="Identify all potential hazards associated with this step (Required for Australian compliance)",
+        blank=True,
+    )
+
+    jsa_risk_rating = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Low Risk'),
+            ('medium', 'Medium Risk'),
+            ('high', 'High Risk'),
+            ('critical', 'Critical Risk'),
+        ],
+        verbose_name="JSA: Risk Rating",
+        help_text="Overall risk rating after controls applied",
+        blank=True,
+    )
+
+    jsa_control_measures = models.TextField(
+        verbose_name="JSA: Control Measures",
+        help_text="Specific control measures to mitigate identified risks",
+        blank=True,
+    )
+
+    # Risk Assessment Fields
+    risk_likelihood = models.CharField(
+        max_length=15,
+        choices=[
+            ('rare', 'Rare (1)'),
+            ('unlikely', 'Unlikely (2)'),
+            ('possible', 'Possible (3)'),
+            ('likely', 'Likely (4)'),
+            ('almost_certain', 'Almost Certain (5)'),
+        ],
+        verbose_name="Risk Likelihood",
+        blank=True,
+    )
+
+    risk_consequence = models.CharField(
+        max_length=15,
+        choices=[
+            ('insignificant', 'Insignificant (1)'),
+            ('minor', 'Minor (2)'),
+            ('moderate', 'Moderate (3)'),
+            ('major', 'Major (4)'),
+            ('catastrophic', 'Catastrophic (5)'),
+        ],
+        verbose_name="Risk Consequence",
+        blank=True,
+    )
+
+    # Safety & Warnings Section
+    safety_warnings = models.TextField(
+        verbose_name="Safety & Warnings",
+        help_text="Critical safety warnings and precautions for this step",
+        blank=True,
+    )
+
+    emergency_procedures = models.TextField(
+        verbose_name="Emergency Procedures",
+        help_text="Emergency response procedures if something goes wrong during this step",
+        blank=True,
+    )
+
+    # Equipment & Resources Section
+    required_equipment = models.TextField(
+        verbose_name="Required Equipment & Tools",
+        help_text="List all equipment, tools, and resources needed for this step",
+        blank=True,
+    )
+
+    required_personnel = models.TextField(
+        verbose_name="Required Personnel",
+        help_text="Personnel qualifications and numbers required",
+        blank=True,
+    )
+
+    environmental_conditions = models.TextField(
+        verbose_name="Environmental Conditions",
+        help_text="Weather, lighting, or other environmental requirements",
+        blank=True,
+    )
+
+    # Quality & Verification Section
+    quality_standards = models.TextField(
+        verbose_name="Quality Standards",
+        help_text="Quality criteria and standards that must be met",
+        blank=True,
+    )
+
+    verification_method = models.TextField(
+        verbose_name="Verification Method",
+        help_text="How completion and quality of this step will be verified",
+        blank=True,
+    )
+
+    acceptance_criteria = models.TextField(
+        verbose_name="Acceptance Criteria",
+        help_text="Specific criteria that define successful completion of this step",
+        blank=True,
+    )
+
+    # Compliance & Documentation
+    regulatory_references = models.TextField(
+        verbose_name="Regulatory References",
+        help_text="Relevant CASA regulations, Australian standards, or other regulatory requirements",
+        blank=True,
+    )
+
+    sign_off_required = models.BooleanField(
+        default=False,
+        verbose_name="Supervisor Sign-off Required",
+        help_text="Mark if this step requires supervisor or authority sign-off",
+    )
+
     # Dependencies
     prerequisite_steps = models.ManyToManyField(
         "self",

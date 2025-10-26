@@ -9,20 +9,20 @@
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h2>
-                    <i class="fas fa-clipboard-list"></i> {{ object.title }}
-                    <small class="text-muted">v{{ object.version_number|default:"1.0" }}</small>
+                    <i class="fas fa-clipboard-list"></i> {{ sop.title }}
+                    <small class="text-muted">v{{ sop.version_number|default:"1.0" }}</small>
                 </h2>
                 <div>
                     <a href="{% url 'core:sop_list' %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to List
                     </a>
-                    <a href="{% url 'core:sop_update' object.pk %}" class="btn btn-primary">
+                    <a href="{% url 'core:sop_update' sop.pk %}" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Edit
                     </a>
-                    <a href="{% url 'core:sop_export' object.pk %}" class="btn btn-success">
+                    <a href="{% url 'core:sop_export' sop.pk %}" class="btn btn-success">
                         <i class="fas fa-download"></i> Export PDF
                     </a>
-                    <a href="{% url 'core:sop_steps_list' object.pk %}" class="btn btn-info">
+                    <a href="{% url 'core:sop_steps_list' sop.pk %}" class="btn btn-info">
                         <i class="fas fa-list-ol"></i> Manage Steps
                     </a>
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
@@ -45,55 +45,55 @@
                     <div class="row">
                         <div class="col-md-6">
                             <strong>Title:</strong><br>
-                            {{ object.title }}
+                            {{ sop.title }}
                         </div>
                         <div class="col-md-3">
                             <strong>Version:</strong><br>
-                            {{ object.version_number|default:"1.0" }}
+                            {{ sop.version_number|default:"1.0" }}
                         </div>
                         <div class="col-md-3">
                             <strong>Status:</strong><br>
-                            {% if object.status == 'active' %}
-                                <span class="badge bg-success">{{ object.get_status_display|default:"Active" }}</span>
-                            {% elif object.status == 'draft' %}
-                                <span class="badge bg-warning">{{ object.get_status_display|default:"Draft" }}</span>
-                            {% elif object.status == 'under_review' %}
-                                <span class="badge bg-primary">{{ object.get_status_display|default:"Under Review" }}</span>
+                            {% if sop.status == 'active' %}
+                                <span class="badge bg-success">{{ sop.get_status_display|default:"Active" }}</span>
+                            {% elif sop.status == 'draft' %}
+                                <span class="badge bg-warning">{{ sop.get_status_display|default:"Draft" }}</span>
+                            {% elif sop.status == 'under_review' %}
+                                <span class="badge bg-primary">{{ sop.get_status_display|default:"Under Review" }}</span>
                             {% else %}
-                                <span class="badge bg-secondary">{{ object.get_status_display|default:"Archived" }}</span>
+                                <span class="badge bg-secondary">{{ sop.get_status_display|default:"Archived" }}</span>
                             {% endif %}
                         </div>
                     </div>
                     
                     <div class="row mt-3">
-                        {% if object.procedure_type %}
+                        {% if sop.procedure_type %}
                         <div class="col-md-6">
                             <strong>Procedure Type:</strong><br>
-                            <span class="badge bg-info">{{ object.get_procedure_type_display|default:object.procedure_type|title }}</span>
+                            <span class="badge bg-info">{{ sop.get_procedure_type_display|default:sop.procedure_type|title }}</span>
                         </div>
                         {% endif %}
-                        {% if object.category %}
+                        {% if sop.category %}
                         <div class="col-md-6">
                             <strong>Category:</strong><br>
-                            {{ object.category }}
+                            {{ sop.category }}
                         </div>
                         {% endif %}
                     </div>
                     
-                    {% if object.description %}
+                    {% if sop.description %}
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <strong>Description:</strong><br>
-                            {{ object.description|linebreaks }}
+                            {{ sop.description|linebreaks }}
                         </div>
                     </div>
                     {% endif %}
                     
-                    {% if object.approval_authority %}
+                    {% if sop.approval_authority %}
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <strong>Approval Authority:</strong><br>
-                            {{ object.approval_authority }}
+                            {{ sop.approval_authority }}
                         </div>
                     </div>
                     {% endif %}
@@ -101,23 +101,23 @@
             </div>
 
             <!-- Purpose and Scope -->
-            {% if object.purpose or object.scope %}
+            {% if sop.purpose or sop.scope %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-bullseye"></i> Purpose & Scope</h5>
                 </div>
                 <div class="card-body">
-                    {% if object.purpose %}
+                    {% if sop.purpose %}
                     <div class="mb-3">
                         <h6><strong>Purpose:</strong></h6>
-                        {{ object.purpose|linebreaks }}
+                        {{ sop.purpose|linebreaks }}
                     </div>
                     {% endif %}
                     
-                    {% if object.scope %}
+                    {% if sop.scope %}
                     <div>
                         <h6><strong>Scope:</strong></h6>
-                        {{ object.scope|linebreaks }}
+                        {{ sop.scope|linebreaks }}
                     </div>
                     {% endif %}
                 </div>
@@ -128,21 +128,21 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5><i class="fas fa-list-ol"></i> Procedure Steps</h5>
-                    <a href="{% url 'core:sop_steps_list' object.pk %}" class="btn btn-sm btn-outline-primary">
+                    <a href="{% url 'core:sop_steps_list' sop.pk %}" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-cog"></i> Manage Steps
                     </a>
                 </div>
                 <div class="card-body">
-                    {% if object.sop_steps.exists %}
+                    {% if procedure_steps %}
                         <div class="steps-container">
-                            {% for step in object.sop_steps.all %}
+                            {% for step in procedure_steps %}
                                 <div class="step-item mb-3 p-3 border rounded">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="step-number-badge">
                                             <span class="badge bg-primary fs-6">Step {{ step.step_number }}</span>
                                         </div>
                                         <div class="step-actions">
-                                            <a href="{% url 'core:sop_step_update' object.pk step.pk %}" class="btn btn-sm btn-outline-secondary">
+                                            <a href="{% url 'core:sop_step_update' sop.pk step.pk %}" class="btn btn-sm btn-outline-secondary">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         </div>
@@ -150,28 +150,54 @@
                                     <h6 class="mt-2 mb-2">{{ step.title }}</h6>
                                     <p class="mb-2">{{ step.description|linebreaks }}</p>
                                     
-                                    {% if step.warnings or step.safety_notes %}
-                                        <div class="mt-2">
-                                            {% if step.warnings %}
-                                                <div class="alert alert-warning alert-sm mb-2">
-                                                    <i class="fas fa-exclamation-triangle"></i>
-                                                    <strong>Warning:</strong> {{ step.warnings }}
-                                                </div>
-                                            {% endif %}
-                                            {% if step.safety_notes %}
-                                                <div class="alert alert-info alert-sm mb-0">
-                                                    <i class="fas fa-shield-alt"></i>
-                                                    <strong>Safety Note:</strong> {{ step.safety_notes }}
-                                                </div>
-                                            {% endif %}
+                                    <!-- Australian Compliance Fields Display -->
+                                    {% if step.safety_warnings %}
+                                        <div class="alert alert-warning alert-sm mb-2">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <strong>Safety Warning:</strong> {{ step.safety_warnings }}
                                         </div>
                                     {% endif %}
                                     
-                                    {% if step.estimated_duration %}
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock"></i> Estimated Duration: {{ step.estimated_duration }} minutes
-                                        </small>
+                                    {% if step.jsa_hazard_identification %}
+                                        <div class="alert alert-info alert-sm mb-2">
+                                            <i class="fas fa-shield-alt"></i>
+                                            <strong>JSA Hazards:</strong> {{ step.jsa_hazard_identification|truncatewords:20 }}
+                                        </div>
                                     {% endif %}
+                                    
+                                    {% if step.required_equipment %}
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-tools"></i> <strong>Equipment:</strong> {{ step.required_equipment|truncatewords:15 }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <div>
+                                            {% if step.duration_estimate %}
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock"></i> {{ step.duration_estimate }} min
+                                                </small>
+                                            {% endif %}
+                                            {% if step.responsible_role %}
+                                                <small class="text-muted ms-3">
+                                                    <i class="fas fa-user"></i> {{ step.responsible_role }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            {% if step.safety_critical %}
+                                                <span class="badge bg-danger">Safety Critical</span>
+                                            {% endif %}
+                                            {% if step.sign_off_required %}
+                                                <span class="badge bg-warning">Sign-off Required</span>
+                                            {% endif %}
+                                            {% if step.jsa_risk_rating %}
+                                                <span class="badge bg-secondary">{{ step.get_jsa_risk_rating_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
                             {% endfor %}
                         </div>
@@ -180,7 +206,7 @@
                             <i class="fas fa-list-ol fa-2x text-muted mb-3"></i>
                             <h6 class="text-muted">No procedure steps defined</h6>
                             <p class="text-muted">Add steps to provide detailed instructions for this SOP.</p>
-                            <a href="{% url 'core:sop_step_create' object.pk %}" class="btn btn-primary">
+                            <a href="{% url 'core:sop_step_create' sop.pk %}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add First Step
                             </a>
                         </div>
@@ -189,61 +215,61 @@
             </div>
 
             <!-- Prerequisites -->
-            {% if object.prerequisites %}
+            {% if sop.prerequisites %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-list-check"></i> Prerequisites</h5>
                 </div>
                 <div class="card-body">
-                    {{ object.prerequisites|linebreaks }}
+                    {{ sop.prerequisites|linebreaks }}
                 </div>
             </div>
             {% endif %}
 
             <!-- Equipment Required -->
-            {% if object.equipment_required %}
+            {% if sop.equipment_required %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-tools"></i> Equipment Required</h5>
                 </div>
                 <div class="card-body">
-                    {{ object.equipment_required|linebreaks }}
+                    {{ sop.equipment_required|linebreaks }}
                 </div>
             </div>
             {% endif %}
 
             <!-- Safety Considerations -->
-            {% if object.safety_considerations %}
+            {% if sop.safety_considerations %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-shield-alt"></i> Safety Considerations</h5>
                 </div>
                 <div class="card-body">
-                    {{ object.safety_considerations|linebreaks }}
+                    {{ sop.safety_considerations|linebreaks }}
                 </div>
             </div>
             {% endif %}
 
             <!-- Regulatory References -->
-            {% if object.regulatory_references %}
+            {% if sop.regulatory_references %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-gavel"></i> Regulatory References</h5>
                 </div>
                 <div class="card-body">
-                    {{ object.regulatory_references|linebreaks }}
+                    {{ sop.regulatory_references|linebreaks }}
                 </div>
             </div>
             {% endif %}
 
             <!-- Related Documents -->
-            {% if object.related_documents %}
+            {% if sop.related_documents %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-link"></i> Related Documents</h5>
                 </div>
                 <div class="card-body">
-                    {{ object.related_documents|linebreaks }}
+                    {{ sop.related_documents|linebreaks }}
                 </div>
             </div>
             {% endif %}
@@ -259,42 +285,42 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <strong>Current Status:</strong><br>
-                        {% if object.status == 'active' %}
-                            <span class="badge bg-success fs-6">{{ object.get_status_display|default:"Active" }}</span>
-                        {% elif object.status == 'draft' %}
-                            <span class="badge bg-warning fs-6">{{ object.get_status_display|default:"Draft" }}</span>
-                        {% elif object.status == 'under_review' %}
-                            <span class="badge bg-primary fs-6">{{ object.get_status_display|default:"Under Review" }}</span>
+                        {% if sop.status == 'active' %}
+                            <span class="badge bg-success fs-6">{{ sop.get_status_display|default:"Active" }}</span>
+                        {% elif sop.status == 'draft' %}
+                            <span class="badge bg-warning fs-6">{{ sop.get_status_display|default:"Draft" }}</span>
+                        {% elif sop.status == 'under_review' %}
+                            <span class="badge bg-primary fs-6">{{ sop.get_status_display|default:"Under Review" }}</span>
                         {% else %}
-                            <span class="badge bg-secondary fs-6">{{ object.get_status_display|default:"Archived" }}</span>
+                            <span class="badge bg-secondary fs-6">{{ sop.get_status_display|default:"Archived" }}</span>
                         {% endif %}
                     </div>
                     
-                    {% if object.effective_date %}
+                    {% if sop.effective_date %}
                     <div class="mb-3">
                         <strong>Effective Date:</strong><br>
-                        <small class="text-muted">{{ object.effective_date|date:"M d, Y" }}</small>
+                        <small class="text-muted">{{ sop.effective_date|date:"M d, Y" }}</small>
                     </div>
                     {% endif %}
                     
-                    {% if object.review_date %}
+                    {% if sop.review_date %}
                     <div class="mb-3">
                         <strong>Review Date:</strong><br>
-                        <small class="text-muted">{{ object.review_date|date:"M d, Y" }}</small>
-                        {% if object.review_date|timeuntil %}
-                            <br><small class="text-info">{{ object.review_date|timeuntil }} remaining</small>
+                        <small class="text-muted">{{ sop.review_date|date:"M d, Y" }}</small>
+                        {% if sop.review_date|timeuntil %}
+                            <br><small class="text-info">{{ sop.review_date|timeuntil }} remaining</small>
                         {% endif %}
                     </div>
                     {% endif %}
                     
                     <div class="mb-3">
                         <strong>Created:</strong><br>
-                        <small class="text-muted">{{ object.created_at|date:"M d, Y H:i" }}</small>
+                        <small class="text-muted">{{ sop.created_at|date:"M d, Y H:i" }}</small>
                     </div>
                     
                     <div class="mb-3">
                         <strong>Last Updated:</strong><br>
-                        <small class="text-muted">{{ object.updated_at|date:"M d, Y H:i" }}</small>
+                        <small class="text-muted">{{ sop.updated_at|date:"M d, Y H:i" }}</small>
                     </div>
                 </div>
             </div>
@@ -307,13 +333,13 @@
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-6">
-                            <h4 class="text-primary">{{ object.sop_steps.count|default:"0" }}</h4>
+                            <h4 class="text-primary">{{ procedure_steps|length|default:"0" }}</h4>
                             <small class="text-muted">Total Steps</small>
                         </div>
                         <div class="col-6">
                             <h4 class="text-success">
-                                {% if object.sop_steps.aggregate.estimated_duration__sum %}
-                                    {{ object.sop_steps.aggregate.estimated_duration__sum }}
+                                {% if sop.procedure_steps.aggregate.estimated_duration__sum %}
+                                    {{ sop.procedure_steps.aggregate.estimated_duration__sum }}
                                 {% else %}
                                     0
                                 {% endif %}
@@ -331,16 +357,16 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'core:sop_update' object.pk %}" class="btn btn-primary btn-sm">
+                        <a href="{% url 'core:sop_update' sop.pk %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-edit"></i> Edit SOP
                         </a>
-                        <a href="{% url 'core:sop_steps_list' object.pk %}" class="btn btn-info btn-sm">
+                        <a href="{% url 'core:sop_steps_list' sop.pk %}" class="btn btn-info btn-sm">
                             <i class="fas fa-list-ol"></i> Manage Steps
                         </a>
-                        <a href="{% url 'core:sop_export' object.pk %}" class="btn btn-success btn-sm">
+                        <a href="{% url 'core:sop_export' sop.pk %}" class="btn btn-success btn-sm">
                             <i class="fas fa-download"></i> Export as PDF
                         </a>
-                        {% if object.status == 'draft' %}
+                        {% if sop.status == 'draft' %}
                         <button type="button" class="btn btn-warning btn-sm">
                             <i class="fas fa-paper-plane"></i> Submit for Review
                         </button>
@@ -359,29 +385,29 @@
                     <h5><i class="fas fa-info"></i> Document Information</h5>
                 </div>
                 <div class="card-body">
-                    {% if object.procedure_type %}
+                    {% if sop.procedure_type %}
                     <div class="mb-3">
                         <strong>Procedure Type:</strong><br>
-                        <span class="badge bg-info">{{ object.get_procedure_type_display|default:object.procedure_type|title }}</span>
+                        <span class="badge bg-info">{{ sop.get_procedure_type_display|default:sop.procedure_type|title }}</span>
                     </div>
                     {% endif %}
                     
                     <div class="mb-3">
                         <strong>Version:</strong><br>
-                        {{ object.version_number|default:"1.0" }}
+                        {{ sop.version_number|default:"1.0" }}
                     </div>
                     
-                    {% if object.category %}
+                    {% if sop.category %}
                     <div class="mb-3">
                         <strong>Category:</strong><br>
-                        {{ object.category }}
+                        {{ sop.category }}
                     </div>
                     {% endif %}
                     
-                    {% if object.approval_authority %}
+                    {% if sop.approval_authority %}
                     <div class="mb-3">
                         <strong>Approval Authority:</strong><br>
-                        <small>{{ object.approval_authority }}</small>
+                        <small>{{ sop.approval_authority }}</small>
                     </div>
                     {% endif %}
                 </div>
@@ -400,12 +426,12 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete this SOP?</p>
-                <p><strong>{{ object.title }}</strong></p>
+                <p><strong>{{ sop.title }}</strong></p>
                 <p class="text-danger"><small>This action cannot be undone and will also delete all associated procedure steps.</small></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form method="post" action="{% url 'core:sop_delete' object.pk %}" style="display: inline;">
+                <form method="post" action="{% url 'core:sop_delete' sop.pk %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
