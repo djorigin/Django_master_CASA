@@ -1,0 +1,251 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}All Flight Plans{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-route"></i> All Flight Plans</h2>
+                    <p class="text-muted">Unified view of all aircraft and drone flight operations</p>
+                </div>
+                <div>
+                    <a href="{% url 'flight_operations:unified_flight_plan_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Flight Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h4 class="text-primary">{{ aircraft_count }}</h4>
+                    <small class="text-muted">Aircraft Plans</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h4 class="text-success">{{ drone_count }}</h4>
+                    <small class="text-muted">Drone Plans</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h4 class="text-info">{{ total_count }}</h4>
+                    <small class="text-muted">Total Plans</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h4 class="text-warning">{{ page_obj.paginator.count }}</h4>
+                    <small class="text-muted">Displayed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="draft" {% if current_status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="submitted" {% if current_status == 'submitted' %}selected{% endif %}>Submitted</option>
+                        <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="mission" class="form-label">Mission</label>
+                    <select name="mission" id="mission" class="form-select">
+                        <option value="">All Missions</option>
+                        {% for mission in missions %}
+                            <option value="{{ mission.pk }}" {% if current_mission == mission.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ mission.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="operation_type" class="form-label">Operation Type</label>
+                    <select name="operation_type" id="operation_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="aircraft" {% if current_operation_type == 'aircraft' %}selected{% endif %}>Aircraft</option>
+                        <option value="drone" {% if current_operation_type == 'drone' %}selected{% endif %}>Drone</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'flight_operations:unified_flight_plan_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flight Plans List -->
+    <div class="card">
+        <div class="card-body">
+            {% if page_obj.object_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Flight Plan ID</th>
+                                <th>Type</th>
+                                <th>Mission</th>
+                                <th>Aircraft/Drone</th>
+                                <th>Pilot/Remote Pilot</th>
+                                <th>Status</th>
+                                <th>Departure</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page_obj.object_list %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.plan.flight_plan_id }}</strong>
+                                </td>
+                                <td>
+                                    {% if item.type == 'aircraft' %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-plane"></i> Aircraft
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-helicopter"></i> Drone
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'flight_operations:mission_detail' item.plan.mission.pk %}">
+                                        {{ item.plan.mission.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if item.type == 'aircraft' %}
+                                        {{ item.plan.aircraft.registration_mark }}
+                                    {% else %}
+                                        {{ item.plan.drone.registration_mark }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.type == 'aircraft' %}
+                                        {{ item.plan.pilot_in_command.user.get_full_name }}
+                                    {% else %}
+                                        {{ item.plan.remote_pilot.user.get_full_name }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.plan.status == 'approved' %}
+                                        <span class="badge bg-success">{{ item.plan.get_status_display }}</span>
+                                    {% elif item.plan.status == 'draft' %}
+                                        <span class="badge bg-warning">{{ item.plan.get_status_display }}</span>
+                                    {% elif item.plan.status == 'active' %}
+                                        <span class="badge bg-primary">{{ item.plan.get_status_display }}</span>
+                                    {% elif item.plan.status == 'completed' %}
+                                        <span class="badge bg-secondary">{{ item.plan.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ item.plan.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.plan.planned_departure_time|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if item.type == 'aircraft' %}
+                                        <a href="{% url 'flight_operations:aircraft_flight_plan_detail' item.plan.pk %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'flight_operations:aircraft_flight_plan_update' item.plan.pk %}" 
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'flight_operations:drone_flight_plan_detail' item.plan.pk %}" 
+                                           class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'flight_operations:drone_flight_plan_update' item.plan.pk %}" 
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Flight plans pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.mission %}&mission={{ request.GET.mission }}{% endif %}{% if request.GET.operation_type %}&operation_type={{ request.GET.operation_type }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.mission %}&mission={{ request.GET.mission }}{% endif %}{% if request.GET.operation_type %}&operation_type={{ request.GET.operation_type }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.mission %}&mission={{ request.GET.mission }}{% endif %}{% if request.GET.operation_type %}&operation_type={{ request.GET.operation_type }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.mission %}&mission={{ request.GET.mission }}{% endif %}{% if request.GET.operation_type %}&operation_type={{ request.GET.operation_type }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Flight Plans Found</h4>
+                    <p class="text-muted">
+                        {% if current_status or current_mission or current_operation_type %}
+                            Try adjusting your filters or create a new flight plan.
+                        {% else %}
+                            Create your first flight plan to get started.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'flight_operations:unified_flight_plan_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Flight Plan
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

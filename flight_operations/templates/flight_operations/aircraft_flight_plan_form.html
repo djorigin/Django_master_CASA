@@ -1,0 +1,316 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-plane"></i> {{ title }}</h2>
+                    {% if mission %}
+                        <p class="text-muted">
+                            <i class="fas fa-tasks"></i> Mission: {{ mission.name }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% if flight_plan.mission %}{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}{% elif mission %}{% url 'flight_operations:mission_detail' mission.pk %}{% else %}{% url 'flight_operations:unified_flight_plan_list' %}{% endif %}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Flight Plan Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Flight Plan Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.mission.label_tag }}
+                                    {{ form.mission }}
+                                    {% if form.mission.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.mission.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.flight_type.label_tag }}
+                                    {{ form.flight_type }}
+                                    {% if form.flight_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.flight_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.flight_rules.label_tag }}
+                                    {{ form.flight_rules }}
+                                    {% if form.flight_rules.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.flight_rules.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aircraft and Crew -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-plane"></i> Aircraft and Crew</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.aircraft.label_tag }}
+                                    {{ form.aircraft }}
+                                    {% if form.aircraft.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.aircraft.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.pilot_in_command.label_tag }}
+                                    {{ form.pilot_in_command }}
+                                    {% if form.pilot_in_command.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.pilot_in_command.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.co_pilot.label_tag }}
+                                    {{ form.co_pilot }}
+                                    {% if form.co_pilot.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.co_pilot.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.passenger_count.label_tag }}
+                                    {{ form.passenger_count }}
+                                    {% if form.passenger_count.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.passenger_count.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route and Navigation -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-route"></i> Route and Navigation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.departure_airport.label_tag }}
+                                    {{ form.departure_airport }}
+                                    {% if form.departure_airport.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.departure_airport.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.arrival_airport.label_tag }}
+                                    {{ form.arrival_airport }}
+                                    {% if form.arrival_airport.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.arrival_airport.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.alternate_airport.label_tag }}
+                                    {{ form.alternate_airport }}
+                                    {% if form.alternate_airport.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.alternate_airport.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    {{ form.route.label_tag }}
+                                    {{ form.route }}
+                                    {% if form.route.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.route.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.cruise_altitude.label_tag }}
+                                    {{ form.cruise_altitude }}
+                                    {% if form.cruise_altitude.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.cruise_altitude.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timing -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Flight Timing</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.planned_departure_time.label_tag }}
+                                    {{ form.planned_departure_time }}
+                                    {% if form.planned_departure_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.planned_departure_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.planned_arrival_time.label_tag }}
+                                    {{ form.planned_arrival_time }}
+                                    {% if form.planned_arrival_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.planned_arrival_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.estimated_flight_time.label_tag }}
+                                    {{ form.estimated_flight_time }}
+                                    {% if form.estimated_flight_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.estimated_flight_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance and Loading -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-weight"></i> Performance and Loading</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.fuel_required.label_tag }}
+                                    {{ form.fuel_required }}
+                                    {% if form.fuel_required.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.fuel_required.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.payload_weight.label_tag }}
+                                    {{ form.payload_weight }}
+                                    {% if form.payload_weight.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.payload_weight.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% if flight_plan.mission %}{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}{% elif mission %}{% url 'flight_operations:mission_detail' mission.pk %}{% else %}{% url 'flight_operations:unified_flight_plan_list' %}{% endif %}" 
+                       class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if flight_plan %}Update{% else %}Create{% endif %} Flight Plan
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Aircraft Operations</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Aircraft flight plans follow traditional aviation procedures with:
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> ICAO airport codes</li>
+                        <li><i class="fas fa-check text-success"></i> Standard airways and waypoints</li>
+                        <li><i class="fas fa-check text-success"></i> Fuel and weight calculations</li>
+                        <li><i class="fas fa-check text-success"></i> Crew licensing requirements</li>
+                        <li><i class="fas fa-check text-success"></i> ATC coordination procedures</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

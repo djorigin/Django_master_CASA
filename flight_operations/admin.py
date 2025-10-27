@@ -3,7 +3,25 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import FlightLog, FlightPlan, JobSafetyAssessment, Mission, RiskRegister
+from .models import (
+    AircraftFlightPlan,
+    DroneFlightPlan,
+    FlightLog,
+    FlightPlan,
+    JobSafetyAssessment,
+    Mission,
+    MissionAssignment,
+    RiskRegister,
+)
+
+
+class MissionAssignmentInline(admin.TabularInline):
+    """Inline for mission crew assignments"""
+
+    model = MissionAssignment
+    extra = 0
+    fields = ['role', 'pilot', 'staff_member', 'is_primary', 'notes']
+    autocomplete_fields = ['pilot', 'staff_member']
 
 
 @admin.register(Mission)
@@ -40,6 +58,7 @@ class MissionAdmin(admin.ModelAdmin):
         "description",
     ]
     date_hierarchy = "planned_start_date"
+    inlines = [MissionAssignmentInline]
 
     fieldsets = (
         (
@@ -735,3 +754,322 @@ class JobSafetyAssessmentAdmin(admin.ModelAdmin):
         return format_html('<span style="color: red;">✗ Pending</span>')
 
     section2_approved.short_description = "Section 2"
+
+
+@admin.register(MissionAssignment)
+class MissionAssignmentAdmin(admin.ModelAdmin):
+    """Admin for mission crew assignments"""
+
+    list_display = [
+        'mission',
+        'assigned_person_name',
+        'role',
+        'is_primary',
+        'created_at',
+    ]
+    list_filter = ['role', 'is_primary']
+    search_fields = [
+        'mission__mission_id',
+        'mission__name',
+        'pilot__user__username',
+        'staff_member__user__username',
+    ]
+    autocomplete_fields = ['mission', 'pilot', 'staff_member']
+
+
+@admin.register(AircraftFlightPlan)
+class AircraftFlightPlanAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Aircraft Flight Plan Management
+    """
+
+    list_display = [
+        'flight_plan_id',
+        'mission',
+        'aircraft',
+        'pilot_in_command',
+        'status_display',
+        'flight_type',
+        'departure_airport',
+        'arrival_airport',
+        'planned_departure_time',
+    ]
+
+    list_filter = [
+        'status',
+        'flight_type',
+        'flight_rules',
+        'created_at',
+    ]
+
+    search_fields = [
+        'flight_plan_id',
+        'mission__name',
+        'mission__mission_id',
+        'aircraft__registration_mark',
+        'pilot_in_command__user__username',
+        'departure_airport',
+        'arrival_airport',
+    ]
+
+    fieldsets = (
+        (
+            'Flight Plan Information',
+            {
+                'fields': (
+                    'flight_plan_id',
+                    'mission',
+                    'status',
+                    'flight_type',
+                    'flight_rules',
+                )
+            },
+        ),
+        (
+            'Aircraft and Crew',
+            {
+                'fields': (
+                    'aircraft',
+                    'pilot_in_command',
+                    'co_pilot',
+                    'passenger_count',
+                )
+            },
+        ),
+        (
+            'Route and Navigation',
+            {
+                'fields': (
+                    'departure_airport',
+                    'arrival_airport',
+                    'alternate_airport',
+                    'route',
+                    'cruise_altitude',
+                )
+            },
+        ),
+        (
+            'Timing',
+            {
+                'fields': (
+                    'planned_departure_time',
+                    'planned_arrival_time',
+                    'estimated_flight_time',
+                    'actual_departure_time',
+                    'actual_arrival_time',
+                )
+            },
+        ),
+        (
+            'Performance and Loading',
+            {
+                'fields': (
+                    'fuel_required',
+                    'fuel_loaded',
+                    'payload_weight',
+                )
+            },
+        ),
+        (
+            'Weather and Safety',
+            {
+                'fields': (
+                    'weather_conditions',
+                    'weather_minimums',
+                    'special_instructions',
+                    'emergency_procedures',
+                )
+            },
+        ),
+        (
+            'Regulatory Compliance',
+            {
+                'fields': (
+                    'notam_checked',
+                    'airspace_coordination_required',
+                    'airspace_coordination_reference',
+                    'atc_clearance',
+                )
+            },
+        ),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'planned_departure_time'
+    autocomplete_fields = ['mission', 'aircraft', 'pilot_in_command', 'co_pilot']
+
+    def status_display(self, obj):
+        """Display status with color coding"""
+        colors = {
+            'draft': 'orange',
+            'submitted': 'blue',
+            'approved': 'green',
+            'active': 'purple',
+            'completed': 'gray',
+            'cancelled': 'red',
+        }
+        return format_html(
+            '<span style="color: {};">{}</span>',
+            colors.get(obj.status, 'black'),
+            obj.get_status_display(),
+        )
+
+    status_display.short_description = 'Status'
+
+
+@admin.register(DroneFlightPlan)
+class DroneFlightPlanAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Drone Flight Plan Management
+    """
+
+    list_display = [
+        'flight_plan_id',
+        'mission',
+        'drone',
+        'remote_pilot',
+        'status_display',
+        'flight_type',
+        'maximum_altitude_agl',
+        'planned_departure_time',
+    ]
+
+    list_filter = [
+        'status',
+        'flight_type',
+        'autonomous_mode',
+        'no_fly_zones_checked',
+        'created_at',
+    ]
+
+    search_fields = [
+        'flight_plan_id',
+        'mission__name',
+        'mission__mission_id',
+        'drone__registration_mark',
+        'remote_pilot__user__username',
+        'takeoff_location',
+        'landing_location',
+    ]
+
+    fieldsets = (
+        (
+            'Flight Plan Information',
+            {
+                'fields': (
+                    'flight_plan_id',
+                    'mission',
+                    'status',
+                    'flight_type',
+                )
+            },
+        ),
+        (
+            'Drone and Crew',
+            {
+                'fields': (
+                    'drone',
+                    'remote_pilot',
+                    'visual_observer',
+                )
+            },
+        ),
+        (
+            'Operating Area',
+            {
+                'fields': (
+                    'operational_area',
+                    'takeoff_location',
+                    'landing_location',
+                    'operating_area_coordinates',
+                    'maximum_altitude_agl',
+                    'maximum_range_from_pilot',
+                )
+            },
+        ),
+        (
+            'Timing',
+            {
+                'fields': (
+                    'planned_departure_time',
+                    'planned_arrival_time',
+                    'estimated_flight_time',
+                    'actual_departure_time',
+                    'actual_arrival_time',
+                )
+            },
+        ),
+        (
+            'Drone Performance',
+            {
+                'fields': (
+                    'battery_capacity',
+                    'estimated_battery_consumption',
+                    'payload_description',
+                )
+            },
+        ),
+        (
+            'Automated Flight Features',
+            {
+                'fields': (
+                    'waypoints',
+                    'autonomous_mode',
+                    'return_to_home_altitude',
+                )
+            },
+        ),
+        (
+            'Weather and Safety',
+            {
+                'fields': (
+                    'weather_conditions',
+                    'weather_minimums',
+                    'special_instructions',
+                    'emergency_procedures',
+                    'lost_link_procedures',
+                )
+            },
+        ),
+        (
+            'Regulatory Compliance',
+            {
+                'fields': (
+                    'casa_approval_number',
+                    'airspace_approval',
+                    'notam_checked',
+                    'airspace_coordination_required',
+                    'airspace_coordination_reference',
+                    'no_fly_zones_checked',
+                )
+            },
+        ),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'planned_departure_time'
+    autocomplete_fields = [
+        'mission',
+        'drone',
+        'remote_pilot',
+        'visual_observer',
+        'operational_area',
+    ]
+
+    def status_display(self, obj):
+        """Display status with color coding"""
+        colors = {
+            'draft': 'orange',
+            'submitted': 'blue',
+            'approved': 'green',
+            'active': 'purple',
+            'completed': 'gray',
+            'cancelled': 'red',
+        }
+        return format_html(
+            '<span style="color: {};">{}</span>',
+            colors.get(obj.status, 'black'),
+            obj.get_status_display(),
+        )
+
+    status_display.short_description = 'Status'

@@ -2,7 +2,15 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import FlightLog, FlightPlan, JobSafetyAssessment, Mission, RiskRegister
+from .models import (
+    AircraftFlightPlan,
+    DroneFlightPlan,
+    FlightLog,
+    FlightPlan,
+    JobSafetyAssessment,
+    Mission,
+    RiskRegister,
+)
 
 
 class MissionForm(forms.ModelForm):
@@ -170,6 +178,16 @@ class MissionForm(forms.ModelForm):
 
         # Make CASA authorization reference conditional
         self.fields["casa_authorization_reference"].required = False
+
+        # Set default values for new missions (when no instance exists)
+        if not self.instance.pk:
+            self.fields["status"].initial = "planning"
+            self.fields["priority"].initial = "medium"
+            self.fields["risk_assessment_required"].initial = True
+            self.fields["jsa_required"].initial = True
+            self.fields["casa_authorization_required"].initial = False
+            self.fields["risk_accepted_by_ceo"].initial = False
+            self.fields["risk_accepted_by_crp"].initial = False
 
         # Make staff profile querysets more efficient
         from accounts.models import ClientProfile, StaffProfile
@@ -376,14 +394,12 @@ class FlightPlanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Make flight_reference optional for auto-generation
-        self.fields["flight_reference"].required = False
+        # Make flight_plan_id optional for auto-generation
+        self.fields["flight_plan_id"].required = False
 
         # Make some fields optional
-        self.fields["backup_remote_pilot"].required = False
-        self.fields["visual_observer"].required = False
-        self.fields["airspace_approval"].required = False
-        self.fields["flight_restrictions"].required = False
+        self.fields["remote_pilot_observer"].required = False
+        self.fields["airspace_coordination_reference"].required = False
 
     def clean(self):
         """Cross-field validation"""
@@ -857,3 +873,354 @@ class JobSafetyAssessmentForm(forms.ModelForm):
         self.fields["approved_by"].required = False
         self.fields["approval_date"].required = False
         self.fields["review_date"].required = False
+
+
+class FlightPlanTypeSelectForm(forms.Form):
+    """Form for selecting flight plan operation type"""
+
+    OPERATION_TYPE_CHOICES = [
+        ('', 'Select Operation Type'),
+        ('aircraft', 'Aircraft Flight Plan'),
+        ('drone', 'Drone/RPAS Flight Plan'),
+    ]
+
+    operation_type = forms.ChoiceField(
+        choices=OPERATION_TYPE_CHOICES,
+        widget=forms.Select(
+            attrs={'class': 'form-select', 'id': 'operation-type-select'}
+        ),
+        label="Operation Type",
+        help_text="Select the type of flight operation to create a flight plan for",
+    )
+
+    mission = forms.ModelChoiceField(
+        queryset=Mission.objects.all(), widget=forms.HiddenInput(), required=False
+    )
+
+
+class AircraftFlightPlanForm(forms.ModelForm):
+    """Form for creating and editing aircraft flight plans"""
+
+    class Meta:
+        model = AircraftFlightPlan
+        fields = [
+            'mission',
+            'aircraft',
+            'pilot_in_command',
+            'co_pilot',
+            'flight_type',
+            'flight_rules',
+            'departure_airport',
+            'arrival_airport',
+            'alternate_airport',
+            'route',
+            'cruise_altitude',
+            'planned_departure_time',
+            'planned_arrival_time',
+            'estimated_flight_time',
+            'fuel_required',
+            'payload_weight',
+            'passenger_count',
+            'weather_conditions',
+            'weather_minimums',
+            'special_instructions',
+            'emergency_procedures',
+            'notam_checked',
+            'airspace_coordination_required',
+            'airspace_coordination_reference',
+            'atc_clearance',
+        ]
+
+        widgets = {
+            'mission': forms.Select(attrs={'class': 'form-select'}),
+            'aircraft': forms.Select(attrs={'class': 'form-select'}),
+            'pilot_in_command': forms.Select(attrs={'class': 'form-select'}),
+            'co_pilot': forms.Select(attrs={'class': 'form-select'}),
+            'flight_type': forms.Select(attrs={'class': 'form-select'}),
+            'flight_rules': forms.Select(attrs={'class': 'form-select'}),
+            'departure_airport': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'YSSY',
+                    'maxlength': 4,
+                    'style': 'text-transform: uppercase;',
+                }
+            ),
+            'arrival_airport': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'YMEL',
+                    'maxlength': 4,
+                    'style': 'text-transform: uppercase;',
+                }
+            ),
+            'alternate_airport': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'YMML (optional)',
+                    'maxlength': 4,
+                    'style': 'text-transform: uppercase;',
+                }
+            ),
+            'route': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Enter airways, waypoints, and routing',
+                }
+            ),
+            'cruise_altitude': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '5500',
+                    'min': 0,
+                    'max': 50000,
+                }
+            ),
+            'planned_departure_time': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'}
+            ),
+            'planned_arrival_time': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'}
+            ),
+            'estimated_flight_time': forms.TimeInput(
+                attrs={'class': 'form-control', 'type': 'time'}
+            ),
+            'fuel_required': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': '250.00', 'step': '0.01'}
+            ),
+            'payload_weight': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': '450.00', 'step': '0.01'}
+            ),
+            'passenger_count': forms.NumberInput(
+                attrs={'class': 'form-control', 'min': 0, 'max': 20}
+            ),
+            'weather_conditions': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Current weather conditions and forecast',
+                }
+            ),
+            'weather_minimums': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Minimum weather conditions required',
+                }
+            ),
+            'special_instructions': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Special operational instructions',
+                }
+            ),
+            'emergency_procedures': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Emergency procedures specific to this flight',
+                }
+            ),
+            'airspace_coordination_reference': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'ATC clearance or coordination reference',
+                }
+            ),
+            'atc_clearance': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'ATC clearance details',
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Make some fields optional initially
+        self.fields['co_pilot'].required = False
+        self.fields['alternate_airport'].required = False
+        self.fields['planned_arrival_time'].required = False
+        self.fields['weather_conditions'].required = False
+        self.fields['special_instructions'].required = False
+        self.fields['airspace_coordination_reference'].required = False
+        self.fields['atc_clearance'].required = False
+
+
+class DroneFlightPlanForm(forms.ModelForm):
+    """Form for creating and editing drone flight plans"""
+
+    class Meta:
+        model = DroneFlightPlan
+        fields = [
+            'mission',
+            'drone',
+            'remote_pilot',
+            'visual_observer',
+            'flight_type',
+            'takeoff_location',
+            'landing_location',
+            'maximum_altitude_agl',
+            'maximum_range_from_pilot',
+            'planned_departure_time',
+            'planned_arrival_time',
+            'estimated_flight_time',
+            'battery_capacity',
+            'estimated_battery_consumption',
+            'payload_description',
+            'weather_conditions',
+            'weather_minimums',
+            'special_instructions',
+            'emergency_procedures',
+            'lost_link_procedures',
+            'casa_approval_number',
+            'airspace_approval',
+            'notam_checked',
+            'airspace_coordination_required',
+            'airspace_coordination_reference',
+            'no_fly_zones_checked',
+            'waypoints',
+            'autonomous_mode',
+            'return_to_home_altitude',
+        ]
+
+        widgets = {
+            'mission': forms.Select(attrs={'class': 'form-select'}),
+            'drone': forms.Select(attrs={'class': 'form-select'}),
+            'remote_pilot': forms.Select(attrs={'class': 'form-select'}),
+            'visual_observer': forms.Select(attrs={'class': 'form-select'}),
+            'flight_type': forms.Select(attrs={'class': 'form-select'}),
+            'takeoff_location': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Describe takeoff location',
+                }
+            ),
+            'landing_location': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Describe landing location',
+                }
+            ),
+            'maximum_altitude_agl': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '120',
+                    'min': 1,
+                    'max': 400,
+                }
+            ),
+            'maximum_range_from_pilot': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '500',
+                    'min': 1,
+                    'max': 500,
+                }
+            ),
+            'planned_departure_time': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'}
+            ),
+            'planned_arrival_time': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'}
+            ),
+            'estimated_flight_time': forms.TimeInput(
+                attrs={'class': 'form-control', 'type': 'time'}
+            ),
+            'battery_capacity': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': '5000', 'step': '1'}
+            ),
+            'estimated_battery_consumption': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '75.00',
+                    'step': '0.01',
+                    'min': 0,
+                    'max': 100,
+                }
+            ),
+            'payload_description': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Describe payload and equipment',
+                }
+            ),
+            'weather_conditions': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Current weather conditions and forecast',
+                }
+            ),
+            'weather_minimums': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Minimum weather conditions required',
+                }
+            ),
+            'special_instructions': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Special operational instructions',
+                }
+            ),
+            'emergency_procedures': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Emergency procedures specific to this flight',
+                }
+            ),
+            'lost_link_procedures': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Procedures if communication link is lost',
+                }
+            ),
+            'casa_approval_number': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'ReOC or approval number',
+                }
+            ),
+            'airspace_approval': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Airspace approval reference',
+                }
+            ),
+            'airspace_coordination_reference': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'ATC coordination reference',
+                }
+            ),
+            'return_to_home_altitude': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '100',
+                    'min': 50,
+                    'max': 400,
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Make some fields optional initially
+        self.fields['visual_observer'].required = False
+        self.fields['planned_arrival_time'].required = False
+        self.fields['weather_conditions'].required = False
+        self.fields['special_instructions'].required = False
+        self.fields['casa_approval_number'].required = False
+        self.fields['airspace_approval'].required = False
+        self.fields['airspace_coordination_reference'].required = False
