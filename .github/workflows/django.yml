@@ -2,9 +2,9 @@ name: Django CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [ master, feature/*, debug/* ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 env:
   SECRET_KEY: test-secret-key-for-github-actions
@@ -28,7 +28,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/test_requirements.txt') }}
