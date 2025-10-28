@@ -1,6 +1,10 @@
 # PROPOSED CERTIFICATE ARCHITECTURE FIX
 # File: accounts/models.py - Additional models to add
 
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils import timezone
+
 
 class CertificateType(models.Model):
     """
