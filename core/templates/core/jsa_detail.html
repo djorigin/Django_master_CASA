@@ -1,0 +1,452 @@
+{% extends "aircraft/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header with Breadcrumbs -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:main_system_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:jsa_register' %}">JSA Register</a></li>
+                    <li class="breadcrumb-item active">{{ jsa.jsa_id }}</li>
+                </ol>
+            </nav>
+            
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fas fa-clipboard-check me-2"></i>
+                            {{ jsa.jsa_id }}
+                        </h1>
+                        <p class="page-description text-muted">{{ page_description }}</p>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'core:jsa_register' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Register
+                        </a>
+                        <a href="{% url 'flight_operations:jsa_edit' jsa.pk %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit JSA
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status and Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title">Approval Status</h6>
+                            {% if is_fully_approved %}
+                                <span class="badge bg-success fs-6">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Fully Approved
+                                </span>
+                            {% elif jsa.flight_authorized %}
+                                <span class="badge bg-warning fs-6">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Authorized
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">
+                                    <i class="fas fa-hourglass me-1"></i>
+                                    Pending
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Mission</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-rocket me-2 text-primary"></i>
+                        <strong>{{ jsa.mission.name }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Operation Type</h6>
+                    <span class="badge bg-info fs-6">
+                        {{ jsa.get_operation_type_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Review Date</h6>
+                    {% if jsa.review_date %}
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar me-2 text-success"></i>
+                            <span>{{ jsa.review_date|date:"M d, Y" }}</span>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-calendar-times me-2"></i>
+                            <span>Not scheduled</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Creation Context - Critical for CASA Compliance -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-link me-2"></i>
+                        Creation Context & Audit Trail
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Operational Trigger</h6>
+                            {% if creation_context.created_from_flight_plan %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-plane me-2"></i>
+                                    <strong>Flight Plan Triggered:</strong><br>
+                                    {{ creation_context.created_from_flight_plan.description }}
+                                    <br><small class="text-muted">Type: {{ creation_context.created_from_flight_plan.type|title }}</small>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-secondary">
+                                    <i class="fas fa-minus me-2"></i>
+                                    No flight plan trigger recorded
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>SOP Context</h6>
+                            {% if creation_context.created_from_sop %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-book me-2"></i>
+                                    <strong>SOP Requirement:</strong><br>
+                                    {{ creation_context.created_from_sop.description }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-secondary">
+                                    <i class="fas fa-minus me-2"></i>
+                                    No SOP trigger recorded
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if jsa.creation_context %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Additional Context</h6>
+                            <div class="alert alert-light">
+                                <i class="fas fa-info-circle me-2"></i>
+                                {{ jsa.creation_context }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Context Summary for Audit Trail</h6>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <strong>{{ creation_context.context_summary }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSA Technical Details -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Operational Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Operational Assessment Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Airspace Class:</strong>
+                            <p>{{ jsa.get_airspace_class_display }}</p>
+                            
+                            <strong>Maximum Operating Height:</strong>
+                            <p>{{ jsa.maximum_operating_height_agl }} ft AGL</p>
+                            
+                            {% if jsa.maximum_operating_altitude_amsl %}
+                            <strong>Maximum Operating Altitude:</strong>
+                            <p>{{ jsa.maximum_operating_altitude_amsl }} ft AMSL</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if jsa.nearby_aerodromes %}
+                            <strong>Nearby Aerodromes:</strong>
+                            <p>{{ jsa.nearby_aerodromes }}</p>
+                            {% endif %}
+                            
+                            {% if jsa.aeronautical_radio_frequencies %}
+                            <strong>Radio Frequencies:</strong>
+                            <p>{{ jsa.aeronautical_radio_frequencies }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hazard Assessment -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Hazard Assessment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if jsa.airspace_hazards %}
+                    <div class="mb-3">
+                        <strong>Airspace Hazards:</strong>
+                        <p>{{ jsa.airspace_hazards }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if jsa.ground_hazards %}
+                    <div class="mb-3">
+                        <strong>Ground Hazards:</strong>
+                        <p>{{ jsa.ground_hazards }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>SOP Adequacy:</strong>
+                        {% if jsa.sop_adequate %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>
+                                SOPs adequately mitigate all hazards
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-exclamation me-1"></i>
+                                SOPs may not adequately mitigate all hazards
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if jsa.unmitigated_hazards %}
+                    <div class="alert alert-warning">
+                        <strong>Unmitigated Hazards:</strong>
+                        <p class="mb-0">{{ jsa.unmitigated_hazards }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Approval Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-timeline me-2"></i>
+                        Approval Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if approval_timeline %}
+                        <div class="timeline">
+                            {% for approval in approval_timeline %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">{{ approval.type }}</h6>
+                                    <p class="timeline-description">
+                                        <strong>{{ approval.signature }}</strong><br>
+                                        <small class="text-muted">{{ approval.description }}</small>
+                                    </p>
+                                    <small class="timeline-date">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ approval.date|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-clock fa-2x mb-3"></i>
+                            <p>No approvals recorded yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Record Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info me-2"></i>
+                        Record Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Created:</strong>
+                        <p>{{ jsa.created_at|date:"M d, Y g:i A" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Created By:</strong>
+                        <p>
+                            {% if jsa.created_by %}
+                                {{ jsa.created_by.get_full_name|default:jsa.created_by.username }}
+                            {% else %}
+                                <em class="text-muted">Not recorded</em>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Last Updated:</strong>
+                        <p>{{ jsa.updated_at|date:"M d, Y g:i A" }}</p>
+                    </div>
+                    
+                    {% if jsa.authorized_date %}
+                    <div class="mb-3">
+                        <strong>Authorized Date:</strong>
+                        <p>{{ jsa.authorized_date|date:"M d, Y" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Assessment Information -->
+    {% if jsa.assessment_changes or jsa.additional_operating_restrictions or jsa.official_authorization %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Additional Assessment Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if jsa.assessment_changes %}
+                        <div class="col-md-4">
+                            <strong>Assessment Changes:</strong>
+                            <p>{{ jsa.assessment_changes }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if jsa.additional_operating_restrictions %}
+                        <div class="col-md-4">
+                            <strong>Operating Restrictions:</strong>
+                            <p>{{ jsa.additional_operating_restrictions }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if jsa.official_authorization %}
+                        <div class="col-md-4">
+                            <strong>Official Authorization:</strong>
+                            <p>{{ jsa.official_authorization }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+        border-left: 2px solid #e9ecef;
+    }
+    
+    .timeline-item:last-child {
+        border-left: 2px solid transparent;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+    }
+    
+    .timeline-content {
+        margin-left: 20px;
+    }
+    
+    .timeline-title {
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .timeline-description {
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+    }
+    
+    .timeline-date {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize any JSA detail specific functionality
+        console.log('JSA Detail page loaded for:', '{{ jsa.jsa_id }}');
+    });
+</script>
+{% endblock %}

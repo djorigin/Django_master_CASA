@@ -84,9 +84,9 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Aircraft ID</th>
-                <th>Type</th>
-                <th>Registration</th>
+                <th>Registration Mark</th>
+                <th>Aircraft Type</th>
+                <th>Serial Number</th>
                 <th>Status</th>
                 <th>Location</th>
                 <th>Flight Hours</th>
@@ -99,11 +99,11 @@
             <tr>
                 <td>
                     <a href="{% url 'aircraft:aircraft_detail' aircraft.pk %}" class="item-link">
-                        {{ aircraft.aircraft_id }}
+                        {{ aircraft.registration_mark }}
                     </a>
                 </td>
                 <td>{{ aircraft.aircraft_type.name }}</td>
-                <td>{{ aircraft.registration_number|default:"-" }}</td>
+                <td>{{ aircraft.serial_number|default:"-" }}</td>
                 <td>
                     <span class="status-badge status-{{ aircraft.status }}">
                         {{ aircraft.get_status_display }}
@@ -137,7 +137,7 @@
                     </a>
                     <button class="action-btn delete-btn" title="Delete"
                             data-aircraft-id="{{ aircraft.pk }}"
-                            data-aircraft-name="{{ aircraft.aircraft_id|escapejs }}">
+                            data-aircraft-name="{{ aircraft.registration_mark|escapejs }}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>

@@ -293,48 +293,7 @@
                             </div>
                         {% endif %}
                         
-                        <!-- Legacy Flight Plans (if any) -->
-                        {% if object.flightplan_set.all %}
-                            <h6 class="text-secondary mb-2">
-                                <i class="fas fa-archive"></i> Legacy Flight Plans
-                            </h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Flight Plan</th>
-                                            <th>Aircraft</th>
-                                            <th>Status</th>
-                                            <th>Scheduled</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for flight_plan in object.flightplan_set.all %}
-                                        <tr>
-                                            <td>{{ flight_plan.flight_plan_id }}</td>
-                                            <td>{{ flight_plan.aircraft }}</td>
-                                            <td>
-                                                {% if flight_plan.status == 'approved' %}
-                                                    <span class="badge bg-success">{{ flight_plan.get_status_display }}</span>
-                                                {% elif flight_plan.status == 'draft' %}
-                                                    <span class="badge bg-warning">{{ flight_plan.get_status_display }}</span>
-                                                {% else %}
-                                                    <span class="badge bg-info">{{ flight_plan.get_status_display }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ flight_plan.planned_departure_time|date:"M d, H:i" }}</td>
-                                            <td>
-                                                <a href="{% url 'flight_operations:flight_plan_detail' flight_plan.pk %}" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% endif %}
+
                     {% else %}
                         <div class="text-center py-4">
                             <i class="fas fa-route fa-3x text-muted mb-3"></i>
@@ -472,8 +431,8 @@
                             <small class="text-muted">Drone Plans</small>
                         </div>
                         <div class="col-4">
-                            <h4 class="text-info">{{ object.flightplan_set.count }}</h4>
-                            <small class="text-muted">Legacy Plans</small>
+                            <h4 class="text-warning">{{ object.risk_registers.count }}</h4>
+                            <small class="text-muted">Risk Items</small>
                         </div>
                     </div>
                     <hr>

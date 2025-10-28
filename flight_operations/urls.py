@@ -13,21 +13,21 @@ urlpatterns = [
     path("missions/<int:pk>/", crud_views.mission_detail, name="mission_detail"),
     path("missions/<int:pk>/edit/", crud_views.mission_update, name="mission_update"),
     path("missions/<int:pk>/delete/", crud_views.mission_delete, name="mission_delete"),
-    # Flight Plan CRUD
-    path("flight-plans/", crud_views.flight_plan_list, name="flight_plan_list"),
-    path(
-        "flight-plans/create/", crud_views.flight_plan_create, name="flight_plan_create"
-    ),
-    path(
-        "flight-plans/<int:pk>/",
-        crud_views.flight_plan_detail,
-        name="flight_plan_detail",
-    ),
-    path(
-        "flight-plans/<int:pk>/edit/",
-        crud_views.flight_plan_update,
-        name="flight_plan_update",
-    ),
+    # Legacy Flight Plan CRUD - REMOVED (Use AircraftFlightPlan/DroneFlightPlan URLs below)
+    # path("flight-plans/", crud_views.flight_plan_list, name="flight_plan_list"),
+    # path(
+    #     "flight-plans/create/", crud_views.flight_plan_create, name="flight_plan_create"
+    # ),
+    # path(
+    #     "flight-plans/<int:pk>/",
+    #     crud_views.flight_plan_detail,
+    #     name="flight_plan_detail",
+    # ),
+    # path(
+    #     "flight-plans/<int:pk>/edit/",
+    #     crud_views.flight_plan_update,
+    #     name="flight_plan_update",
+    # ),
     # Flight Log CRUD
     path("flight-logs/", crud_views.flight_log_list, name="flight_log_list"),
     path("flight-logs/create/", crud_views.flight_log_create, name="flight_log_create"),
@@ -50,11 +50,11 @@ urlpatterns = [
         crud_views.ajax_mission_delete,
         name="ajax_mission_delete",
     ),
-    path(
-        "ajax/flight-plan/delete/<int:pk>/",
-        crud_views.ajax_flight_plan_delete,
-        name="ajax_flight_plan_delete",
-    ),
+    # path(
+    #     "ajax/flight-plan/delete/<int:pk>/",
+    #     crud_views.ajax_flight_plan_delete,
+    #     name="ajax_flight_plan_delete",
+    # ),
     path(
         "ajax/dashboard-stats/",
         crud_views.ajax_dashboard_stats,

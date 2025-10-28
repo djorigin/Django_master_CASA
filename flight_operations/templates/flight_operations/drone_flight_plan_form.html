@@ -1,0 +1,535 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-helicopter"></i> {{ title }}</h2>
+                    {% if mission %}
+                        <p class="text-muted">
+                            <i class="fas fa-tasks"></i> Mission: {{ mission.name }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% if flight_plan.mission %}{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}{% elif mission %}{% url 'flight_operations:mission_detail' mission.pk %}{% else %}{% url 'flight_operations:unified_flight_plan_list' %}{% endif %}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Form-level errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Form Errors:</h6>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Flight Plan Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Flight Plan Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.mission.label_tag }}
+                                    {{ form.mission }}
+                                    {% if form.mission.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.mission.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.flight_type.label_tag }}
+                                    {{ form.flight_type }}
+                                    {% if form.flight_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.flight_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drone and Crew -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-helicopter"></i> Drone and Crew</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.drone.label_tag }}
+                                    {{ form.drone }}
+                                    {% if form.drone.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.drone.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.remote_pilot.label_tag }}
+                                    {{ form.remote_pilot }}
+                                    {% if form.remote_pilot.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.remote_pilot.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.visual_observer.label_tag }}
+                                    {{ form.visual_observer }}
+                                    {% if form.visual_observer.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.visual_observer.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operating Area -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-map-marker-alt"></i> Operating Area</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.takeoff_location.label_tag }}
+                                    {{ form.takeoff_location }}
+                                    {% if form.takeoff_location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.takeoff_location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.landing_location.label_tag }}
+                                    {{ form.landing_location }}
+                                    {% if form.landing_location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.landing_location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Parameters -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Flight Parameters</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.maximum_altitude_agl.label_tag }}
+                                    {{ form.maximum_altitude_agl }}
+                                    {% if form.maximum_altitude_agl.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.maximum_altitude_agl.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.maximum_range_from_pilot.label_tag }}
+                                    {{ form.maximum_range_from_pilot }}
+                                    {% if form.maximum_range_from_pilot.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.maximum_range_from_pilot.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.return_to_home_altitude.label_tag }}
+                                    {{ form.return_to_home_altitude }}
+                                    {% if form.return_to_home_altitude.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.return_to_home_altitude.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Scheduling</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.planned_departure_time.label_tag }}
+                                    {{ form.planned_departure_time }}
+                                    {% if form.planned_departure_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.planned_departure_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.planned_arrival_time.label_tag }}
+                                    {{ form.planned_arrival_time }}
+                                    {% if form.planned_arrival_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.planned_arrival_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.estimated_flight_time.label_tag }}
+                                    {{ form.estimated_flight_time }}
+                                    {% if form.estimated_flight_time.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.estimated_flight_time.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Battery and Payload -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-battery-half"></i> Battery and Payload</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.battery_capacity.label_tag }}
+                                    {{ form.battery_capacity }}
+                                    {% if form.battery_capacity.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.battery_capacity.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.estimated_battery_consumption.label_tag }}
+                                    {{ form.estimated_battery_consumption }}
+                                    {% if form.estimated_battery_consumption.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.estimated_battery_consumption.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    {{ form.payload_description.label_tag }}
+                                    {{ form.payload_description }}
+                                    {% if form.payload_description.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.payload_description.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather and Conditions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cloud-sun"></i> Weather and Conditions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.weather_conditions.label_tag }}
+                                    {{ form.weather_conditions }}
+                                    {% if form.weather_conditions.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.weather_conditions.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.weather_minimums.label_tag }}
+                                    {{ form.weather_minimums }}
+                                    {% if form.weather_minimums.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.weather_minimums.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Procedures -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Emergency Procedures</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.emergency_procedures.label_tag }}
+                                    {{ form.emergency_procedures }}
+                                    {% if form.emergency_procedures.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.emergency_procedures.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.lost_link_procedures.label_tag }}
+                                    {{ form.lost_link_procedures }}
+                                    {% if form.lost_link_procedures.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.lost_link_procedures.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CASA Compliance -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shield-alt"></i> CASA Compliance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.casa_approval_number.label_tag }}
+                                    {{ form.casa_approval_number }}
+                                    {% if form.casa_approval_number.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.casa_approval_number.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.airspace_approval.label_tag }}
+                                    {{ form.airspace_approval }}
+                                    {% if form.airspace_approval.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.airspace_approval.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.notam_checked }}
+                                    {{ form.notam_checked.label_tag }}
+                                    {% if form.notam_checked.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.notam_checked.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.no_fly_zones_checked }}
+                                    {{ form.no_fly_zones_checked.label_tag }}
+                                    {% if form.no_fly_zones_checked.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.no_fly_zones_checked.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.airspace_coordination_required }}
+                                    {{ form.airspace_coordination_required.label_tag }}
+                                    {% if form.airspace_coordination_required.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.airspace_coordination_required.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.airspace_coordination_reference.label_tag }}
+                                    {{ form.airspace_coordination_reference }}
+                                    {% if form.airspace_coordination_reference.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.airspace_coordination_reference.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Autonomous Operations -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-robot"></i> Autonomous Operations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.autonomous_mode }}
+                                    {{ form.autonomous_mode.label_tag }}
+                                    {% if form.autonomous_mode.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.autonomous_mode.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.waypoints.label_tag }}
+                                    {{ form.waypoints }}
+                                    {% if form.waypoints.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.waypoints.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        <strong>GPS waypoints for automated flight.</strong><br>
+                                        Use JSON format: <code>[{"lat": -33.8688, "lng": 151.2093, "alt": 100}]</code><br>
+                                        Leave empty <code>[]</code> for manual flight control.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    {{ form.special_instructions.label_tag }}
+                                    {{ form.special_instructions }}
+                                    {% if form.special_instructions.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.special_instructions.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% if flight_plan.mission %}{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}{% elif mission %}{% url 'flight_operations:mission_detail' mission.pk %}{% else %}{% url 'flight_operations:unified_flight_plan_list' %}{% endif %}" 
+                       class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if flight_plan %}Update{% else %}Create{% endif %} Flight Plan
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Drone/RPAS Operations</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Drone flight plans follow CASA Part 101 regulations with:
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Operating area boundaries</li>
+                        <li><i class="fas fa-check text-success"></i> 120m AGL altitude limits</li>
+                        <li><i class="fas fa-check text-success"></i> 500m VLOS range limits</li>
+                        <li><i class="fas fa-check text-success"></i> Battery endurance planning</li>
+                        <li><i class="fas fa-check text-success"></i> No-fly zone compliance</li>
+                        <li><i class="fas fa-check text-success"></i> Emergency procedures</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if mission %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-tasks"></i> Mission Context</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Mission:</strong> {{ mission.name }}</p>
+                    <p><strong>Type:</strong> {{ mission.get_mission_type_display }}</p>
+                    <p><strong>Client:</strong> {{ mission.client }}</p>
+                    <p><strong>Commander:</strong> {{ mission.mission_commander }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
