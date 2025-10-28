@@ -67,8 +67,9 @@ class BaseFlightPlan(models.Model):
         help_text="Planned flight arrival time",
     )
 
-    estimated_flight_time = models.DurationField(
-        verbose_name="Estimated Flight Time", help_text="Estimated duration of flight"
+    estimated_flight_time_minutes = models.PositiveIntegerField(
+        verbose_name="Estimated Flight Time (minutes)",
+        help_text="Estimated flight duration in minutes (e.g., 30 for 30 minutes)",
     )
 
     actual_departure_time = models.DateTimeField(
@@ -159,8 +160,11 @@ class BaseFlightPlan(models.Model):
 
     def get_flight_duration_hours(self):
         """Business logic method: Calculate flight duration in hours"""
-        if hasattr(self, 'estimated_flight_time') and self.estimated_flight_time:
-            return self.estimated_flight_time.total_seconds() / 3600
+        if (
+            hasattr(self, 'estimated_flight_time_minutes')
+            and self.estimated_flight_time_minutes
+        ):
+            return self.estimated_flight_time_minutes / 60
         return 0
 
     def get_actual_flight_duration(self):

@@ -621,6 +621,7 @@ class AircraftFlightPlanAdmin(admin.ModelAdmin):
         'departure_airport',
         'arrival_airport',
         'planned_departure_time',
+        'estimated_flight_time_minutes',
     ]
 
     list_filter = [
@@ -682,7 +683,7 @@ class AircraftFlightPlanAdmin(admin.ModelAdmin):
                 'fields': (
                     'planned_departure_time',
                     'planned_arrival_time',
-                    'estimated_flight_time',
+                    'estimated_flight_time_minutes',
                     'actual_departure_time',
                     'actual_arrival_time',
                 )
@@ -821,7 +822,7 @@ class DroneFlightPlanAdmin(admin.ModelAdmin):
                 'fields': (
                     'planned_departure_time',
                     'planned_arrival_time',
-                    'estimated_flight_time',
+                    'estimated_flight_time_minutes',
                     'actual_departure_time',
                     'actual_arrival_time',
                 )

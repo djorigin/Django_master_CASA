@@ -850,7 +850,7 @@ class AircraftFlightPlanForm(forms.ModelForm):
             'cruise_altitude',
             'planned_departure_time',
             'planned_arrival_time',
-            'estimated_flight_time',
+            'estimated_flight_time_minutes',
             'fuel_required',
             'payload_weight',
             'passenger_count',
@@ -916,8 +916,13 @@ class AircraftFlightPlanForm(forms.ModelForm):
             'planned_arrival_time': forms.DateTimeInput(
                 attrs={'class': 'form-control', 'type': 'datetime-local'}
             ),
-            'estimated_flight_time': forms.TimeInput(
-                attrs={'class': 'form-control', 'type': 'time'}
+            'estimated_flight_time_minutes': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '30',
+                    'min': 1,
+                    'max': 480,
+                }
             ),
             'fuel_required': forms.NumberInput(
                 attrs={'class': 'form-control', 'placeholder': '250.00', 'step': '0.01'}
@@ -1001,7 +1006,7 @@ class DroneFlightPlanForm(forms.ModelForm):
             'maximum_range_from_pilot',
             'planned_departure_time',
             'planned_arrival_time',
-            'estimated_flight_time',
+            'estimated_flight_time_minutes',
             'battery_capacity',
             'estimated_battery_consumption',
             'payload_description',
@@ -1061,8 +1066,13 @@ class DroneFlightPlanForm(forms.ModelForm):
             'planned_arrival_time': forms.DateTimeInput(
                 attrs={'class': 'form-control', 'type': 'datetime-local'}
             ),
-            'estimated_flight_time': forms.TimeInput(
-                attrs={'class': 'form-control', 'type': 'time'}
+            'estimated_flight_time_minutes': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': '30',
+                    'min': 1,
+                    'max': 480,
+                }
             ),
             'battery_capacity': forms.NumberInput(
                 attrs={'class': 'form-control', 'placeholder': '5000', 'step': '1'}
