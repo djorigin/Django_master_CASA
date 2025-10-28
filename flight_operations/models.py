@@ -1,9 +1,199 @@
+from abc import abstractmethod
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
+
+
+class BaseFlightPlan(models.Model):
+    """
+    Abstract base class for all flight planning operations.
+    Contains common fields and business logic shared between aircraft and drone operations.
+    Maintains database normalization by preventing field duplication.
+    """
+
+    # Common status choices for all flight plan types
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("submitted", "Submitted for Approval"),
+        ("approved", "Approved"),
+        ("active", "Active"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    class Meta:
+        abstract = True
+        ordering = ["-planned_departure_time"]
+
+    # Core identification fields
+    flight_plan_id = models.CharField(
+        max_length=20,
+        unique=True,
+        verbose_name="Flight Plan ID",
+        help_text="Unique flight plan identifier",
+    )
+
+    # Mission relationship (common to all flight types)
+    mission = models.ForeignKey(
+        'Mission',
+        on_delete=models.CASCADE,
+        verbose_name="Mission",
+        help_text="Associated mission",
+    )
+
+    # Common status and operational fields
+    status = models.CharField(
+        max_length=15,
+        choices=STATUS_CHOICES,
+        default="draft",
+        verbose_name="Status",
+        help_text="Current flight plan status",
+    )
+
+    # Common timing fields
+    planned_departure_time = models.DateTimeField(
+        verbose_name="Planned Departure Time", help_text="Planned flight departure time"
+    )
+
+    planned_arrival_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Planned Arrival Time",
+        help_text="Planned flight arrival time",
+    )
+
+    estimated_flight_time = models.DurationField(
+        verbose_name="Estimated Flight Time", help_text="Estimated duration of flight"
+    )
+
+    actual_departure_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Actual Departure Time",
+        help_text="Actual flight departure time",
+    )
+
+    actual_arrival_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Actual Arrival Time",
+        help_text="Actual flight arrival time",
+    )
+
+    # Common weather and environmental fields
+    weather_conditions = models.TextField(
+        blank=True,
+        verbose_name="Weather Conditions",
+        help_text="Weather conditions and requirements",
+    )
+
+    weather_minimums = models.TextField(
+        verbose_name="Weather Minimums",
+        help_text="Minimum weather conditions for flight",
+    )
+
+    # Common safety fields
+    special_instructions = models.TextField(
+        blank=True,
+        verbose_name="Special Instructions",
+        help_text="Special operational instructions",
+    )
+
+    emergency_procedures = models.TextField(
+        verbose_name="Emergency Procedures",
+        help_text="Emergency procedures for this flight",
+    )
+
+    # Common regulatory compliance
+    notam_checked = models.BooleanField(
+        default=False,
+        verbose_name="NOTAM Checked",
+        help_text="NOTAMs have been checked",
+    )
+
+    airspace_coordination_required = models.BooleanField(
+        default=False,
+        verbose_name="Airspace Coordination Required",
+        help_text="Requires coordination with ATC or other authorities",
+    )
+
+    airspace_coordination_reference = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Airspace Coordination Reference",
+        help_text="ATC clearance or coordination reference",
+    )
+
+    # Common audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name="Created By",
+        help_text="User who created this flight plan",
+    )
+
+    def clean(self):
+        """Shared validation logic for all flight plan types"""
+        super().clean()
+
+        # Validate timing relationships
+        if (
+            self.planned_arrival_time
+            and self.planned_arrival_time <= self.planned_departure_time
+        ):
+            raise ValidationError("Planned arrival time must be after departure time")
+
+        if self.actual_departure_time and self.actual_arrival_time:
+            if self.actual_arrival_time <= self.actual_departure_time:
+                raise ValidationError(
+                    "Actual arrival time must be after departure time"
+                )
+
+    def get_flight_duration_hours(self):
+        """Business logic method: Calculate flight duration in hours"""
+        if hasattr(self, 'estimated_flight_time') and self.estimated_flight_time:
+            return self.estimated_flight_time.total_seconds() / 3600
+        return 0
+
+    def get_actual_flight_duration(self):
+        """Business logic method: Calculate actual flight duration"""
+        if self.actual_departure_time and self.actual_arrival_time:
+            return self.actual_arrival_time - self.actual_departure_time
+        return None
+
+    def is_completed(self):
+        """Business logic method: Check if flight is completed"""
+        return self.status == "completed"
+
+    def requires_weather_check(self):
+        """Business logic method: Determine if weather check is required"""
+        return bool(self.weather_minimums)
+
+    @abstractmethod
+    def get_operational_requirements(self):
+        """
+        Abstract method that must be implemented by concrete classes.
+        Should return dict with operation-type-specific requirements.
+        """
+        pass
+
+    @abstractmethod
+    def validate_operational_parameters(self):
+        """
+        Abstract method for operation-type-specific validation.
+        Should raise ValidationError if parameters are invalid.
+        """
+        pass
+
+    def __str__(self):
+        return f"{self.flight_plan_id} - {self.mission.name if self.mission else 'No Mission'}"
 
 
 class RiskRegister(models.Model):
@@ -973,6 +1163,442 @@ class Mission(models.Model):
         super().save(*args, **kwargs)
 
 
+class AircraftFlightPlan(BaseFlightPlan):
+    """
+    Aircraft Flight Plan for traditional aviation operations.
+    Extends BaseFlightPlan with aircraft-specific fields and validation.
+    """
+
+    FLIGHT_RULES_CHOICES = [
+        ('VFR', 'Visual Flight Rules'),
+        ('IFR', 'Instrument Flight Rules'),
+    ]
+
+    FLIGHT_TYPE_CHOICES = [
+        ('passenger', 'Passenger Transport'),
+        ('cargo', 'Cargo Transport'),
+        ('training', 'Training Flight'),
+        ('aerial_work', 'Aerial Work'),
+        ('charter', 'Charter Flight'),
+        ('positioning', 'Positioning Flight'),
+    ]
+
+    # Aircraft-specific relationships
+    aircraft = models.ForeignKey(
+        'aircraft.Aircraft',
+        on_delete=models.PROTECT,
+        verbose_name="Aircraft",
+        help_text="Aircraft for this flight",
+    )
+
+    pilot_in_command = models.ForeignKey(
+        'accounts.PilotProfile',
+        on_delete=models.PROTECT,
+        related_name='aircraft_commanded_flights',
+        verbose_name="Pilot in Command",
+        help_text="Pilot in command for this flight",
+    )
+
+    co_pilot = models.ForeignKey(
+        'accounts.PilotProfile',
+        on_delete=models.SET_NULL,
+        related_name='aircraft_copilot_flights',
+        null=True,
+        blank=True,
+        verbose_name="Co-pilot",
+        help_text="Co-pilot for this flight (if required)",
+    )
+
+    # Aviation navigation fields
+    departure_airport = models.CharField(
+        max_length=4,
+        verbose_name="Departure Airport",
+        help_text="ICAO airport code (e.g., YSSY)",
+    )
+
+    arrival_airport = models.CharField(
+        max_length=4,
+        verbose_name="Arrival Airport",
+        help_text="ICAO airport code (e.g., YMEL)",
+    )
+
+    alternate_airport = models.CharField(
+        max_length=4,
+        blank=True,
+        verbose_name="Alternate Airport",
+        help_text="Alternate ICAO airport code",
+    )
+
+    # Flight route and navigation
+    route = models.TextField(
+        verbose_name="Route", help_text="Airways, waypoints, and routing information"
+    )
+
+    cruise_altitude = models.IntegerField(
+        verbose_name="Cruise Altitude (feet MSL)",
+        help_text="Planned cruise altitude in feet above mean sea level",
+    )
+
+    # Aircraft performance and loading
+    fuel_required = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="Fuel Required (liters)",
+        help_text="Total fuel required for flight",
+    )
+
+    fuel_loaded = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Fuel Loaded (liters)",
+        help_text="Actual fuel loaded on aircraft",
+    )
+
+    payload_weight = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="Payload Weight (kg)",
+        help_text="Total payload weight including passengers and cargo",
+    )
+
+    passenger_count = models.PositiveIntegerField(
+        default=0, verbose_name="Passenger Count", help_text="Number of passengers"
+    )
+
+    # Regulatory compliance
+    flight_rules = models.CharField(
+        max_length=3,
+        choices=FLIGHT_RULES_CHOICES,
+        verbose_name="Flight Rules",
+        help_text="VFR or IFR flight rules",
+    )
+
+    flight_type = models.CharField(
+        max_length=20,
+        choices=FLIGHT_TYPE_CHOICES,
+        verbose_name="Flight Type",
+        help_text="Type of flight operation",
+    )
+
+    atc_clearance = models.TextField(
+        blank=True,
+        verbose_name="ATC Clearance",
+        help_text="Air traffic control clearance details",
+    )
+
+    class Meta:
+        verbose_name = "Aircraft Flight Plan"
+        verbose_name_plural = "Aircraft Flight Plans"
+
+    def get_operational_requirements(self):
+        """Aircraft-specific operational requirements"""
+        requirements = {
+            'fuel_endurance_hours': float(self.fuel_required)
+            / getattr(self.aircraft, 'fuel_consumption_per_hour', 50),
+            'weight_and_balance_check': self.payload_weight
+            <= getattr(self.aircraft, 'max_payload', 1000),
+            'crew_qualifications': self.validate_crew_certifications(),
+            'airport_compatibility': self.validate_airport_requirements(),
+        }
+        return requirements
+
+    def validate_operational_parameters(self):
+        """Aircraft-specific parameter validation"""
+        errors = []
+
+        # Validate airport codes (basic ICAO format)
+        airport_codes = [self.departure_airport, self.arrival_airport]
+        if self.alternate_airport:
+            airport_codes.append(self.alternate_airport)
+
+        for code in airport_codes:
+            if len(code) != 4 or not code.isupper():
+                errors.append(f"Invalid ICAO airport code: {code}")
+
+        # Validate altitude for flight rules
+        if self.flight_rules == 'VFR' and self.cruise_altitude > 10000:
+            errors.append("VFR flights typically operate below 10,000 feet")
+
+        # Validate fuel vs flight time
+        if self.fuel_loaded and self.fuel_loaded < self.fuel_required:
+            errors.append("Loaded fuel is less than required fuel")
+
+        if errors:
+            raise ValidationError(errors)
+
+    def validate_crew_certifications(self):
+        """Validate crew has required certifications"""
+        # This will be expanded when certificate system is integrated
+        return True  # Placeholder
+
+    def validate_airport_requirements(self):
+        """Validate aircraft meets airport requirements"""
+        # This could check runway length, aircraft category, etc.
+        return True  # Placeholder
+
+    def save(self, *args, **kwargs):
+        """Auto-generate flight plan ID with aircraft prefix"""
+        if not self.flight_plan_id:
+            year = timezone.now().year
+            last_plan = (
+                AircraftFlightPlan.objects.filter(
+                    flight_plan_id__startswith=f"AFL-{year}-"
+                )
+                .order_by("flight_plan_id")
+                .last()
+            )
+
+            if last_plan:
+                last_seq = int(last_plan.flight_plan_id[-6:])
+                next_seq = last_seq + 1
+            else:
+                next_seq = 1
+
+            self.flight_plan_id = f"AFL-{year}-{next_seq:06d}"
+
+        super().save(*args, **kwargs)
+
+
+class DroneFlightPlan(BaseFlightPlan):
+    """
+    Drone/RPAS Flight Plan for unmanned aircraft operations.
+    Extends BaseFlightPlan with drone-specific fields and CASA Part 101 compliance.
+    """
+
+    FLIGHT_TYPE_CHOICES = [
+        ("line_of_sight", "Visual Line of Sight (VLOS)"),
+        ("extended_vlos", "Extended Visual Line of Sight (EVLOS)"),
+        ("beyond_vlos", "Beyond Visual Line of Sight (BVLOS)"),
+        ("night_operations", "Night Operations"),
+        ("controlled_airspace", "Controlled Airspace Operations"),
+    ]
+
+    # Drone-specific relationships
+    drone = models.ForeignKey(
+        'aircraft.Aircraft',  # Using existing Aircraft model until Drone model is created
+        on_delete=models.PROTECT,
+        verbose_name="Drone/RPA",
+        help_text="Drone/RPA for this flight",
+    )
+
+    remote_pilot = models.ForeignKey(
+        'accounts.PilotProfile',
+        on_delete=models.PROTECT,
+        related_name='drone_commanded_flights',
+        verbose_name="Remote Pilot in Command",
+        help_text="Remote pilot in command",
+    )
+
+    visual_observer = models.ForeignKey(
+        'accounts.PilotProfile',
+        on_delete=models.SET_NULL,
+        related_name='drone_observed_flights',
+        null=True,
+        blank=True,
+        verbose_name="Visual Observer",
+        help_text="Visual observer (if required)",
+    )
+
+    # RPAS navigation and operational area
+    flight_type = models.CharField(
+        max_length=20,
+        choices=FLIGHT_TYPE_CHOICES,
+        verbose_name="Flight Type",
+        help_text="Type of RPAS operation",
+    )
+
+    operational_area = models.ForeignKey(
+        "airspace.OperationalArea",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="Operational Area",
+        help_text="Defined operational area (if applicable)",
+    )
+
+    takeoff_location = models.CharField(
+        max_length=200,
+        verbose_name="Takeoff Location",
+        help_text="Takeoff location description",
+    )
+
+    landing_location = models.CharField(
+        max_length=200,
+        verbose_name="Landing Location",
+        help_text="Landing location description",
+    )
+
+    operating_area_coordinates = models.JSONField(
+        default=dict,
+        verbose_name="Operating Area Coordinates",
+        help_text="Polygon boundary of operating area",
+    )
+
+    # RPAS altitude and range parameters
+    maximum_altitude_agl = models.PositiveIntegerField(
+        verbose_name="Maximum Altitude AGL (feet)",
+        help_text="Maximum operating altitude above ground level",
+        validators=[MaxValueValidator(400)],  # CASA Part 101 standard limit
+    )
+
+    maximum_range_from_pilot = models.PositiveIntegerField(
+        verbose_name="Maximum Range from Pilot (meters)",
+        help_text="Maximum distance from remote pilot",
+        validators=[MaxValueValidator(500)],  # VLOS limit
+    )
+
+    # RPAS performance parameters
+    battery_capacity = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="Battery Capacity (mAh)",
+        help_text="Total battery capacity",
+    )
+
+    estimated_battery_consumption = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Estimated Battery Consumption (%)",
+        help_text="Estimated battery consumption percentage",
+    )
+
+    payload_description = models.TextField(
+        verbose_name="Payload Description",
+        help_text="Description of payload and equipment",
+    )
+
+    # RPAS regulatory compliance
+    casa_approval_number = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="CASA Approval Number",
+        help_text="ReOC or other CASA approval reference",
+    )
+
+    airspace_approval = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Airspace Approval",
+        help_text="Specific airspace approval reference",
+    )
+
+    no_fly_zones_checked = models.BooleanField(
+        default=False,
+        verbose_name="No-Fly Zones Checked",
+        help_text="Confirmed no-fly zones have been checked",
+    )
+
+    # Automated flight features
+    waypoints = models.JSONField(
+        default=list,
+        verbose_name="Waypoints",
+        help_text="GPS coordinates for automated flight path",
+    )
+
+    autonomous_mode = models.BooleanField(
+        default=False,
+        verbose_name="Autonomous Mode",
+        help_text="Flight will use autonomous/automated modes",
+    )
+
+    return_to_home_altitude = models.IntegerField(
+        default=100,
+        verbose_name="Return to Home Altitude (feet AGL)",
+        help_text="Altitude for automated return to home function",
+    )
+
+    # Lost link procedures (drone-specific)
+    lost_link_procedures = models.TextField(
+        verbose_name="Lost Link Procedures",
+        help_text="Procedures if communication link is lost with RPA",
+    )
+
+    class Meta:
+        verbose_name = "Drone Flight Plan"
+        verbose_name_plural = "Drone Flight Plans"
+
+    def get_operational_requirements(self):
+        """Drone-specific operational requirements"""
+        requirements = {
+            'battery_endurance_minutes': self.calculate_battery_life(),
+            'airspace_compliance': self.validate_airspace_restrictions(),
+            'remote_pilot_qualifications': self.validate_rpas_certifications(),
+            'range_compliance': self.validate_range_limits(),
+        }
+        return requirements
+
+    def validate_operational_parameters(self):
+        """Drone-specific parameter validation"""
+        errors = []
+
+        # Validate altitude for flight type
+        if self.flight_type == "line_of_sight" and self.maximum_altitude_agl > 120:
+            errors.append("VLOS operations typically limited to 120ft AGL")
+
+        # Validate range for VLOS
+        if self.flight_type == "line_of_sight" and self.maximum_range_from_pilot > 500:
+            errors.append("VLOS operations limited to 500m from pilot")
+
+        # Validate battery capacity vs estimated consumption
+        if self.estimated_battery_consumption > 90:
+            errors.append(
+                "Battery consumption should not exceed 90% for safety margins"
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def calculate_battery_life(self):
+        """Calculate estimated battery endurance"""
+        if self.battery_capacity and self.estimated_battery_consumption:
+            # Simplified calculation - 80% usable capacity, consumption rate
+            usable_capacity = float(self.battery_capacity) * 0.8
+            consumption_rate = float(self.estimated_battery_consumption) / 100
+            # Assuming base flight time calculation (simplified)
+            return int(usable_capacity * (1 - consumption_rate) / 100)  # Minutes
+        return 0
+
+    def validate_airspace_restrictions(self):
+        """Validate compliance with airspace restrictions"""
+        # This will be expanded with actual airspace validation
+        return self.no_fly_zones_checked
+
+    def validate_rpas_certifications(self):
+        """Validate remote pilot certifications"""
+        # This will be expanded when certificate system is integrated
+        return True  # Placeholder
+
+    def validate_range_limits(self):
+        """Validate range limitations for flight type"""
+        if self.flight_type == "line_of_sight":
+            return self.maximum_range_from_pilot <= 500
+        return True
+
+    def save(self, *args, **kwargs):
+        """Auto-generate flight plan ID with drone prefix"""
+        if not self.flight_plan_id:
+            year = timezone.now().year
+            last_plan = (
+                DroneFlightPlan.objects.filter(
+                    flight_plan_id__startswith=f"DFL-{year}-"
+                )
+                .order_by("flight_plan_id")
+                .last()
+            )
+
+            if last_plan:
+                last_seq = int(last_plan.flight_plan_id[-6:])
+                next_seq = last_seq + 1
+            else:
+                next_seq = 1
+
+            self.flight_plan_id = f"DFL-{year}-{next_seq:06d}"
+
+        super().save(*args, **kwargs)
+
+
 class FlightPlan(models.Model):
     """
     Individual Flight Plan for RPA Operations
@@ -1466,3 +2092,112 @@ class FlightLog(models.Model):
             self.log_id = f"LOG-{year}-{next_seq:06d}"
 
         super().save(*args, **kwargs)
+
+
+class MissionAssignment(models.Model):
+    """
+    Mission crew assignments - allows multiple pilots and staff to be assigned to missions
+    Addresses the limitation where only clients could be selected for mission assignments
+    """
+
+    ROLE_CHOICES = [
+        ('pilot', 'Remote Pilot'),
+        ('observer', 'Aircraft Observer'),
+        ('safety_officer', 'Safety Officer'),
+        ('technical_lead', 'Technical Lead'),
+        ('ground_crew', 'Ground Crew'),
+        ('coordinator', 'Mission Coordinator'),
+        ('backup_pilot', 'Backup Pilot'),
+    ]
+
+    mission = models.ForeignKey(
+        'Mission',
+        on_delete=models.CASCADE,
+        related_name='crew_assignments',
+        verbose_name='Mission',
+        help_text='Mission being staffed',
+    )
+
+    # Can assign either a pilot or staff member
+    pilot = models.ForeignKey(
+        'accounts.PilotProfile',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name='Pilot',
+        help_text='Assigned pilot',
+    )
+
+    staff_member = models.ForeignKey(
+        'accounts.StaffProfile',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name='Staff Member',
+        help_text='Assigned staff member',
+    )
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        verbose_name='Role',
+        help_text='Role in the mission',
+    )
+
+    is_primary = models.BooleanField(
+        default=False,
+        verbose_name='Primary Assignment',
+        help_text='Primary person for this role',
+    )
+
+    notes = models.TextField(
+        blank=True,
+        verbose_name='Assignment Notes',
+        help_text='Additional notes about this assignment',
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Mission Assignment'
+        verbose_name_plural = 'Mission Assignments'
+        ordering = ['role', '-is_primary']
+        unique_together = [
+            ('mission', 'pilot', 'role'),
+            ('mission', 'staff_member', 'role'),
+        ]
+
+    def __str__(self):
+        person = self.pilot or self.staff_member
+        primary = " (Primary)" if self.is_primary else ""
+        return (
+            f"{self.mission.mission_id} - {person} - {self.get_role_display()}{primary}"
+        )
+
+    def clean(self):
+        """Validate assignment data"""
+        # Must assign either pilot or staff, but not both
+        if not self.pilot and not self.staff_member:
+            raise ValidationError("Must assign either a pilot or staff member")
+
+        if self.pilot and self.staff_member:
+            raise ValidationError(
+                "Cannot assign both pilot and staff member to same assignment"
+            )
+
+    @property
+    def assigned_person(self):
+        """Get the assigned person (pilot or staff)"""
+        return self.pilot or self.staff_member
+
+    @property
+    def assigned_person_name(self):
+        """Get the name of assigned person"""
+        person = self.assigned_person
+        return (
+            f"{person.user.first_name} {person.user.last_name}"
+            if person
+            else "No Assignment"
+        )

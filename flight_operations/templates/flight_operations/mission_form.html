@@ -28,6 +28,20 @@
         </div>
     </div>
 
+    <!-- Messages Display -->
+    {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
     <form method="post" novalidate>
         {% csrf_token %}
         
@@ -362,7 +376,15 @@ $(document).ready(function() {
         if (!isValid) {
             e.preventDefault();
             alert('Please fill in all required fields.');
+            return false;
         }
+        
+        // Prevent double submission
+        var $submitBtn = $(this).find('button[type="submit"]');
+        $submitBtn.prop('disabled', true);
+        $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        
+        return true;
     });
     
     // Remove validation classes on input

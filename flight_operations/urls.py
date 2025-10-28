@@ -60,4 +60,50 @@ urlpatterns = [
         crud_views.ajax_dashboard_stats,
         name="ajax_dashboard_stats",
     ),
+    # ================================
+    # NEW DUAL-MODEL FLIGHT PLAN URLS
+    # ================================
+    # Unified flight plan operations
+    path(
+        "flight-plans/new/",
+        crud_views.unified_flight_plan_create,
+        name="unified_flight_plan_create",
+    ),
+    path(
+        "flight-plans/all/",
+        crud_views.unified_flight_plan_list,
+        name="unified_flight_plan_list",
+    ),
+    # Aircraft flight plan operations
+    path(
+        "aircraft-flight-plans/create/",
+        crud_views.aircraft_flight_plan_create,
+        name="aircraft_flight_plan_create",
+    ),
+    path(
+        "aircraft-flight-plans/<int:pk>/",
+        crud_views.aircraft_flight_plan_detail,
+        name="aircraft_flight_plan_detail",
+    ),
+    path(
+        "aircraft-flight-plans/<int:pk>/edit/",
+        crud_views.aircraft_flight_plan_update,
+        name="aircraft_flight_plan_update",
+    ),
+    # Drone flight plan operations
+    path(
+        "drone-flight-plans/create/",
+        crud_views.drone_flight_plan_create,
+        name="drone_flight_plan_create",
+    ),
+    path(
+        "drone-flight-plans/<int:pk>/",
+        crud_views.drone_flight_plan_detail,
+        name="drone_flight_plan_detail",
+    ),
+    path(
+        "drone-flight-plans/<int:pk>/edit/",
+        crud_views.drone_flight_plan_update,
+        name="drone_flight_plan_update",
+    ),
 ]

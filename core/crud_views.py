@@ -71,9 +71,9 @@ def core_dashboard(request):
         "active_syllabuses": active_syllabuses,
         "total_manuals": total_manuals,
         "approved_manuals": approved_manuals,
-        "overdue_sops": overdue_sops,
+        "overdue_sops_count": overdue_sops,
     }
-    return render(request, "core/dashboard.html", context)
+    return render(request, "core/core_management_dashboard.html", context)
 
 
 # StandardOperatingProcedure Views

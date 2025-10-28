@@ -624,3 +624,215 @@ class KeyPersonnel(models.Model):
             return "Key Personnel: All positions filled"
         else:
             return f"Key Personnel: {vacant_count} position(s) vacant"
+
+
+# ============================================================================
+# CERTIFICATE MANAGEMENT MODELS - Phase 1 Implementation
+# ============================================================================
+
+
+class CertificateType(models.Model):
+    """
+    Master certificate types for aviation compliance
+    Defines all certificate types that can be issued to pilots and staff
+    """
+
+    CATEGORY_CHOICES = [
+        ('pilot', 'Pilot Certificates'),
+        ('staff', 'Staff Certificates'),
+        ('maintenance', 'Maintenance Certificates'),
+        ('safety', 'Safety Certificates'),
+        ('training', 'Training Certificates'),
+    ]
+
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        help_text="Unique code for certificate type (e.g., REPL, ARN, WHS)",
+    )
+    name = models.CharField(max_length=100, help_text="Full name of the certificate")
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, help_text="Certificate category"
+    )
+    description = models.TextField(
+        help_text="Detailed description of certificate requirements and scope"
+    )
+    validity_period_months = models.IntegerField(
+        help_text="Certificate validity in months (0 = permanent)", default=0
+    )
+    is_mandatory = models.BooleanField(
+        default=False, help_text="Is this certificate mandatory for the role?"
+    )
+    issuing_authority = models.CharField(
+        max_length=100, help_text="Standard issuing authority (e.g., CASA, WorkSafe)"
+    )
+    is_active = models.BooleanField(
+        default=True, help_text="Is this certificate type currently active?"
+    )
+
+    # Audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Certificate Type"
+        verbose_name_plural = "Certificate Types"
+        ordering = ['category', 'code']
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class PersonalCertificate(models.Model):
+    """
+    Individual certificates held by pilots and staff
+    Tracks the complete lifecycle of each certificate
+    """
+
+    STATUS_CHOICES = [
+        ('valid', 'Valid'),
+        ('expired', 'Expired'),
+        ('suspended', 'Suspended'),
+        ('revoked', 'Revoked'),
+        ('pending', 'Pending Approval'),
+    ]
+
+    # Link to person (pilot or staff) - only one can be set
+    pilot = models.ForeignKey(
+        'PilotProfile',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='certificates',
+        help_text="Pilot who holds this certificate",
+    )
+    staff = models.ForeignKey(
+        'StaffProfile',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='certificates',
+        help_text="Staff member who holds this certificate",
+    )
+
+    # Certificate details
+    certificate_type = models.ForeignKey(
+        CertificateType, on_delete=models.PROTECT, help_text="Type of certificate"
+    )
+    certificate_number = models.CharField(
+        max_length=50, help_text="Official certificate number"
+    )
+
+    # Dates
+    issue_date = models.DateField(help_text="Date certificate was issued")
+    expiry_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date certificate expires (leave blank for permanent)",
+    )
+
+    # Status and authority
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='valid')
+    issuing_authority = models.CharField(
+        max_length=100, help_text="Organization that issued this certificate"
+    )
+    issuing_officer = models.CharField(
+        max_length=100, blank=True, help_text="Officer who signed the certificate"
+    )
+
+    # Supporting documentation
+    certificate_document = models.FileField(
+        upload_to='certificates/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text="Scanned copy of certificate",
+    )
+
+    # Training linkage (for Phase 2)
+    related_training = models.ForeignKey(
+        'core.TrainingRegister',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Training record that led to this certificate (if applicable)",
+    )
+
+    # Additional information
+    conditions = models.TextField(
+        blank=True, help_text="Any conditions or restrictions on this certificate"
+    )
+    notes = models.TextField(
+        blank=True, help_text="Additional notes about this certificate"
+    )
+
+    # Audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Personal Certificate"
+        verbose_name_plural = "Personal Certificates"
+        unique_together = [
+            ['pilot', 'certificate_type', 'certificate_number'],
+            ['staff', 'certificate_type', 'certificate_number'],
+        ]
+        ordering = ['-issue_date']
+
+    def clean(self):
+        """Validate that certificate belongs to exactly one person"""
+        if self.pilot and self.staff:
+            raise ValidationError("Certificate cannot belong to both pilot and staff")
+        if not self.pilot and not self.staff:
+            raise ValidationError("Certificate must belong to either pilot or staff")
+
+        # Set expiry date based on certificate type if not provided
+        if not self.expiry_date and self.certificate_type.validity_period_months > 0:
+            from dateutil.relativedelta import relativedelta
+
+            self.expiry_date = self.issue_date + relativedelta(
+                months=self.certificate_type.validity_period_months
+            )
+
+    @property
+    def is_expired(self):
+        """Check if certificate is expired"""
+        if self.expiry_date:
+            return self.expiry_date < timezone.now().date()
+        return False
+
+    @property
+    def days_until_expiry(self):
+        """Days until certificate expires (negative if expired)"""
+        if self.expiry_date:
+            return (self.expiry_date - timezone.now().date()).days
+        return None
+
+    @property
+    def expiry_status(self):
+        """Human-readable expiry status"""
+        if not self.expiry_date:
+            return "No expiry"
+
+        days = self.days_until_expiry
+        if days < 0:
+            return f"Expired {abs(days)} days ago"
+        elif days == 0:
+            return "Expires today"
+        elif days <= 30:
+            return f"Expires in {days} days"
+        else:
+            return f"Valid for {days} days"
+
+    @property
+    def holder(self):
+        """Get the person who holds this certificate"""
+        return self.pilot or self.staff
+
+    @property
+    def holder_name(self):
+        """Get the name of the certificate holder"""
+        holder = self.holder
+        return holder.user.get_full_name() if holder else "Unknown"
+
+    def __str__(self):
+        return f"{self.holder_name} - {self.certificate_type.code} ({self.certificate_number})"
