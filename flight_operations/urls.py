@@ -13,21 +13,21 @@ urlpatterns = [
     path("missions/<int:pk>/", crud_views.mission_detail, name="mission_detail"),
     path("missions/<int:pk>/edit/", crud_views.mission_update, name="mission_update"),
     path("missions/<int:pk>/delete/", crud_views.mission_delete, name="mission_delete"),
-    # Flight Plan CRUD
-    path("flight-plans/", crud_views.flight_plan_list, name="flight_plan_list"),
-    path(
-        "flight-plans/create/", crud_views.flight_plan_create, name="flight_plan_create"
-    ),
-    path(
-        "flight-plans/<int:pk>/",
-        crud_views.flight_plan_detail,
-        name="flight_plan_detail",
-    ),
-    path(
-        "flight-plans/<int:pk>/edit/",
-        crud_views.flight_plan_update,
-        name="flight_plan_update",
-    ),
+    # Legacy Flight Plan CRUD - REMOVED (Use AircraftFlightPlan/DroneFlightPlan URLs below)
+    # path("flight-plans/", crud_views.flight_plan_list, name="flight_plan_list"),
+    # path(
+    #     "flight-plans/create/", crud_views.flight_plan_create, name="flight_plan_create"
+    # ),
+    # path(
+    #     "flight-plans/<int:pk>/",
+    #     crud_views.flight_plan_detail,
+    #     name="flight_plan_detail",
+    # ),
+    # path(
+    #     "flight-plans/<int:pk>/edit/",
+    #     crud_views.flight_plan_update,
+    #     name="flight_plan_update",
+    # ),
     # Flight Log CRUD
     path("flight-logs/", crud_views.flight_log_list, name="flight_log_list"),
     path("flight-logs/create/", crud_views.flight_log_create, name="flight_log_create"),
@@ -50,14 +50,60 @@ urlpatterns = [
         crud_views.ajax_mission_delete,
         name="ajax_mission_delete",
     ),
-    path(
-        "ajax/flight-plan/delete/<int:pk>/",
-        crud_views.ajax_flight_plan_delete,
-        name="ajax_flight_plan_delete",
-    ),
+    # path(
+    #     "ajax/flight-plan/delete/<int:pk>/",
+    #     crud_views.ajax_flight_plan_delete,
+    #     name="ajax_flight_plan_delete",
+    # ),
     path(
         "ajax/dashboard-stats/",
         crud_views.ajax_dashboard_stats,
         name="ajax_dashboard_stats",
+    ),
+    # ================================
+    # NEW DUAL-MODEL FLIGHT PLAN URLS
+    # ================================
+    # Unified flight plan operations
+    path(
+        "flight-plans/new/",
+        crud_views.unified_flight_plan_create,
+        name="unified_flight_plan_create",
+    ),
+    path(
+        "flight-plans/all/",
+        crud_views.unified_flight_plan_list,
+        name="unified_flight_plan_list",
+    ),
+    # Aircraft flight plan operations
+    path(
+        "aircraft-flight-plans/create/",
+        crud_views.aircraft_flight_plan_create,
+        name="aircraft_flight_plan_create",
+    ),
+    path(
+        "aircraft-flight-plans/<int:pk>/",
+        crud_views.aircraft_flight_plan_detail,
+        name="aircraft_flight_plan_detail",
+    ),
+    path(
+        "aircraft-flight-plans/<int:pk>/edit/",
+        crud_views.aircraft_flight_plan_update,
+        name="aircraft_flight_plan_update",
+    ),
+    # Drone flight plan operations
+    path(
+        "drone-flight-plans/create/",
+        crud_views.drone_flight_plan_create,
+        name="drone_flight_plan_create",
+    ),
+    path(
+        "drone-flight-plans/<int:pk>/",
+        crud_views.drone_flight_plan_detail,
+        name="drone_flight_plan_detail",
+    ),
+    path(
+        "drone-flight-plans/<int:pk>/edit/",
+        crud_views.drone_flight_plan_update,
+        name="drone_flight_plan_update",
     ),
 ]

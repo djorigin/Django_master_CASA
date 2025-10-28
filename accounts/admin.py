@@ -4,11 +4,13 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
+    CertificateType,
     ClientProfile,
     CompanyContactDetails,
     CustomUser,
     KeyPersonnel,
     OperatorCertificate,
+    PersonalCertificate,
     PilotProfile,
     StaffProfile,
 )
@@ -454,3 +456,147 @@ class KeyPersonnelAdmin(admin.ModelAdmin):
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
+
+
+# ============================================================================
+# CERTIFICATE MANAGEMENT ADMIN - Phase 1 Implementation
+# ============================================================================
+
+
+@admin.register(CertificateType)
+class CertificateTypeAdmin(admin.ModelAdmin):
+    """Admin interface for Certificate Types"""
+
+    list_display = [
+        'code',
+        'name',
+        'category',
+        'validity_period_months',
+        'is_mandatory',
+        'issuing_authority',
+        'is_active',
+    ]
+    list_filter = ['category', 'is_mandatory', 'is_active', 'issuing_authority']
+    search_fields = ['code', 'name', 'description']
+    ordering = ['category', 'code']
+
+    fieldsets = [
+        (
+            'Certificate Information',
+            {'fields': ['code', 'name', 'category', 'description']},
+        ),
+        (
+            'Validity & Requirements',
+            {'fields': ['validity_period_months', 'is_mandatory', 'issuing_authority']},
+        ),
+        ('Status', {'fields': ['is_active']}),
+        (
+            'Audit Information',
+            {'fields': ['created_at', 'updated_at'], 'classes': ['collapse']},
+        ),
+    ]
+
+    readonly_fields = ['created_at', 'updated_at']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related()
+
+
+@admin.register(PersonalCertificate)
+class PersonalCertificateAdmin(admin.ModelAdmin):
+    """Admin interface for Personal Certificates"""
+
+    list_display = [
+        'holder_name',
+        'certificate_type',
+        'certificate_number',
+        'issue_date',
+        'expiry_date',
+        'expiry_status_display',
+        'status',
+    ]
+    list_filter = [
+        'status',
+        'certificate_type__category',
+        'certificate_type',
+        'issue_date',
+        'expiry_date',
+    ]
+    search_fields = [
+        'certificate_number',
+        'pilot__user__first_name',
+        'pilot__user__last_name',
+        'staff__user__first_name',
+        'staff__user__last_name',
+    ]
+    ordering = ['-issue_date']
+    date_hierarchy = 'issue_date'
+
+    fieldsets = [
+        (
+            'Certificate Holder',
+            {
+                'fields': ['pilot', 'staff'],
+                'description': 'Select either pilot OR staff member (not both)',
+            },
+        ),
+        (
+            'Certificate Details',
+            {'fields': ['certificate_type', 'certificate_number', 'status']},
+        ),
+        ('Dates', {'fields': ['issue_date', 'expiry_date']}),
+        ('Issuing Authority', {'fields': ['issuing_authority', 'issuing_officer']}),
+        ('Documentation', {'fields': ['certificate_document']}),
+        (
+            'Training Link',
+            {
+                'fields': ['related_training'],
+                'classes': ['collapse'],
+                'description': 'Link to training that resulted in this certificate (optional)',
+            },
+        ),
+        (
+            'Additional Information',
+            {'fields': ['conditions', 'notes'], 'classes': ['collapse']},
+        ),
+        (
+            'Audit Information',
+            {'fields': ['created_at', 'updated_at'], 'classes': ['collapse']},
+        ),
+    ]
+
+    readonly_fields = ['created_at', 'updated_at']
+
+    def holder_name(self, obj):
+        """Display the name of the certificate holder"""
+        return obj.holder_name
+
+    holder_name.short_description = 'Certificate Holder'
+    holder_name.admin_order_field = 'pilot__user__last_name'
+
+    def expiry_status_display(self, obj):
+        """Display expiry status with color coding"""
+        status = obj.expiry_status
+        if obj.is_expired:
+            return f'🔴 {status}'
+        elif obj.days_until_expiry and obj.days_until_expiry <= 30:
+            return f'🟡 {status}'
+        else:
+            return f'🟢 {status}'
+
+    expiry_status_display.short_description = 'Expiry Status'
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('certificate_type', 'pilot__user', 'staff__user')
+        )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Optimize foreign key queries"""
+        if db_field.name == "pilot":
+            kwargs["queryset"] = PilotProfile.objects.select_related('user')
+        elif db_field.name == "staff":
+            kwargs["queryset"] = StaffProfile.objects.select_related('user')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)

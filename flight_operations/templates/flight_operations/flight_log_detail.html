@@ -312,9 +312,13 @@
                             <i class="fas fa-edit"></i> Edit Flight Log
                         </a>
                         
-                        {% if object.flight_plan %}
-                        <a href="{% url 'flight_operations:flight_plan_detail' object.flight_plan.pk %}" class="btn btn-info btn-sm">
-                            <i class="fas fa-route"></i> View Flight Plan
+                        {% if object.aircraft_flight_plan %}
+                        <a href="{% url 'flight_operations:aircraft_flight_plan_detail' object.aircraft_flight_plan.pk %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-route"></i> View Aircraft Flight Plan
+                        </a>
+                        {% elif object.drone_flight_plan %}
+                        <a href="{% url 'flight_operations:drone_flight_plan_detail' object.drone_flight_plan.pk %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-route"></i> View Drone Flight Plan
                         </a>
                         {% endif %}
                         
@@ -438,9 +442,13 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
-                        {% if object.flight_plan %}
-                        <a href="{% url 'flight_operations:flight_plan_detail' object.flight_plan.pk %}" class="list-group-item list-group-item-action">
-                            <i class="fas fa-route text-info"></i> Flight Plan: {{ object.flight_plan.flight_plan_id }}
+                        {% if object.aircraft_flight_plan %}
+                        <a href="{% url 'flight_operations:aircraft_flight_plan_detail' object.aircraft_flight_plan.pk %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-route text-info"></i> Aircraft Flight Plan: {{ object.aircraft_flight_plan.flight_plan_id }}
+                        </a>
+                        {% elif object.drone_flight_plan %}
+                        <a href="{% url 'flight_operations:drone_flight_plan_detail' object.drone_flight_plan.pk %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-route text-info"></i> Drone Flight Plan: {{ object.drone_flight_plan.flight_plan_id }}
                         </a>
                         {% endif %}
                         

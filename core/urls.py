@@ -1,15 +1,28 @@
 from django.urls import path
 
 from . import crud_views
-from .views import client_greeting, home
+from .views import (
+    client_greeting,
+    home,
+    jsa_detail,
+    jsa_register,
+    main_system_dashboard,
+)
 
 app_name = "core"
 
 urlpatterns = [
     path("", home, name="index"),  # Changed name from 'home' to 'index' for consistency
     path("api/greeting/", client_greeting),
-    # Core CRUD Dashboard
-    path("dashboard/", crud_views.core_dashboard, name="dashboard"),
+    # Main System Dashboard - Central hub accessed after login
+    path("dashboard/", main_system_dashboard, name="main_system_dashboard"),
+    # Job Safety Assessment (JSA) Register and Detail Views - Site-wide access
+    path("jsa/", jsa_register, name="jsa_register"),
+    path("jsa/<str:jsa_id>/", jsa_detail, name="jsa_detail"),
+    # Core Operations Management Dashboard - Specific to core module (SOPs, Training, Manuals)
+    path(
+        "core-operations/", crud_views.core_dashboard, name="core_operations_dashboard"
+    ),
     # Standard Operating Procedures (SOP)
     path("sop/", crud_views.sop_list, name="sop_list"),
     path("sop/create/", crud_views.sop_create, name="sop_create"),

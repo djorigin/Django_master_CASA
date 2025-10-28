@@ -49,10 +49,19 @@ class MissionDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Add related flight plans
-        context["flight_plans"] = self.object.flightplan_set.all().order_by(
-            "planned_departure_time"
+        # Add related flight plans from both aircraft and drone sets
+        aircraft_plans = self.object.aircraftflightplan_set.all()
+        drone_plans = self.object.droneflightplan_set.all()
+
+        # Combine and order by planned departure time
+        all_plans = list(aircraft_plans) + list(drone_plans)
+        all_plans.sort(
+            key=lambda x: (
+                x.planned_departure_time if x.planned_departure_time else timezone.now()
+            )
         )
+
+        context["flight_plans"] = all_plans
         return context
 
 

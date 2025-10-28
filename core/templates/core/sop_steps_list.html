@@ -35,9 +35,15 @@
                             <p class="mb-0 text-muted">{{ sop.description|default:"No description available" }}</p>
                         </div>
                         <div class="col-md-4 text-end">
-                            <span class="badge bg-{{ sop.status == 'active' and 'success' or sop.status == 'draft' and 'warning' or 'secondary' }} fs-6">
-                                {{ sop.get_status_display|default:sop.status|title }}
-                            </span>
+                            {% if sop.status == 'active' %}
+                                <span class="badge bg-success fs-6">{{ sop.get_status_display|default:"Active" }}</span>
+                            {% elif sop.status == 'draft' %}
+                                <span class="badge bg-warning fs-6">{{ sop.get_status_display|default:"Draft" }}</span>
+                            {% elif sop.status == 'under_review' %}
+                                <span class="badge bg-primary fs-6">{{ sop.get_status_display|default:"Under Review" }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">{{ sop.get_status_display|default:"Archived" }}</span>
+                            {% endif %}
                             <br><small class="text-muted">Version {{ sop.version_number|default:"1.0" }}</small>
                         </div>
                     </div>

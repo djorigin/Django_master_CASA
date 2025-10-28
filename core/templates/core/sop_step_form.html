@@ -38,9 +38,15 @@
                             <small class="text-muted">{{ sop.description|default:"Standard Operating Procedure"|truncatewords:15 }}</small>
                         </div>
                         <div class="col-md-4 text-end">
-                            <span class="badge bg-{{ sop.status == 'active' and 'success' or sop.status == 'draft' and 'warning' or 'secondary' }}">
-                                {{ sop.get_status_display|default:sop.status|title }}
-                            </span>
+                            {% if sop.status == 'active' %}
+                                <span class="badge bg-success">{{ sop.get_status_display|default:"Active" }}</span>
+                            {% elif sop.status == 'draft' %}
+                                <span class="badge bg-warning">{{ sop.get_status_display|default:"Draft" }}</span>
+                            {% elif sop.status == 'under_review' %}
+                                <span class="badge bg-primary">{{ sop.get_status_display|default:"Under Review" }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ sop.get_status_display|default:"Archived" }}</span>
+                            {% endif %}
                             <br><small class="text-muted">Version {{ sop.version_number|default:"1.0" }}</small>
                         </div>
                     </div>
@@ -54,11 +60,12 @@
         
         <div class="row">
             <!-- Main Form -->
-            <div class="col-md-8">
-                <!-- Step Information -->
+            <div class="col-md-12">
+                
+                <!-- 1. BASIC STEP INFORMATION -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-info-circle"></i> Step Information</h5>
+                        <h5><i class="fas fa-info-circle text-primary"></i> Basic Step Information</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -71,7 +78,7 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-2 mb-3">
                                 <label for="{{ form.step_number.id_for_label }}" class="form-label">Step Number *</label>
                                 {{ form.step_number }}
                                 {% if form.step_number.errors %}
@@ -79,244 +86,209 @@
                                         {% for error in form.step_number.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
-                                <small class="form-text text-muted">
-                                    Steps will be automatically reordered if needed
-                                </small>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label for="{{ form.step_type.id_for_label }}" class="form-label">Step Type</label>
+                                {{ form.step_type }}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Detailed Description *</label>
                             {{ form.description }}
                             {% if form.description.errors %}
                                 <div class="invalid-feedback d-block">
                                     {% for error in form.description.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
-                            <small class="form-text text-muted">
-                                Provide clear, detailed instructions for this step
-                            </small>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.estimated_duration.id_for_label }}" class="form-label">Estimated Duration (minutes)</label>
-                                {{ form.estimated_duration }}
-                                {% if form.estimated_duration.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.estimated_duration.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
+                                <label for="{{ form.responsible_role.id_for_label }}" class="form-label">Responsible Role *</label>
+                                {{ form.responsible_role }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.required_personnel.id_for_label }}" class="form-label">Required Personnel</label>
-                                {{ form.required_personnel }}
-                                {% if form.required_personnel.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.required_personnel.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
+                                <label for="{{ form.duration_estimate.id_for_label }}" class="form-label">Duration Estimate (minutes)</label>
+                                {{ form.duration_estimate }}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Safety & Warnings -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-shield-alt"></i> Safety & Warnings</h5>
+                <!-- 2. JSA (JOB SAFETY ANALYSIS) - AUSTRALIAN COMPLIANCE -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h5><i class="fas fa-shield-alt text-warning"></i> JSA (Job Safety Analysis) - Australian Compliance</h5>
+                        <small class="text-muted">Required for Australian workplace safety standards</small>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="{{ form.warnings.id_for_label }}" class="form-label">Warnings</label>
-                            {{ form.warnings }}
-                            {% if form.warnings.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.warnings.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                            <small class="form-text text-muted">
-                                Important warnings or cautions for this step
-                            </small>
+                            <label for="{{ form.jsa_hazard_identification.id_for_label }}" class="form-label">
+                                Hazard Identification <span class="text-danger">*</span>
+                            </label>
+                            {{ form.jsa_hazard_identification }}
+                            <small class="form-text text-muted">Identify all potential hazards: equipment failure, human error, environmental factors, etc.</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.risk_likelihood.id_for_label }}" class="form-label">Risk Likelihood</label>
+                                {{ form.risk_likelihood }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.risk_consequence.id_for_label }}" class="form-label">Risk Consequence</label>
+                                {{ form.risk_consequence }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.jsa_risk_rating.id_for_label }}" class="form-label">Overall Risk Rating</label>
+                                {{ form.jsa_risk_rating }}
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.safety_notes.id_for_label }}" class="form-label">Safety Notes</label>
-                            {{ form.safety_notes }}
-                            {% if form.safety_notes.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.safety_notes.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                            <small class="form-text text-muted">
-                                Safety considerations and protective measures
-                            </small>
+                            <label for="{{ form.jsa_control_measures.id_for_label }}" class="form-label">
+                                Control Measures <span class="text-danger">*</span>
+                            </label>
+                            {{ form.jsa_control_measures }}
+                            <small class="form-text text-muted">Describe specific control measures to mitigate each identified risk</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Equipment & Resources -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-tools"></i> Equipment & Resources</h5>
+                <!-- 3. SAFETY & WARNINGS -->
+                <div class="card mb-4 border-danger">
+                    <div class="card-header bg-danger bg-opacity-10">
+                        <h5><i class="fas fa-exclamation-triangle text-danger"></i> Safety & Warnings</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="{{ form.required_equipment.id_for_label }}" class="form-label">Required Equipment</label>
+                            <label for="{{ form.safety_warnings.id_for_label }}" class="form-label">Safety Warnings</label>
+                            {{ form.safety_warnings }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.emergency_procedures.id_for_label }}" class="form-label">Emergency Procedures</label>
+                            {{ form.emergency_procedures }}
+                        </div>
+
+                        <div class="form-check">
+                            {{ form.safety_critical }}
+                            <label class="form-check-label" for="{{ form.safety_critical.id_for_label }}">
+                                Safety Critical Step
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. EQUIPMENT & RESOURCES -->
+                <div class="card mb-4 border-info">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h5><i class="fas fa-tools text-info"></i> Equipment & Resources</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.required_equipment.id_for_label }}" class="form-label">Required Equipment & Tools</label>
                             {{ form.required_equipment }}
-                            {% if form.required_equipment.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.required_equipment.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                            <small class="form-text text-muted">
-                                List any tools, equipment, or materials needed
-                            </small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.reference_documents.id_for_label }}" class="form-label">Reference Documents</label>
-                            {{ form.reference_documents }}
-                            {% if form.reference_documents.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.reference_documents.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                            <small class="form-text text-muted">
-                                Related manuals, checklists, or documentation
-                            </small>
+                            <label for="{{ form.required_personnel.id_for_label }}" class="form-label">Required Personnel</label>
+                            {{ form.required_personnel }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.environmental_conditions.id_for_label }}" class="form-label">Environmental Conditions</label>
+                            {{ form.environmental_conditions }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Quality & Verification -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-check-circle"></i> Quality & Verification</h5>
+                <!-- 5. QUALITY & VERIFICATION -->
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-success bg-opacity-10">
+                        <h5><i class="fas fa-check-circle text-success"></i> Quality & Verification</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="{{ form.verification_criteria.id_for_label }}" class="form-label">Verification Criteria</label>
-                            {{ form.verification_criteria }}
-                            {% if form.verification_criteria.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.verification_criteria.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                            <small class="form-text text-muted">
-                                How to verify this step has been completed correctly
-                            </small>
+                            <label for="{{ form.quality_standards.id_for_label }}" class="form-label">Quality Standards</label>
+                            {{ form.quality_standards }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.verification_method.id_for_label }}" class="form-label">Verification Method</label>
+                            {{ form.verification_method }}
                         </div>
 
                         <div class="mb-3">
                             <label for="{{ form.acceptance_criteria.id_for_label }}" class="form-label">Acceptance Criteria</label>
                             {{ form.acceptance_criteria }}
-                            {% if form.acceptance_criteria.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.acceptance_criteria.errors %}{{ error }}{% endfor %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.verification_required }}
+                                    <label class="form-check-label" for="{{ form.verification_required.id_for_label }}">
+                                        Verification Required
+                                    </label>
                                 </div>
-                            {% endif %}
-                            <small class="form-text text-muted">
-                                Standards for acceptable completion of this step
-                            </small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.sign_off_required }}
+                                    <label class="form-check-label" for="{{ form.sign_off_required.id_for_label }}">
+                                        Supervisor Sign-off Required
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. COMPLIANCE & ADDITIONAL INFORMATION -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-check"></i> Compliance & Additional Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.regulatory_references.id_for_label }}" class="form-label">Regulatory References</label>
+                            {{ form.regulatory_references }}
                         </div>
 
                         <div class="mb-3">
                             <label for="{{ form.notes.id_for_label }}" class="form-label">Additional Notes</label>
                             {{ form.notes }}
-                            {% if form.notes.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.notes.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
                         </div>
+
+                        {% if form.prerequisite_steps.field.queryset %}
+                        <div class="mb-3">
+                            <label class="form-label">Prerequisite Steps</label>
+                            {{ form.prerequisite_steps }}
+                            <small class="form-text text-muted">Select steps that must be completed before this step</small>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-            </div>
 
-            <!-- Sidebar -->
-            <div class="col-md-4">
-                <!-- Actions -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-cogs"></i> Actions</h5>
-                    </div>
+                <!-- SUBMIT BUTTONS -->
+                <div class="card">
                     <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                {% if form.instance.pk %}Update Step{% else %}Add Step{% endif %}
-                            </button>
-                            
-                            <a href="{% url 'core:sop_steps_list' sop.pk %}" class="btn btn-outline-secondary">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:sop_steps_list' sop.pk %}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Cancel
                             </a>
-                            
-                            {% if form.instance.pk %}
-                                <hr>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                    <i class="fas fa-trash"></i> Delete Step
+                            <div>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save"></i>
+                                    {% if form.instance.pk %}Update Step{% else %}Create Step{% endif %}
                                 </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step Context -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-list-ol"></i> Step Context</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if form.instance.pk %}
-                            <div class="mb-3">
-                                <strong>Current Step:</strong><br>
-                                <span class="badge bg-primary fs-6">#{{ form.instance.step_number }}</span>
                             </div>
-                        {% endif %}
-                        
-                        <div class="mb-3">
-                            <strong>SOP:</strong><br>
-                            <a href="{% url 'core:sop_detail' sop.pk %}" class="text-decoration-none">
-                                {{ sop.title|truncatewords:6 }}
-                            </a>
                         </div>
-                        
-                        <div class="mb-3">
-                            <strong>Total Steps:</strong><br>
-                            {{ sop.sop_steps.count|default:"0" }}
-                        </div>
-                        
-                        {% if sop.sop_steps.count > 0 %}
-                            <div class="mb-3">
-                                <strong>Step Numbers in Use:</strong><br>
-                                {% for step in sop.sop_steps.all %}
-                                    <span class="badge bg-light text-dark">{{ step.step_number }}</span>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Help -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-question-circle"></i> Help</h5>
-                    </div>
-                    <div class="card-body">
-                        <small class="text-muted">
-                            <strong>Step Guidelines:</strong><br>
-                            • Use clear, actionable titles<br>
-                            • Provide detailed descriptions<br>
-                            • Include safety warnings<br>
-                            • Specify required equipment<br>
-                            • Define verification criteria<br><br>
-                            
-                            <strong>Step Numbers:</strong><br>
-                            • Steps are automatically ordered<br>
-                            • Duplicate numbers are adjusted<br>
-                            • Use gaps for future insertions<br>
-                        </small>
                     </div>
                 </div>
             </div>
@@ -324,67 +296,48 @@
     </form>
 </div>
 
-{% if form.instance.pk %}
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirm Step Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this procedure step?</p>
-                <p><strong>Step {{ form.instance.step_number }}: {{ form.instance.title }}</strong></p>
-                <p class="text-danger"><small>This action cannot be undone. Other step numbers will be automatically adjusted.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form method="post" action="{% url 'core:sop_step_delete' sop.pk form.instance.pk %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete Step</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-{% endblock %}
+<style>
+.card-header h5 {
+    margin-bottom: 0;
+}
 
-{% block extra_js %}
-<script>
-$(document).ready(function() {
-    // Form validation
-    $('form').on('submit', function(e) {
-        var isValid = true;
-        var requiredFields = ['title', 'description', 'step_number'];
-        
-        requiredFields.forEach(function(field) {
-            var input = $('#id_' + field);
-            if (!input.val()) {
-                input.addClass('is-invalid');
-                isValid = false;
-            } else {
-                input.removeClass('is-invalid');
-            }
-        });
-        
-        if (!isValid) {
-            e.preventDefault();
-            alert('Please fill in all required fields.');
-        }
-    });
-    
-    // Remove validation classes on input
-    $('input, select, textarea').on('input change', function() {
-        $(this).removeClass('is-invalid');
-    });
-    
-    // Auto-resize textareas
-    $('textarea').on('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
-});
-</script>
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.text-danger {
+    font-weight: 600;
+}
+
+.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.border-danger {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.border-info {
+    border-left: 4px solid #0dcaf0 !important;
+}
+
+.border-success {
+    border-left: 4px solid #198754 !important;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(var(--bs-bg-opacity), 0.1) !important;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+</style>
 {% endblock %}

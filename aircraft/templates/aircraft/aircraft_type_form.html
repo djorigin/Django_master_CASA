@@ -127,11 +127,11 @@
             <h3>Technical Specifications</h3>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="{{ form.max_takeoff_weight.id_for_label }}">{{ form.max_takeoff_weight.label }}</label>
-                    {{ form.max_takeoff_weight }}
-                    {% if form.max_takeoff_weight.errors %}
+                    <label for="{{ form.maximum_takeoff_weight.id_for_label }}">{{ form.maximum_takeoff_weight.label }}*</label>
+                    {{ form.maximum_takeoff_weight }}
+                    {% if form.maximum_takeoff_weight.errors %}
                         <div class="form-errors">
-                            {% for error in form.max_takeoff_weight.errors %}
+                            {% for error in form.maximum_takeoff_weight.errors %}
                                 <span class="error">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -139,11 +139,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="{{ form.max_operating_altitude.id_for_label }}">{{ form.max_operating_altitude.label }}</label>
-                    {{ form.max_operating_altitude }}
-                    {% if form.max_operating_altitude.errors %}
+                    <label for="{{ form.maximum_operating_height.id_for_label }}">{{ form.maximum_operating_height.label }}*</label>
+                    {{ form.maximum_operating_height }}
+                    {% if form.maximum_operating_height.errors %}
                         <div class="form-errors">
-                            {% for error in form.max_operating_altitude.errors %}
+                            {% for error in form.maximum_operating_height.errors %}
                                 <span class="error">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -151,17 +151,17 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="{{ form.max_operating_speed.id_for_label }}">{{ form.max_operating_speed.label }}</label>
-                    {{ form.max_operating_speed }}
-                    {% if form.max_operating_speed.errors %}
+                    <label for="{{ form.maximum_speed.id_for_label }}">{{ form.maximum_speed.label }}</label>
+                    {{ form.maximum_speed }}
+                    {% if form.maximum_speed.errors %}
                         <div class="form-errors">
-                            {% for error in form.max_operating_speed.errors %}
+                            {% for error in form.maximum_speed.errors %}
                                 <span class="error">{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% endif %}
                 </div>
-            </div>
+            </div></div>
             
             <div class="form-row">
                 <div class="form-group">
@@ -207,11 +207,67 @@
             <h3>Compliance Information</h3>
             <div class="form-row">
                 <div class="form-group">
+                    <label for="{{ form.casa_type_certificate.id_for_label }}">{{ form.casa_type_certificate.label }}</label>
+                    {{ form.casa_type_certificate }}
+                    {% if form.casa_type_certificate.errors %}
+                        <div class="form-errors">
+                            {% for error in form.casa_type_certificate.errors %}
+                                <span class="error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
                     <label for="{{ form.casa_approval_reference.id_for_label }}">{{ form.casa_approval_reference.label }}</label>
                     {{ form.casa_approval_reference }}
                     {% if form.casa_approval_reference.errors %}
                         <div class="form-errors">
                             {% for error in form.casa_approval_reference.errors %}
+                                <span class="error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group checkbox-group">
+                    <div class="checkbox-container">
+                        {{ form.excluded_category_compliant }}
+                        <label for="{{ form.excluded_category_compliant.id_for_label }}">{{ form.excluded_category_compliant.label }}</label>
+                    </div>
+                    {% if form.excluded_category_compliant.errors %}
+                        <div class="form-errors">
+                            {% for error in form.excluded_category_compliant.errors %}
+                                <span class="error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <div class="checkbox-container">
+                        {{ form.flight_manual_required }}
+                        <label for="{{ form.flight_manual_required.id_for_label }}">{{ form.flight_manual_required.label }}</label>
+                    </div>
+                    {% if form.flight_manual_required.errors %}
+                        <div class="form-errors">
+                            {% for error in form.flight_manual_required.errors %}
+                                <span class="error">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <div class="checkbox-container">
+                        {{ form.maintenance_manual_required }}
+                        <label for="{{ form.maintenance_manual_required.id_for_label }}">{{ form.maintenance_manual_required.label }}</label>
+                    </div>
+                    {% if form.maintenance_manual_required.errors %}
+                        <div class="form-errors">
+                            {% for error in form.maintenance_manual_required.errors %}
                                 <span class="error">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -234,6 +290,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
+                    <small class="form-help">Describe any operational limitations and restrictions for this aircraft type</small>
                 </div>
             </div>
             
@@ -248,6 +305,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
+                    <small class="form-help">Maintenance schedules and requirements</small>
                 </div>
                 
                 <div class="form-group">
@@ -260,6 +318,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
+                    <small class="form-help">Training requirements for operators</small>
                 </div>
             </div>
             
@@ -274,6 +333,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
+                    <small class="form-help">Insurance coverage requirements and minimums</small>
                 </div>
             </div>
         </div>
@@ -294,6 +354,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
+                    <small class="form-help">Aircraft type is active and available for selection</small>
                 </div>
             </div>
         </div>

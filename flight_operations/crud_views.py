@@ -5,16 +5,27 @@ from django.db import models
 from django.db.models import Avg, Count, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
-from .forms import (
+from .forms import (  # FlightPlanForm,  # Removed legacy FlightPlan form
+    AircraftFlightPlanForm,
+    DroneFlightPlanForm,
     FlightLogForm,
-    FlightPlanForm,
+    FlightPlanTypeSelectForm,
     JobSafetyAssessmentForm,
     MissionForm,
     RiskRegisterForm,
 )
-from .models import FlightLog, FlightPlan, JobSafetyAssessment, Mission, RiskRegister
+from .managers import FlightPlanManager
+from .models import (  # FlightPlan,  # Removed legacy FlightPlan model
+    AircraftFlightPlan,
+    DroneFlightPlan,
+    FlightLog,
+    JobSafetyAssessment,
+    Mission,
+    RiskRegister,
+)
 
 
 @login_required
@@ -104,6 +115,8 @@ def mission_list(request):
     context = {
         "missions": missions,
         "paginator": paginator,
+        "page_obj": missions,  # For pagination template compatibility
+        "is_paginated": paginator.num_pages > 1,
         "search": search,
         "status": status,
         "priority": priority,
@@ -117,16 +130,29 @@ def mission_list(request):
 
 @login_required
 def mission_detail(request, pk):
-    """Display detailed view of mission"""
+    """Display detailed view of mission with unified flight plan data"""
     mission = get_object_or_404(
         Mission.objects.select_related("mission_commander", "client").prefetch_related(
-            "flightplan_set", "riskregister_set", "jobsafetyassessment_set"
+            "aircraftflightplan_set", "droneflightplan_set", "risk_registers"
         ),
         pk=pk,
     )
 
+    # Get unified flight plan data using FlightPlanManager
+    flight_plan_data = FlightPlanManager.get_all_flight_plans(mission)
+
+    # Validate mission flight plans for conflicts
+    validation_result = FlightPlanManager.validate_mission_flight_plans(mission)
+
+    # Get flight plan statistics
+    flight_stats = FlightPlanManager.get_flight_statistics(mission)
+
     context = {
+        "object": mission,
         "mission": mission,
+        "flight_plan_data": flight_plan_data,
+        "validation_result": validation_result,
+        "flight_stats": flight_stats,
     }
     return render(request, "flight_operations/mission_detail.html", context)
 
@@ -137,11 +163,20 @@ def mission_create(request):
     if request.method == "POST":
         form = MissionForm(request.POST)
         if form.is_valid():
-            mission = form.save()
-            messages.success(
-                request, f"Mission {mission.mission_id} created successfully!"
-            )
-            return redirect("flight_operations:mission_detail", pk=mission.pk)
+            try:
+                mission = form.save()
+                messages.success(
+                    request, f"Mission {mission.mission_id} created successfully!"
+                )
+                # Redirect to mission list instead of detail to ensure user sees the new mission
+                return redirect("flight_operations:mission_list")
+            except Exception as e:
+                messages.error(request, f"Error saving mission: {str(e)}")
+        else:
+            # Add error messages for form validation failures
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = MissionForm()
 
@@ -193,120 +228,123 @@ def mission_delete(request, pk):
     return render(request, "flight_operations/mission_delete.html", context)
 
 
-# Flight Plan CRUD Views
-@login_required
-def flight_plan_list(request):
-    """List all flight plans with filtering"""
-    flight_plans = FlightPlan.objects.select_related(
-        "mission", "aircraft", "pilot_in_command"
-    ).order_by("-created_at")
+# Legacy Flight Plan CRUD Views - REMOVED
+# These functions used the legacy FlightPlan model which has been removed
+# Use AircraftFlightPlan/DroneFlightPlan views below instead
 
-    # Search functionality
-    search = request.GET.get("search", "")
-    if search:
-        flight_plans = flight_plans.filter(
-            Q(flight_plan_id__icontains=search)
-            | Q(mission__mission_id__icontains=search)
-            | Q(mission__name__icontains=search)
-        )
-
-    # Filter by mission
-    mission_id = request.GET.get("mission", "")
-    if mission_id:
-        flight_plans = flight_plans.filter(mission_id=mission_id)
-
-    # Filter by status
-    status = request.GET.get("status", "")
-    if status:
-        flight_plans = flight_plans.filter(status=status)
-
-    # Pagination
-    paginator = Paginator(flight_plans, 15)
-    page_number = request.GET.get("page")
-    flight_plans = paginator.get_page(page_number)
-
-    context = {
-        "flight_plans": flight_plans,
-        "paginator": paginator,
-        "search": search,
-        "mission_id": mission_id,
-        "status": status,
-    }
-
-    return render(request, "flight_operations/flight_plan_list.html", context)
-
-
-@login_required
-def flight_plan_detail(request, pk):
-    """Display detailed view of flight plan"""
-    flight_plan = get_object_or_404(
-        FlightPlan.objects.select_related(
-            "mission", "aircraft", "pilot_in_command"
-        ).prefetch_related("flight_logs"),
-        pk=pk,
-    )
-
-    context = {
-        "flight_plan": flight_plan,
-    }
-    return render(request, "flight_operations/flight_plan_detail.html", context)
-
-
-@login_required
-def flight_plan_create(request):
-    """Create new flight plan"""
-    mission_id = request.GET.get("mission")
-    initial_data = {}
-
-    if mission_id:
-        try:
-            mission = Mission.objects.get(pk=mission_id)
-            initial_data["mission"] = mission
-        except Mission.DoesNotExist:
-            pass
-
-    if request.method == "POST":
-        form = FlightPlanForm(request.POST)
-        if form.is_valid():
-            flight_plan = form.save()
-            messages.success(
-                request,
-                f"Flight Plan {flight_plan.flight_plan_id} created successfully!",
-            )
-            return redirect("flight_operations:flight_plan_detail", pk=flight_plan.pk)
-    else:
-        form = FlightPlanForm(initial=initial_data)
-
-    context = {
-        "form": form,
-        "title": "Create New Flight Plan",
-    }
-    return render(request, "flight_operations/flight_plan_form.html", context)
-
-
-@login_required
-def flight_plan_update(request, pk):
-    """Update existing flight plan"""
-    flight_plan = get_object_or_404(FlightPlan, pk=pk)
-
-    if request.method == "POST":
-        form = FlightPlanForm(request.POST, instance=flight_plan)
-        if form.is_valid():
-            form.save()
-            messages.success(
-                request,
-                f"Flight Plan {flight_plan.flight_plan_id} updated successfully!",
-            )
-            return redirect("flight_operations:flight_plan_detail", pk=flight_plan.pk)
-    else:
-        form = FlightPlanForm(instance=flight_plan)
-
-    context = {
-        "form": form,
-        "flight_plan": flight_plan,
-        "title": "Edit Flight Plan",
-    }
-    return render(request, "flight_operations/flight_plan_form.html", context)
+# @login_required
+# def flight_plan_list(request):
+#     """List all flight plans with filtering"""
+#     flight_plans = FlightPlan.objects.select_related(
+#         "mission", "aircraft", "pilot_in_command"
+#     ).order_by("-created_at")
+#
+#     # Search functionality
+#     search = request.GET.get("search", "")
+#     if search:
+#         flight_plans = flight_plans.filter(
+#             Q(flight_plan_id__icontains=search)
+#             | Q(mission__mission_id__icontains=search)
+#             | Q(mission__name__icontains=search)
+#         )
+#
+#     # Filter by mission
+#     mission_id = request.GET.get("mission", "")
+#     if mission_id:
+#         flight_plans = flight_plans.filter(mission_id=mission_id)
+#
+#     # Filter by status
+#     status = request.GET.get("status", "")
+#     if status:
+#         flight_plans = flight_plans.filter(status=status)
+#
+#     # Pagination
+#     paginator = Paginator(flight_plans, 15)
+#     page_number = request.GET.get("page")
+#     flight_plans = paginator.get_page(page_number)
+#
+#     context = {
+#         "flight_plans": flight_plans,
+#         "paginator": paginator,
+#         "search": search,
+#         "mission_id": mission_id,
+#         "status": status,
+#     }
+#
+#     return render(request, "flight_operations/flight_plan_list.html", context)
+#
+#
+# @login_required
+# def flight_plan_detail(request, pk):
+#     """Display detailed view of flight plan"""
+#     flight_plan = get_object_or_404(
+#         FlightPlan.objects.select_related(
+#             "mission", "aircraft", "pilot_in_command"
+#         ).prefetch_related("flight_logs"),
+#         pk=pk,
+#     )
+#
+#     context = {
+#         "flight_plan": flight_plan,
+#     }
+#     return render(request, "flight_operations/flight_plan_detail.html", context)
+#
+#
+# @login_required
+# def flight_plan_create(request):
+#     """Create new flight plan"""
+#     mission_id = request.GET.get("mission")
+#     initial_data = {}
+#
+#     if mission_id:
+#         try:
+#             mission = Mission.objects.get(pk=mission_id)
+#             initial_data["mission"] = mission
+#         except Mission.DoesNotExist:
+#             pass
+#
+#     if request.method == "POST":
+#         form = FlightPlanForm(request.POST)
+#         if form.is_valid():
+#             flight_plan = form.save()
+#             messages.success(
+#                 request,
+#                 f"Flight Plan {flight_plan.flight_plan_id} created successfully!",
+#             )
+#             return redirect("flight_operations:flight_plan_detail", pk=flight_plan.pk)
+#     else:
+#         form = FlightPlanForm(initial=initial_data)
+#
+#     context = {
+#         "form": form,
+#         "title": "Create New Flight Plan",
+#     }
+#     return render(request, "flight_operations/flight_plan_form.html", context)
+#
+#
+# @login_required
+# def flight_plan_update(request, pk):
+#     """Update existing flight plan"""
+#     flight_plan = get_object_or_404(FlightPlan, pk=pk)
+#
+#     if request.method == "POST":
+#         form = FlightPlanForm(request.POST, instance=flight_plan)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(
+#                 request,
+#                 f"Flight Plan {flight_plan.flight_plan_id} updated successfully!",
+#             )
+#             return redirect("flight_operations:flight_plan_detail", pk=flight_plan.pk)
+#     else:
+#         form = FlightPlanForm(instance=flight_plan)
+#
+#     context = {
+#         "form": form,
+#         "flight_plan": flight_plan,
+#         "title": "Edit Flight Plan",
+#     }
+#     return render(request, "flight_operations/flight_plan_form.html", context)
 
 
 # Flight Log CRUD Views
@@ -374,13 +412,24 @@ def flight_log_create(request):
     initial_data = {}
 
     if flight_plan_id:
+        # Try to find either aircraft or drone flight plan
+        from .models import AircraftFlightPlan, DroneFlightPlan
+
         try:
-            flight_plan = FlightPlan.objects.get(pk=flight_plan_id)
-            initial_data["flight_plan"] = flight_plan
+            # First try aircraft flight plan
+            flight_plan = AircraftFlightPlan.objects.get(pk=flight_plan_id)
+            initial_data["aircraft_flight_plan"] = flight_plan
             initial_data["aircraft"] = flight_plan.aircraft
             initial_data["remote_pilot"] = flight_plan.pilot_in_command
-        except FlightPlan.DoesNotExist:
-            pass
+        except AircraftFlightPlan.DoesNotExist:
+            try:
+                # Then try drone flight plan
+                flight_plan = DroneFlightPlan.objects.get(pk=flight_plan_id)
+                initial_data["drone_flight_plan"] = flight_plan
+                initial_data["aircraft"] = flight_plan.drone
+                initial_data["remote_pilot"] = flight_plan.remote_pilot
+            except DroneFlightPlan.DoesNotExist:
+                pass
 
     if request.method == "POST":
         form = FlightLogForm(request.POST)
@@ -506,7 +555,9 @@ def jsa_create(request):
     if request.method == "POST":
         form = JobSafetyAssessmentForm(request.POST)
         if form.is_valid():
-            jsa = form.save()
+            jsa = form.save(commit=False)
+            jsa.created_by = request.user  # Set the created_by field
+            jsa.save()
             messages.success(request, f"Job Safety Assessment created successfully!")
             return redirect("flight_operations:mission_detail", pk=jsa.mission.pk)
     else:
@@ -544,27 +595,28 @@ def ajax_mission_delete(request, pk):
         return JsonResponse({"success": False, "error": str(e)})
 
 
-@login_required
-def ajax_flight_plan_delete(request, pk):
-    """AJAX delete flight plan"""
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Invalid request method"})
-
-    try:
-        flight_plan = FlightPlan.objects.get(pk=pk)
-        flight_ref = flight_plan.flight_plan_id
-        flight_plan.delete()
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": f"Flight Plan {flight_ref} deleted successfully",
-            }
-        )
-    except FlightPlan.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Flight Plan not found"})
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
+# Legacy AJAX function - REMOVED
+# @login_required
+# def ajax_flight_plan_delete(request, pk):
+#     """AJAX delete flight plan"""
+#     if request.method != "POST":
+#         return JsonResponse({"success": False, "error": "Invalid request method"})
+#
+#     try:
+#         flight_plan = FlightPlan.objects.get(pk=pk)
+#         flight_ref = flight_plan.flight_plan_id
+#         flight_plan.delete()
+#
+#         return JsonResponse(
+#             {
+#                 "success": True,
+#                 "message": f"Flight Plan {flight_ref} deleted successfully",
+#             }
+#         )
+#     except FlightPlan.DoesNotExist:
+#         return JsonResponse({"success": False, "error": "Flight Plan not found"})
+#     except Exception as e:
+#         return JsonResponse({"success": False, "error": str(e)})
 
 
 @login_required
@@ -585,3 +637,347 @@ def ajax_dashboard_stats(request):
         return JsonResponse({"success": True, "stats": stats})
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
+
+
+# ================================
+# NEW DUAL-MODEL FLIGHT PLAN VIEWS
+# ================================
+
+
+@login_required
+def unified_flight_plan_create(request):
+    """
+    Unified flight plan creation workflow - starts with operation type selection
+    """
+    mission_id = request.GET.get("mission")
+    initial_data = {}
+
+    if mission_id:
+        try:
+            mission = Mission.objects.get(pk=mission_id)
+            initial_data["mission"] = mission
+        except Mission.DoesNotExist:
+            messages.error(request, "Mission not found.")
+            return redirect("flight_operations:mission_list")
+
+    if request.method == "POST":
+        form = FlightPlanTypeSelectForm(request.POST)
+        if form.is_valid():
+            operation_type = form.cleaned_data["operation_type"]
+            mission = form.cleaned_data.get("mission")
+
+            # Redirect to specific flight plan creation based on type
+            if operation_type == "aircraft":
+                url_name = "flight_operations:aircraft_flight_plan_create"
+            elif operation_type == "drone":
+                url_name = "flight_operations:drone_flight_plan_create"
+
+            if mission:
+                url = reverse(url_name) + f"?mission={mission.pk}"
+                return redirect(url)
+            else:
+                return redirect(url_name)
+    else:
+        form = FlightPlanTypeSelectForm(initial=initial_data)
+
+    context = {
+        "form": form,
+        "title": "Select Flight Plan Type",
+        "mission": initial_data.get("mission"),
+    }
+    return render(request, "flight_operations/flight_plan_type_select.html", context)
+
+
+@login_required
+def aircraft_flight_plan_create(request):
+    """Create new aircraft flight plan"""
+    mission_id = request.GET.get("mission")
+    initial_data = {}
+
+    if mission_id:
+        try:
+            mission = Mission.objects.get(pk=mission_id)
+            initial_data["mission"] = mission
+        except Mission.DoesNotExist:
+            messages.error(request, "Mission not found.")
+            return redirect("flight_operations:mission_list")
+
+    if request.method == "POST":
+        form = AircraftFlightPlanForm(request.POST)
+        if form.is_valid():
+            flight_plan = form.save(commit=False)
+            flight_plan.created_by = request.user
+
+            try:
+                flight_plan.full_clean()  # Run model validation
+                flight_plan.save()
+                messages.success(
+                    request,
+                    f"Aircraft flight plan {flight_plan.flight_plan_id} created successfully.",
+                )
+                return redirect(
+                    "flight_operations:aircraft_flight_plan_detail", pk=flight_plan.pk
+                )
+            except Exception as e:
+                messages.error(request, f"Error creating flight plan: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = AircraftFlightPlanForm(initial=initial_data)
+
+    context = {
+        "form": form,
+        "title": "Create Aircraft Flight Plan",
+        "operation_type": "aircraft",
+        "mission": initial_data.get("mission"),
+    }
+    return render(request, "flight_operations/aircraft_flight_plan_form.html", context)
+
+
+@login_required
+def drone_flight_plan_create(request):
+    """Create new drone flight plan"""
+    mission_id = request.GET.get("mission")
+    initial_data = {}
+
+    if mission_id:
+        try:
+            mission = Mission.objects.get(pk=mission_id)
+            initial_data["mission"] = mission
+        except Mission.DoesNotExist:
+            messages.error(request, "Mission not found.")
+            return redirect("flight_operations:mission_list")
+
+    if request.method == "POST":
+        form = DroneFlightPlanForm(request.POST)
+        if form.is_valid():
+            flight_plan = form.save(commit=False)
+            flight_plan.created_by = request.user
+
+            try:
+                flight_plan.full_clean()  # Run model validation
+                flight_plan.save()
+                messages.success(
+                    request,
+                    f"Drone flight plan {flight_plan.flight_plan_id} created successfully.",
+                )
+                return redirect(
+                    "flight_operations:drone_flight_plan_detail", pk=flight_plan.pk
+                )
+            except Exception as e:
+                messages.error(request, f"Error creating flight plan: {str(e)}")
+        else:
+            # Debug form errors
+            error_details = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_details.append(f"{field}: {error}")
+
+            if form.non_field_errors():
+                for error in form.non_field_errors():
+                    error_details.append(f"General: {error}")
+
+            # Show specific errors in development
+            if error_details:
+                messages.error(
+                    request, f"Form validation errors: {'; '.join(error_details)}"
+                )
+            else:
+                messages.error(request, "Please correct the errors below.")
+    else:
+        form = DroneFlightPlanForm(initial=initial_data)
+
+    context = {
+        "form": form,
+        "title": "Create Drone Flight Plan",
+        "operation_type": "drone",
+        "mission": initial_data.get("mission"),
+    }
+    return render(request, "flight_operations/drone_flight_plan_form.html", context)
+
+
+@login_required
+def aircraft_flight_plan_detail(request, pk):
+    """Aircraft flight plan detail view"""
+    flight_plan = get_object_or_404(AircraftFlightPlan, pk=pk)
+
+    # Get operational requirements
+    try:
+        requirements = flight_plan.get_operational_requirements()
+    except Exception as e:
+        requirements = {"error": str(e)}
+
+    context = {
+        "flight_plan": flight_plan,
+        "requirements": requirements,
+        "operation_type": "aircraft",
+    }
+    return render(
+        request, "flight_operations/aircraft_flight_plan_detail.html", context
+    )
+
+
+@login_required
+def drone_flight_plan_detail(request, pk):
+    """Drone flight plan detail view"""
+    flight_plan = get_object_or_404(DroneFlightPlan, pk=pk)
+
+    # Get operational requirements
+    try:
+        requirements = flight_plan.get_operational_requirements()
+    except Exception as e:
+        requirements = {"error": str(e)}
+
+    context = {
+        "flight_plan": flight_plan,
+        "requirements": requirements,
+        "operation_type": "drone",
+    }
+    return render(request, "flight_operations/drone_flight_plan_detail.html", context)
+
+
+@login_required
+def aircraft_flight_plan_update(request, pk):
+    """Update aircraft flight plan"""
+    flight_plan = get_object_or_404(AircraftFlightPlan, pk=pk)
+
+    if request.method == "POST":
+        form = AircraftFlightPlanForm(request.POST, instance=flight_plan)
+        if form.is_valid():
+            try:
+                updated_plan = form.save()
+                messages.success(
+                    request,
+                    f"Aircraft flight plan {updated_plan.flight_plan_id} updated successfully.",
+                )
+                return redirect(
+                    "flight_operations:aircraft_flight_plan_detail", pk=updated_plan.pk
+                )
+            except Exception as e:
+                messages.error(request, f"Error updating flight plan: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = AircraftFlightPlanForm(instance=flight_plan)
+
+    context = {
+        "form": form,
+        "flight_plan": flight_plan,
+        "title": f"Edit {flight_plan.flight_plan_id}",
+        "operation_type": "aircraft",
+    }
+    return render(request, "flight_operations/aircraft_flight_plan_form.html", context)
+
+
+@login_required
+def drone_flight_plan_update(request, pk):
+    """Update drone flight plan"""
+    flight_plan = get_object_or_404(DroneFlightPlan, pk=pk)
+
+    if request.method == "POST":
+        form = DroneFlightPlanForm(request.POST, instance=flight_plan)
+        if form.is_valid():
+            try:
+                updated_plan = form.save()
+                messages.success(
+                    request,
+                    f"Drone flight plan {updated_plan.flight_plan_id} updated successfully.",
+                )
+                return redirect(
+                    "flight_operations:drone_flight_plan_detail", pk=updated_plan.pk
+                )
+            except Exception as e:
+                messages.error(request, f"Error updating flight plan: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = DroneFlightPlanForm(instance=flight_plan)
+
+    context = {
+        "form": form,
+        "flight_plan": flight_plan,
+        "title": f"Edit {flight_plan.flight_plan_id}",
+        "operation_type": "drone",
+    }
+    return render(request, "flight_operations/drone_flight_plan_form.html", context)
+
+
+@login_required
+def unified_flight_plan_list(request):
+    """
+    Unified flight plan list showing both aircraft and drone plans
+    """
+    # Get filter parameters
+    status_filter = request.GET.get("status")
+    mission_filter = request.GET.get("mission")
+    operation_type_filter = request.GET.get("operation_type")
+
+    # Get all flight plans
+    aircraft_plans = AircraftFlightPlan.objects.select_related(
+        "mission", "aircraft", "pilot_in_command__user"
+    )
+    drone_plans = DroneFlightPlan.objects.select_related(
+        "mission", "drone", "remote_pilot__user"
+    )
+
+    # Apply filters
+    if status_filter:
+        aircraft_plans = aircraft_plans.filter(status=status_filter)
+        drone_plans = drone_plans.filter(status=status_filter)
+
+    if mission_filter:
+        aircraft_plans = aircraft_plans.filter(mission__pk=mission_filter)
+        drone_plans = drone_plans.filter(mission__pk=mission_filter)
+
+    # Filter by operation type
+    if operation_type_filter == "aircraft":
+        drone_plans = DroneFlightPlan.objects.none()
+    elif operation_type_filter == "drone":
+        aircraft_plans = AircraftFlightPlan.objects.none()
+
+    # Combine and sort by planned departure time
+    all_plans = []
+
+    for plan in aircraft_plans:
+        all_plans.append(
+            {
+                "plan": plan,
+                "type": "aircraft",
+                "type_display": "Aircraft",
+                "planned_departure": plan.planned_departure_time,
+            }
+        )
+
+    for plan in drone_plans:
+        all_plans.append(
+            {
+                "plan": plan,
+                "type": "drone",
+                "type_display": "Drone/RPAS",
+                "planned_departure": plan.planned_departure_time,
+            }
+        )
+
+    # Sort by departure time
+    all_plans.sort(key=lambda x: x["planned_departure"], reverse=True)
+
+    # Pagination
+    paginator = Paginator(all_plans, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # Get filter choices
+    missions = Mission.objects.all()
+
+    context = {
+        "page_obj": page_obj,
+        "missions": missions,
+        "current_status": status_filter,
+        "current_mission": mission_filter,
+        "current_operation_type": operation_type_filter,
+        "total_count": len(all_plans),
+        "aircraft_count": aircraft_plans.count(),
+        "drone_count": drone_plans.count(),
+    }
+
+    return render(request, "flight_operations/unified_flight_plan_list.html", context)

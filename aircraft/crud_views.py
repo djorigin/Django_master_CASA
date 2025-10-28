@@ -109,11 +109,19 @@ def aircraft_type_create(request):
     if request.method == "POST":
         form = AircraftTypeForm(request.POST)
         if form.is_valid():
-            aircraft_type = form.save()
-            messages.success(
-                request, f"Aircraft type {aircraft_type.name} created successfully."
-            )
-            return redirect("aircraft:aircraft_type_detail", pk=aircraft_type.pk)
+            try:
+                aircraft_type = form.save()
+                messages.success(
+                    request,
+                    f"Aircraft type '{aircraft_type.name}' created successfully! "
+                    f"Category: {aircraft_type.get_category_display()}, "
+                    f"MTOW: {aircraft_type.maximum_takeoff_weight}kg",
+                )
+                return redirect("aircraft:aircraft_type_detail", pk=aircraft_type.pk)
+            except Exception as e:
+                messages.error(request, f"Error saving aircraft type: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below and try again.")
     else:
         form = AircraftTypeForm()
 

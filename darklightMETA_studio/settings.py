@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "django_filters",
+    # Security (configured but not activated)
+    # "axes",  # Uncomment when ready to enable brute force protection
     # Core Applications
     "accounts",
     "core",
@@ -151,7 +153,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Authentication URLs
-LOGIN_URL = "/admin/login/"
+LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/accounts/"
 LOGOUT_REDIRECT_URL = "/"
 
@@ -187,3 +189,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.0.15",  # React server IP
     "http://localhost:3000",  # React dev server
 ]
+
+# Security: Django Axes Configuration (Ready for activation)
+# Uncomment the lines below when ready to enable brute force protection
+# AXES_ENABLED = True
+# AXES_FAILURE_LIMIT = 5  # Lock after 5 failed attempts
+# AXES_COOLOFF_TIME = 1  # Hours before reset
+# AXES_LOCKOUT_CALLABLE = 'axes.helpers.lockout_response'
+# AXES_RESET_ON_SUCCESS = True

@@ -4,6 +4,9 @@ djangorestframework
 django-cors-headers
 django-filter
 
+# Security
+django-axes
+
 # Database
 psycopg2-binary
 pillow

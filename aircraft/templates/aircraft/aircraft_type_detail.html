@@ -1,0 +1,345 @@
+{% extends "aircraft/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ aircraft_type.name }} - Aircraft Type Details - {{ block.super }}{% endblock %}
+
+{% block breadcrumb_extra %}
+<span>></span>
+<a href="{% url 'aircraft:aircraft_type_list' %}">Aircraft Types</a>
+<span>></span>
+<span>{{ aircraft_type.name }}</span>
+{% endblock %}
+
+{% block page_title %}{{ aircraft_type.name }}{% endblock %}
+{% block page_subtitle %}
+    {{ aircraft_type.manufacturer }} {{ aircraft_type.model }} - {{ aircraft_type.get_category_display }}
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'aircraft:aircraft_type_list' %}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Types
+</a>
+<a href="{% url 'aircraft:aircraft_type_update' aircraft_type.pk %}" class="btn btn-primary">
+    <i class="fas fa-edit"></i> Edit Type
+</a>
+<a href="{% url 'aircraft:aircraft_type_create' %}" class="btn btn-success">
+    <i class="fas fa-plus"></i> Add New Type
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <!-- Basic Information -->
+    <div class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>Aircraft Type Name:</label>
+                <span>{{ aircraft_type.name }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Manufacturer:</label>
+                <span>{{ aircraft_type.manufacturer }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Model:</label>
+                <span>{{ aircraft_type.model }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CASA Classification -->
+    <div class="detail-section">
+        <h3>CASA Classification</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>CASA Category:</label>
+                <span class="badge badge-{{ aircraft_type.category }}">{{ aircraft_type.get_category_display }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Operation Type:</label>
+                <span class="badge badge-{{ aircraft_type.operation_type }}">{{ aircraft_type.get_operation_type_display }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Certification Required:</label>
+                <span class="{% if aircraft_type.certification_required %}text-warning{% else %}text-success{% endif %}">
+                    {% if aircraft_type.certification_required %}Yes{% else %}No{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Specifications -->
+    <div class="detail-section">
+        <h3>Technical Specifications</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>Maximum Takeoff Weight:</label>
+                <span>{{ aircraft_type.maximum_takeoff_weight }} kg</span>
+            </div>
+            <div class="detail-item">
+                <label>Maximum Operating Height:</label>
+                <span>{{ aircraft_type.maximum_operating_height }} ft AGL</span>
+            </div>
+            <div class="detail-item">
+                <label>Maximum Speed:</label>
+                <span>{% if aircraft_type.maximum_speed %}{{ aircraft_type.maximum_speed }} knots{% else %}Not specified{% endif %}</span>
+            </div>
+            {% if aircraft_type.endurance_hours %}
+            <div class="detail-item">
+                <label>Endurance:</label>
+                <span>{{ aircraft_type.endurance_hours }} hours</span>
+            </div>
+            {% endif %}
+            {% if aircraft_type.payload_capacity %}
+            <div class="detail-item">
+                <label>Payload Capacity:</label>
+                <span>{{ aircraft_type.payload_capacity }} kg</span>
+            </div>
+            {% endif %}
+            {% if aircraft_type.typical_cruise_speed %}
+            <div class="detail-item">
+                <label>Typical Cruise Speed:</label>
+                <span>{{ aircraft_type.typical_cruise_speed }} knots</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Compliance Information -->
+    <div class="detail-section">
+        <h3>Compliance Information</h3>
+        <div class="detail-grid">
+            {% if aircraft_type.casa_type_certificate %}
+            <div class="detail-item">
+                <label>CASA Type Certificate:</label>
+                <span>{{ aircraft_type.casa_type_certificate }}</span>
+            </div>
+            {% endif %}
+            {% if aircraft_type.casa_approval_reference %}
+            <div class="detail-item">
+                <label>CASA Approval Reference:</label>
+                <span>{{ aircraft_type.casa_approval_reference }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-item">
+                <label>Excluded Category Compliant:</label>
+                <span class="{% if aircraft_type.excluded_category_compliant %}text-success{% else %}text-muted{% endif %}">
+                    {% if aircraft_type.excluded_category_compliant %}Yes{% else %}No{% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <label>Flight Manual Required:</label>
+                <span class="{% if aircraft_type.flight_manual_required %}text-warning{% else %}text-success{% endif %}">
+                    {% if aircraft_type.flight_manual_required %}Yes{% else %}No{% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <label>Maintenance Manual Required:</label>
+                <span class="{% if aircraft_type.maintenance_manual_required %}text-warning{% else %}text-success{% endif %}">
+                    {% if aircraft_type.maintenance_manual_required %}Yes{% else %}No{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requirements and Limitations -->
+    {% if aircraft_type.operational_limitations or aircraft_type.maintenance_requirements or aircraft_type.training_requirements or aircraft_type.insurance_requirements %}
+    <div class="detail-section">
+        <h3>Requirements and Limitations</h3>
+        
+        {% if aircraft_type.operational_limitations %}
+        <div class="detail-item-full">
+            <label>Operational Limitations:</label>
+            <div class="detail-text">{{ aircraft_type.operational_limitations|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        {% if aircraft_type.maintenance_requirements %}
+        <div class="detail-item-full">
+            <label>Maintenance Requirements:</label>
+            <div class="detail-text">{{ aircraft_type.maintenance_requirements|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        {% if aircraft_type.training_requirements %}
+        <div class="detail-item-full">
+            <label>Training Requirements:</label>
+            <div class="detail-text">{{ aircraft_type.training_requirements|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        {% if aircraft_type.insurance_requirements %}
+        <div class="detail-item-full">
+            <label>Insurance Requirements:</label>
+            <div class="detail-text">{{ aircraft_type.insurance_requirements|linebreaks }}</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Status and Metadata -->
+    <div class="detail-section">
+        <h3>Status and Metadata</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>Status:</label>
+                <span class="badge {% if aircraft_type.is_active %}badge-success{% else %}badge-secondary{% endif %}">
+                    {% if aircraft_type.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <label>Created:</label>
+                <span>{{ aircraft_type.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Last Updated:</label>
+                <span>{{ aircraft_type.updated_at|date:"M d, Y H:i" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Aircraft -->
+    {% if aircraft_type.aircraft_set.exists %}
+    <div class="detail-section">
+        <h3>Related Aircraft</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Registration</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aircraft in aircraft_type.aircraft_set.all %}
+                    <tr>
+                        <td>{{ aircraft.registration_mark }}</td>
+                        <td>{{ aircraft.owner }}</td>
+                        <td>
+                            <span class="badge badge-{{ aircraft.status }}">
+                                {{ aircraft.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'aircraft:aircraft_detail' aircraft.pk %}" class="btn btn-sm btn-outline">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="detail-section">
+        <h3>Related Aircraft</h3>
+        <p class="text-muted">No aircraft of this type have been registered yet.</p>
+        <a href="{% url 'aircraft:aircraft_create' %}?type={{ aircraft_type.pk }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Register Aircraft of this Type
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.detail-section {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.detail-section h3 {
+    color: #2c5282;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.875rem;
+}
+
+.detail-item span {
+    color: #2d3748;
+    font-size: 0.95rem;
+}
+
+.detail-item-full {
+    margin-bottom: 20px;
+}
+
+.detail-item-full label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.detail-text {
+    color: #2d3748;
+    font-size: 0.95rem;
+    padding: 12px;
+    background-color: #f7fafc;
+    border-left: 4px solid #4299e1;
+    border-radius: 4px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-success { background-color: #48bb78; color: white; }
+.badge-warning { background-color: #ed8936; color: white; }
+.badge-secondary { background-color: #a0aec0; color: white; }
+.badge-excluded { background-color: #9f7aea; color: white; }
+.badge-micro { background-color: #4299e1; color: white; }
+.badge-small { background-color: #38b2ac; color: white; }
+.badge-medium { background-color: #ed8936; color: white; }
+.badge-large { background-color: #e53e3e; color: white; }
+.badge-recreational { background-color: #48bb78; color: white; }
+.badge-commercial { background-color: #ed8936; color: white; }
+.badge-research { background-color: #9f7aea; color: white; }
+.badge-emergency { background-color: #e53e3e; color: white; }
+
+.text-success { color: #48bb78; }
+.text-warning { color: #ed8936; }
+.text-muted { color: #a0aec0; }
+
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

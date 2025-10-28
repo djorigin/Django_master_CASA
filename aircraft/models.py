@@ -68,6 +68,28 @@ class AircraftType(models.Model):
         verbose_name="Maximum Speed (knots)",
         help_text="Maximum operating speed in knots",
     )
+    endurance_hours = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Endurance (hours)",
+        help_text="Maximum flight endurance in hours",
+    )
+    payload_capacity = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Payload Capacity (kg)",
+        help_text="Maximum payload capacity in kilograms",
+    )
+    typical_cruise_speed = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Typical Cruise Speed (knots)",
+        help_text="Typical cruise speed in knots",
+    )
 
     # CASA Compliance Fields
     casa_type_certificate = models.CharField(
@@ -75,6 +97,17 @@ class AircraftType(models.Model):
         blank=True,
         verbose_name="CASA Type Certificate",
         help_text="CASA type certificate number if applicable",
+    )
+    casa_approval_reference = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="CASA Approval Reference",
+        help_text="CASA approval or exemption reference",
+    )
+    certification_required = models.BooleanField(
+        default=True,
+        verbose_name="Certification Required",
+        help_text="Aircraft requires CASA certification",
     )
     excluded_category_compliant = models.BooleanField(
         default=False,
@@ -93,6 +126,36 @@ class AircraftType(models.Model):
         verbose_name="Maintenance Manual Required",
         help_text="Aircraft requires maintenance manual",
     )
+
+    # Requirements and Limitations
+    operational_limitations = models.TextField(
+        blank=True,
+        verbose_name="Operational Limitations",
+        help_text="Operational limitations and restrictions",
+    )
+    maintenance_requirements = models.TextField(
+        blank=True,
+        verbose_name="Maintenance Requirements",
+        help_text="Maintenance requirements and schedules",
+    )
+    training_requirements = models.TextField(
+        blank=True,
+        verbose_name="Training Requirements",
+        help_text="Training requirements for operators",
+    )
+    insurance_requirements = models.TextField(
+        blank=True,
+        verbose_name="Insurance Requirements",
+        help_text="Insurance coverage requirements",
+    )
+
+    # Status
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Active",
+        help_text="Aircraft type is active and available for selection",
+    )
+    # Updated model with additional fields for enhanced aircraft type management
 
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
@@ -163,12 +226,14 @@ class Aircraft(models.Model):
     )
 
     # Owner Information (linked to accounts app)
+    # TODO: Design Decision - Update to accounts.StaffProfile or create CompanyProfile
     owner = models.ForeignKey(
         "accounts.ClientProfile",
         on_delete=models.PROTECT,
         verbose_name="Aircraft Owner",
         help_text="Registered owner from client profiles",
     )
+    # TODO: Design Decision - Update to accounts.PilotProfile for operators
     operator = models.ForeignKey(
         "accounts.ClientProfile",
         on_delete=models.PROTECT,
@@ -225,12 +290,13 @@ class Aircraft(models.Model):
     )
 
     # Operational Limitations
-    current_flight_hours = models.DecimalField(
+    current_flight_hours = models.DecimalField(  # AUTO-CALCULATED from flight logs - READ ONLY
         max_digits=10,
         decimal_places=2,
         default=0.00,
         verbose_name="Current Flight Hours",
-        help_text="Total accumulated flight hours",
+        help_text="Total accumulated flight hours (auto-calculated from flight logs)",
+        editable=False,  # Prevents manual editing - data integrity protection
     )
     maximum_flight_hours = models.PositiveIntegerField(
         null=True,
@@ -329,3 +395,39 @@ class Aircraft(models.Model):
             and self.is_insured
             and self.maintenance_status in ["current", "due_soon"]
         )
+
+    def calculate_total_flight_hours(self):
+        """
+        Auto-calculate total flight hours from flight logs
+        Data integrity: Single source of truth from actual flight records
+        """
+        from flight_operations.models import FlightLog
+
+        total_hours = (
+            FlightLog.objects.filter(aircraft=self).aggregate(
+                total=models.Sum('flight_time')
+            )['total']
+            or 0
+        )
+
+        return total_hours
+
+    def update_flight_hours(self):
+        """
+        Update current flight hours from flight logs
+        Called automatically when flight logs are created/updated
+        Ensures data integrity and compliance tracking
+        """
+        self.current_flight_hours = self.calculate_total_flight_hours()
+        self.save(update_fields=['current_flight_hours'])
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to auto-calculate flight hours
+        Data integrity: Always ensure hours are accurate
+        """
+        # Auto-calculate flight hours on save (except during initial creation)
+        if self.pk:  # Only for existing aircraft
+            self.current_flight_hours = self.calculate_total_flight_hours()
+
+        super().save(*args, **kwargs)

@@ -29,6 +29,8 @@ urlpatterns = [
     path("aircraft/", include("aircraft.urls")),
     path("airspace/", include("airspace.urls")),
     path("flight_operations/", include("flight_operations.urls")),
+    path("incidents/", include("incidents.urls")),
+    path("maintenance/", include("maintenance.urls")),
     # API endpoints
     path("api/v1/accounts/", include("accounts.api.urls")),
     path("api-auth/", include("rest_framework.urls")),  # DRF login/logout

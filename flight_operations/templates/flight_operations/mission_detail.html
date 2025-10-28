@@ -38,7 +38,7 @@
                     <a href="{% url 'flight_operations:mission_list' %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to List
                     </a>
-                    <a href="{% url 'flight_operations:mission_edit' object.pk %}" class="btn btn-warning">
+                    <a href="{% url 'flight_operations:mission_update' object.pk %}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Edit
                     </a>
                     <div class="btn-group">
@@ -62,7 +62,7 @@
                                 </a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'flight_operations:flight_plan_create' %}?mission={{ object.pk }}">
+                            <li><a class="dropdown-item" href="{% url 'flight_operations:unified_flight_plan_create' %}?mission={{ object.pk }}">
                                 <i class="fas fa-route"></i> Create Flight Plan
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'flight_operations:risk_register_create' %}?mission={{ object.pk }}">
@@ -157,50 +157,153 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5><i class="fas fa-route"></i> Flight Plans</h5>
-                    <a href="{% url 'flight_operations:flight_plan_create' %}?mission={{ object.pk }}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus"></i> Add Flight Plan
-                    </a>
+                    <div>
+                        <a href="{% url 'flight_operations:unified_flight_plan_create' %}?mission={{ object.pk }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Add Flight Plan
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    {% if object.flightplan_set.all %}
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Flight Plan</th>
-                                        <th>Aircraft</th>
-                                        <th>Status</th>
-                                        <th>Scheduled</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for flight_plan in object.flightplan_set.all %}
-                                    <tr>
-                                        <td>{{ flight_plan.flight_plan_id }}</td>
-                                        <td>{{ flight_plan.aircraft }}</td>
-                                        <td>
-                                            {% if flight_plan.status == 'approved' %}
-                                                <span class="badge bg-success">{{ flight_plan.get_status_display }}</span>
-                                            {% elif flight_plan.status == 'draft' %}
-                                                <span class="badge bg-warning">{{ flight_plan.get_status_display }}</span>
-                                            {% else %}
-                                                <span class="badge bg-info">{{ flight_plan.get_status_display }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ flight_plan.planned_departure_time|date:"M d, H:i" }}</td>
-                                        <td>
-                                            <a href="{% url 'flight_operations:flight_plan_detail' flight_plan.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    {% if flight_plan_data.total_count > 0 %}
+                        <!-- Flight Plan Statistics -->
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-center">
+                                <h4 class="text-primary">{{ flight_plan_data.aircraft_plans.count }}</h4>
+                                <small class="text-muted">Aircraft Plans</small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <h4 class="text-success">{{ flight_plan_data.drone_plans.count }}</h4>
+                                <small class="text-muted">Drone Plans</small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <h4 class="text-info">{{ flight_plan_data.total_count }}</h4>
+                                <small class="text-muted">Total Plans</small>
+                            </div>
                         </div>
+                        
+                        <!-- Conflict Validation -->
+                        {% if validation_result.conflicts %}
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Flight Plan Conflicts Detected</h6>
+                                <ul class="mb-0">
+                                    {% for conflict in validation_result.conflicts %}
+                                        <li>{{ conflict.message }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% elif validation_result.is_valid %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> All flight plans validated - no conflicts detected.
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Aircraft Flight Plans -->
+                        {% if flight_plan_data.aircraft_plans %}
+                            <h6 class="text-primary mb-2">
+                                <i class="fas fa-plane"></i> Aircraft Flight Plans
+                            </h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Flight Plan ID</th>
+                                            <th>Aircraft</th>
+                                            <th>Route</th>
+                                            <th>Pilot in Command</th>
+                                            <th>Status</th>
+                                            <th>Departure</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for aircraft_plan in flight_plan_data.aircraft_plans %}
+                                        <tr>
+                                            <td>{{ aircraft_plan.flight_plan_id }}</td>
+                                            <td>{{ aircraft_plan.aircraft.registration_mark }}</td>
+                                            <td>{{ aircraft_plan.departure_airport }} → {{ aircraft_plan.arrival_airport }}</td>
+                                            <td>{{ aircraft_plan.pilot_in_command.user.get_full_name }}</td>
+                                            <td>
+                                                {% if aircraft_plan.status == 'approved' %}
+                                                    <span class="badge bg-success">{{ aircraft_plan.get_status_display }}</span>
+                                                {% elif aircraft_plan.status == 'draft' %}
+                                                    <span class="badge bg-warning">{{ aircraft_plan.get_status_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">{{ aircraft_plan.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ aircraft_plan.planned_departure_time|date:"M d, H:i" }}</td>
+                                            <td>
+                                                <a href="{% url 'flight_operations:aircraft_flight_plan_detail' aircraft_plan.pk %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Drone Flight Plans -->
+                        {% if flight_plan_data.drone_plans %}
+                            <h6 class="text-success mb-2">
+                                <i class="fas fa-helicopter"></i> Drone/RPAS Flight Plans
+                            </h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Flight Plan ID</th>
+                                            <th>Drone</th>
+                                            <th>Location</th>
+                                            <th>Remote Pilot</th>
+                                            <th>Status</th>
+                                            <th>Departure</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for drone_plan in flight_plan_data.drone_plans %}
+                                        <tr>
+                                            <td>{{ drone_plan.flight_plan_id }}</td>
+                                            <td>{{ drone_plan.drone.registration_mark }}</td>
+                                            <td>{{ drone_plan.takeoff_location|truncatechars:30 }}</td>
+                                            <td>{{ drone_plan.remote_pilot.user.get_full_name }}</td>
+                                            <td>
+                                                {% if drone_plan.status == 'approved' %}
+                                                    <span class="badge bg-success">{{ drone_plan.get_status_display }}</span>
+                                                {% elif drone_plan.status == 'draft' %}
+                                                    <span class="badge bg-warning">{{ drone_plan.get_status_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">{{ drone_plan.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ drone_plan.planned_departure_time|date:"M d, H:i" }}</td>
+                                            <td>
+                                                <a href="{% url 'flight_operations:drone_flight_plan_detail' drone_plan.pk %}" 
+                                                   class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                        
+
                     {% else %}
-                        <p class="text-muted">No flight plans created yet.</p>
+                        <div class="text-center py-4">
+                            <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Flight Plans Created</h5>
+                            <p class="text-muted">Create your first flight plan to begin planning operations.</p>
+                            <a href="{% url 'flight_operations:unified_flight_plan_create' %}?mission={{ object.pk }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First Flight Plan
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -214,7 +317,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    {% if object.riskregister_set.all %}
+                    {% if object.risk_registers.all %}
                         <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead>
@@ -227,7 +330,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for risk in object.riskregister_set.all %}
+                                    {% for risk in object.risk_registers.all %}
                                     <tr>
                                         <td>{{ risk.risk_description|truncatechars:50 }}</td>
                                         <td>{{ risk.get_risk_category_display }}</td>
@@ -319,23 +422,31 @@
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-6">
-                            <h4 class="text-primary">{{ object.flightplan_set.count }}</h4>
-                            <small class="text-muted">Flight Plans</small>
+                        <div class="col-4">
+                            <h4 class="text-primary">{{ flight_stats.aircraft.total }}</h4>
+                            <small class="text-muted">Aircraft Plans</small>
                         </div>
-                        <div class="col-6">
-                            <h4 class="text-warning">{{ object.riskregister_set.count }}</h4>
+                        <div class="col-4">
+                            <h4 class="text-success">{{ flight_stats.drone.total }}</h4>
+                            <small class="text-muted">Drone Plans</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-warning">{{ object.risk_registers.count }}</h4>
                             <small class="text-muted">Risk Items</small>
                         </div>
                     </div>
                     <hr>
                     <div class="row text-center">
-                        <div class="col-6">
-                            <h4 class="text-success">{{ object.flightlog_set.count }}</h4>
+                        <div class="col-4">
+                            <h4 class="text-warning">{{ object.risk_registers.count }}</h4>
+                            <small class="text-muted">Risk Items</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-secondary">0</h4>
                             <small class="text-muted">Flight Logs</small>
                         </div>
-                        <div class="col-6">
-                            <h4 class="text-info">{{ object.jobsafetyassessment_set.count }}</h4>
+                        <div class="col-4">
+                            <h4 class="text-info">{% if object.jobsafetyassessment %}1{% else %}0{% endif %}</h4>
                             <small class="text-muted">Safety Assessments</small>
                         </div>
                     </div>

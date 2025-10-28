@@ -70,8 +70,8 @@
             <a href="{% url 'core:sop_create' %}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Create New SOP
             </a>
-            <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            <a href="{% url 'core:core_operations_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Core Operations
             </a>
         </div>
     </div>
@@ -189,7 +189,7 @@
                                     {{ sop.get_status_display }}
                                 </span>
                                 {% if sop.approved_by and sop.approved_date %}
-                                    <br><small class="text-muted">By: {{ sop.approved_by.user.get_full_name|default:sop.approved_by.user.username }}</small>
+                                    <br><small class="text-muted">By: {{ sop.approved_by.user.get_full_name|default:sop.approved_by.user.email }}</small>
                                 {% endif %}
                             </td>
                             <td>

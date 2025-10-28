@@ -1,0 +1,180 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-route"></i> {{ title }}</h4>
+                    {% if mission %}
+                        <p class="mb-0 text-muted">
+                            <i class="fas fa-tasks"></i> Mission: {{ mission.name }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if mission %}
+                            <input type="hidden" name="mission" value="{{ mission.pk }}">
+                        {% endif %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 text-center">
+                                <div class="operation-type-card" data-type="aircraft">
+                                    <div class="card h-100 border-primary">
+                                        <div class="card-body">
+                                            <i class="fas fa-plane fa-3x text-primary mb-3"></i>
+                                            <h5 class="card-title">Aircraft Flight Plan</h5>
+                                            <p class="card-text">
+                                                Traditional manned aircraft operations with:
+                                            </p>
+                                            <ul class="list-unstyled text-start">
+                                                <li><i class="fas fa-check text-success"></i> Airport-to-airport routing</li>
+                                                <li><i class="fas fa-check text-success"></i> Airways and waypoints</li>
+                                                <li><i class="fas fa-check text-success"></i> Fuel planning</li>
+                                                <li><i class="fas fa-check text-success"></i> Crew management</li>
+                                                <li><i class="fas fa-check text-success"></i> ATC coordination</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 text-center">
+                                <div class="operation-type-card" data-type="drone">
+                                    <div class="card h-100 border-success">
+                                        <div class="card-body">
+                                            <i class="fas fa-helicopter fa-3x text-success mb-3"></i>
+                                            <h5 class="card-title">Drone/RPAS Flight Plan</h5>
+                                            <p class="card-text">
+                                                Unmanned aircraft operations with:
+                                            </p>
+                                            <ul class="list-unstyled text-start">
+                                                <li><i class="fas fa-check text-success"></i> Operating area definition</li>
+                                                <li><i class="fas fa-check text-success"></i> Battery management</li>
+                                                <li><i class="fas fa-check text-success"></i> CASA Part 101 compliance</li>
+                                                <li><i class="fas fa-check text-success"></i> Automated waypoints</li>
+                                                <li><i class="fas fa-check text-success"></i> No-fly zone validation</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.operation_type.label_tag }}
+                            {{ form.operation_type }}
+                            {% if form.operation_type.help_text %}
+                                <small class="form-text text-muted">{{ form.operation_type.help_text }}</small>
+                            {% endif %}
+                            {% if form.operation_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.operation_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% if mission %}{% url 'flight_operations:mission_detail' mission.pk %}{% else %}{% url 'flight_operations:mission_list' %}{% endif %}" 
+                               class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="create-flight-plan-btn" disabled>
+                                <i class="fas fa-plus"></i> Create Flight Plan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.operation-type-card {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.operation-type-card:hover {
+    transform: translateY(-5px);
+}
+
+.operation-type-card.selected .card {
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+    transform: scale(1.02);
+}
+
+.operation-type-card.selected .card-body {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const operationTypeSelect = document.getElementById('operation-type-select');
+    const createButton = document.getElementById('create-flight-plan-btn');
+    const cards = document.querySelectorAll('.operation-type-card');
+    
+    // Handle card clicks
+    cards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            
+            // Update select value
+            operationTypeSelect.value = type;
+            
+            // Update card selection
+            cards.forEach(function(c) {
+                c.classList.remove('selected');
+            });
+            this.classList.add('selected');
+            
+            // Enable create button
+            createButton.disabled = false;
+        });
+    });
+    
+    // Handle select change
+    operationTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        
+        // Update card selection
+        cards.forEach(function(card) {
+            card.classList.remove('selected');
+        });
+        
+        if (selectedType) {
+            const selectedCard = document.querySelector('.operation-type-card[data-type="' + selectedType + '"]');
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            createButton.disabled = false;
+        } else {
+            createButton.disabled = true;
+        }
+    });
+    
+    // Initialize if value already selected
+    if (operationTypeSelect.value) {
+        const initialType = operationTypeSelect.value;
+        const initialCard = document.querySelector('.operation-type-card[data-type="' + initialType + '"]');
+        if (initialCard) {
+            initialCard.classList.add('selected');
+        }
+        createButton.disabled = false;
+    }
+});
+</script>
+{% endblock %}
