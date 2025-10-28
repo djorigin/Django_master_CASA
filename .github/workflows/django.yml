@@ -2,9 +2,9 @@ name: Django CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [ master, feature/*, debug/* ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 env:
   SECRET_KEY: test-secret-key-for-github-actions
