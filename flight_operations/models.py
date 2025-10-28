@@ -33,8 +33,9 @@ class BaseFlightPlan(models.Model):
     flight_plan_id = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,  # Auto-generated in save method
         verbose_name="Flight Plan ID",
-        help_text="Unique flight plan identifier",
+        help_text="Unique flight plan identifier (auto-generated)",
     )
 
     # Mission relationship (common to all flight types)
@@ -535,6 +536,65 @@ class JobSafetyAssessment(models.Model):
         help_text="Associated mission",
     )
 
+    # JSA Creation Context Tracking - Critical for CASA compliance audit trail
+    related_aircraft_flight_plan = models.ForeignKey(
+        "AircraftFlightPlan",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="jsa_aircraft_plans",
+        verbose_name="Related Aircraft Flight Plan",
+        help_text="Aircraft flight plan that triggered this JSA creation",
+    )
+
+    related_drone_flight_plan = models.ForeignKey(
+        "DroneFlightPlan",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="jsa_drone_plans",
+        verbose_name="Related Drone Flight Plan",
+        help_text="Drone flight plan that triggered this JSA creation",
+    )
+
+    sop_reference = models.ForeignKey(
+        "core.StandardOperatingProcedure",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Related SOP",
+        help_text="Standard Operating Procedure that required this JSA",
+    )
+
+    sop_step_number = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="SOP Step Number",
+        help_text="Specific SOP step that triggered JSA creation (e.g., Step 2 of Flight Operations SOP)",
+    )
+
+    creation_context = models.TextField(
+        blank=True,
+        verbose_name="JSA Creation Context",
+        help_text="Detailed description of the operational context that triggered this JSA (e.g., 'Created during Step 2 of Flight Operations SOP for Mission ABC123')",
+    )
+
+    # JSA Creation Context - Critical for CASA compliance and audit trail
+    created_from_sop_step = models.ForeignKey(
+        "core.SOPProcedureStep",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Created from SOP Step",
+        help_text="SOP procedure step that triggered this JSA creation (e.g., Step 2 of Flight Operations SOP)",
+    )
+
+    creation_context_notes = models.TextField(
+        blank=True,
+        verbose_name="Creation Context Notes",
+        help_text="Additional context about why and how this JSA was created (operational trigger, specific requirements, etc.)",
+    )
+
     # Section 1: Risk Assessment
     operation_type = models.CharField(
         max_length=20,
@@ -692,9 +752,24 @@ class JobSafetyAssessment(models.Model):
         help_text="Date of RP or ARN approval",
     )
 
-    # Metadata
+    # JSA Review and Compliance Tracking
+    review_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="JSA Review Date",
+        help_text="Date for periodic JSA review as required for continuous improvement and compliance audit trail",
+    )
+
+    # Metadata and audit trail
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name="Created By",
+        help_text="User who created this JSA",
+    )
 
     class Meta:
         verbose_name = "Job Safety Assessment"
@@ -703,6 +778,61 @@ class JobSafetyAssessment(models.Model):
 
     def __str__(self):
         return f"{self.jsa_id} - {self.mission.name}"
+
+    def get_creation_context_details(self):
+        """
+        Get comprehensive creation context for CASA compliance audit trail.
+        Returns details about the operational trigger that required this JSA.
+        """
+        context_details = {
+            'created_from_flight_plan': None,
+            'created_from_sop': None,
+            'context_summary': None,
+        }
+
+        # Check which flight plan type triggered this JSA
+        if self.related_aircraft_flight_plan:
+            context_details['created_from_flight_plan'] = {
+                'type': 'aircraft',
+                'plan': self.related_aircraft_flight_plan,
+                'description': f"Aircraft Flight Plan {self.related_aircraft_flight_plan.flight_plan_id}",
+            }
+        elif self.related_drone_flight_plan:
+            context_details['created_from_flight_plan'] = {
+                'type': 'drone',
+                'plan': self.related_drone_flight_plan,
+                'description': f"Drone Flight Plan {self.related_drone_flight_plan.flight_plan_id}",
+            }
+
+        # Check SOP context
+        if self.sop_reference:
+            sop_context = f"SOP: {self.sop_reference.name}"
+            if self.sop_step_number:
+                sop_context += f" (Step {self.sop_step_number})"
+            context_details['created_from_sop'] = {
+                'sop': self.sop_reference,
+                'step': self.sop_step_number,
+                'description': sop_context,
+            }
+
+        # Generate summary for audit trail
+        summary_parts = []
+        if context_details['created_from_flight_plan']:
+            summary_parts.append(
+                context_details['created_from_flight_plan']['description']
+            )
+        if context_details['created_from_sop']:
+            summary_parts.append(context_details['created_from_sop']['description'])
+        if self.creation_context:
+            summary_parts.append(self.creation_context)
+
+        context_details['context_summary'] = (
+            " | ".join(summary_parts)
+            if summary_parts
+            else "No specific creation context recorded"
+        )
+
+        return context_details
 
     @property
     def is_fully_approved(self):
@@ -975,6 +1105,53 @@ class Mission(models.Model):
         help_text="Mission briefing notes and considerations",
     )
 
+    # Assignment and Crew
+    assigned_pilot = models.ForeignKey(
+        "accounts.PilotProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_missions",
+        verbose_name="Assigned Pilot",
+        help_text="Primary pilot assigned to this mission",
+    )
+
+    crew_members = models.ManyToManyField(
+        "accounts.PilotProfile",
+        blank=True,
+        related_name="crew_missions",
+        verbose_name="Crew Members",
+        help_text="Additional crew members assigned to this mission",
+    )
+
+    # Additional Mission Details
+    estimated_duration = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Estimated Duration (hours)",
+        help_text="Estimated mission duration in hours",
+    )
+
+    weather_requirements = models.TextField(
+        blank=True,
+        verbose_name="Weather Requirements",
+        help_text="Specific weather conditions required for this mission",
+    )
+
+    special_requirements = models.TextField(
+        blank=True,
+        verbose_name="Special Requirements",
+        help_text="Special equipment, permissions, or considerations required",
+    )
+
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Additional Notes",
+        help_text="Additional notes and operational considerations",
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1187,6 +1364,9 @@ class AircraftFlightPlan(BaseFlightPlan):
     aircraft = models.ForeignKey(
         'aircraft.Aircraft',
         on_delete=models.PROTECT,
+        related_name='base_flight_plans',
+        null=True,
+        blank=True,
         verbose_name="Aircraft",
         help_text="Aircraft for this flight",
     )
@@ -1195,6 +1375,8 @@ class AircraftFlightPlan(BaseFlightPlan):
         'accounts.PilotProfile',
         on_delete=models.PROTECT,
         related_name='aircraft_commanded_flights',
+        null=True,
+        blank=True,
         verbose_name="Pilot in Command",
         help_text="Pilot in command for this flight",
     )
@@ -1379,6 +1561,7 @@ class DroneFlightPlan(BaseFlightPlan):
     drone = models.ForeignKey(
         'aircraft.Aircraft',  # Using existing Aircraft model until Drone model is created
         on_delete=models.PROTECT,
+        related_name='drone_flight_plans',
         verbose_name="Drone/RPA",
         help_text="Drone/RPA for this flight",
     )
@@ -1432,8 +1615,9 @@ class DroneFlightPlan(BaseFlightPlan):
 
     operating_area_coordinates = models.JSONField(
         default=dict,
+        blank=True,  # Optional - use operational_area relationship instead
         verbose_name="Operating Area Coordinates",
-        help_text="Polygon boundary of operating area",
+        help_text="Polygon boundary of operating area (optional - use Operational Area relationship when possible)",
     )
 
     # RPAS altitude and range parameters
@@ -1493,6 +1677,7 @@ class DroneFlightPlan(BaseFlightPlan):
     # Automated flight features
     waypoints = models.JSONField(
         default=list,
+        blank=True,  # Allow empty waypoints for manual flights
         verbose_name="Waypoints",
         help_text="GPS coordinates for automated flight path",
     )
@@ -1599,269 +1784,6 @@ class DroneFlightPlan(BaseFlightPlan):
         super().save(*args, **kwargs)
 
 
-class FlightPlan(models.Model):
-    """
-    Individual Flight Plan for RPA Operations
-    CASA Part 101 compliant flight planning
-    """
-
-    FLIGHT_TYPE_CHOICES = [
-        ("line_of_sight", "Visual Line of Sight (VLOS)"),
-        ("extended_vlos", "Extended Visual Line of Sight (EVLOS)"),
-        ("beyond_vlos", "Beyond Visual Line of Sight (BVLOS)"),
-        ("night_operations", "Night Operations"),
-        ("controlled_airspace", "Controlled Airspace Operations"),
-    ]
-
-    STATUS_CHOICES = [
-        ("draft", "Draft"),
-        ("submitted", "Submitted for Approval"),
-        ("approved", "Approved"),
-        ("active", "Active"),
-        ("completed", "Completed"),
-        ("cancelled", "Cancelled"),
-    ]
-
-    # Flight Plan Identification
-    flight_plan_id = models.CharField(
-        max_length=20,
-        unique=True,
-        verbose_name="Flight Plan ID",
-        help_text="Unique flight plan identifier",
-        validators=[
-            RegexValidator(
-                regex=r"^FPL-\d{4}-\d{6}$", message="Format: FPL-YYYY-XXXXXX"
-            )
-        ],
-    )
-
-    # Related Objects
-    mission = models.ForeignKey(
-        Mission,
-        on_delete=models.CASCADE,
-        verbose_name="Mission",
-        help_text="Associated mission",
-    )
-
-    aircraft = models.ForeignKey(
-        "aircraft.Aircraft",
-        on_delete=models.PROTECT,
-        verbose_name="Aircraft",
-        help_text="Aircraft for this flight",
-    )
-
-    pilot_in_command = models.ForeignKey(
-        "accounts.PilotProfile",
-        on_delete=models.PROTECT,
-        related_name="commanded_flights",
-        verbose_name="Pilot in Command",
-        help_text="Remote pilot in command",
-    )
-
-    remote_pilot_observer = models.ForeignKey(
-        "accounts.PilotProfile",
-        on_delete=models.PROTECT,
-        related_name="observed_flights",
-        null=True,
-        blank=True,
-        verbose_name="Remote Pilot Observer",
-        help_text="Observer pilot (if required)",
-    )
-
-    # Flight Details
-    flight_type = models.CharField(
-        max_length=20,
-        choices=FLIGHT_TYPE_CHOICES,
-        verbose_name="Flight Type",
-        help_text="Type of flight operation",
-    )
-
-    status = models.CharField(
-        max_length=15,
-        choices=STATUS_CHOICES,
-        default="draft",
-        verbose_name="Status",
-        help_text="Current flight plan status",
-    )
-
-    # Operational Area
-    operational_area = models.ForeignKey(
-        "airspace.OperationalArea",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        verbose_name="Operational Area",
-        help_text="Defined operational area (if applicable)",
-    )
-
-    departure_location = models.CharField(
-        max_length=200,
-        verbose_name="Departure Location",
-        help_text="Departure location description",
-    )
-
-    departure_latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
-        verbose_name="Departure Latitude",
-        help_text="Departure latitude in decimal degrees",
-    )
-
-    departure_longitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
-        verbose_name="Departure Longitude",
-        help_text="Departure longitude in decimal degrees",
-    )
-
-    # Flight Parameters
-    planned_altitude_agl = models.PositiveIntegerField(
-        verbose_name="Planned Altitude AGL (feet)",
-        help_text="Planned operating altitude above ground level",
-        validators=[MaxValueValidator(400)],  # Part 101 standard limit
-    )
-
-    maximum_range_from_pilot = models.PositiveIntegerField(
-        verbose_name="Maximum Range from Pilot (meters)",
-        help_text="Maximum distance from remote pilot",
-        validators=[MaxValueValidator(500)],  # VLOS limit
-    )
-
-    # Timing
-    planned_departure_time = models.DateTimeField(
-        verbose_name="Planned Departure Time", help_text="Planned flight departure time"
-    )
-
-    estimated_flight_time = models.DurationField(
-        verbose_name="Estimated Flight Time", help_text="Estimated duration of flight"
-    )
-
-    actual_departure_time = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="Actual Departure Time",
-        help_text="Actual flight departure time",
-    )
-
-    actual_landing_time = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="Actual Landing Time",
-        help_text="Actual flight landing time",
-    )
-
-    # Weather and Conditions
-    weather_minimums = models.TextField(
-        verbose_name="Weather Minimums",
-        help_text="Minimum weather conditions for flight",
-    )
-
-    planned_weather_check_time = models.DateTimeField(
-        verbose_name="Planned Weather Check Time",
-        help_text="When weather will be checked before flight",
-    )
-
-    # CASA Compliance
-    notam_checked = models.BooleanField(
-        default=False,
-        verbose_name="NOTAM Checked",
-        help_text="NOTAMs have been checked",
-    )
-
-    airspace_coordination_required = models.BooleanField(
-        default=False,
-        verbose_name="Airspace Coordination Required",
-        help_text="Requires coordination with ATC or other authorities",
-    )
-
-    airspace_coordination_reference = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name="Airspace Coordination Reference",
-        help_text="ATC clearance or coordination reference",
-    )
-
-    # Safety
-    emergency_procedures = models.TextField(
-        verbose_name="Emergency Procedures",
-        help_text="Emergency procedures for this flight",
-    )
-
-    lost_link_procedures = models.TextField(
-        verbose_name="Lost Link Procedures",
-        help_text="Procedures if communication link is lost",
-    )
-
-    # Route Planning (JSON format for waypoints)
-    route_waypoints = models.JSONField(
-        null=True,
-        blank=True,
-        verbose_name="Route Waypoints",
-        help_text="Flight route waypoints in JSON format",
-    )
-
-    # Metadata
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Flight Plan"
-        verbose_name_plural = "Flight Plans"
-        ordering = ["-planned_departure_time"]
-
-    def __str__(self):
-        return f"{self.flight_plan_id} - {self.aircraft.registration_mark}"
-
-    def clean(self):
-        """Validate flight plan parameters"""
-        # Validate coordinates
-        if not (-90 <= self.departure_latitude <= 90):
-            raise ValidationError("Latitude must be between -90 and 90 degrees")
-
-        if not (-180 <= self.departure_longitude <= 180):
-            raise ValidationError("Longitude must be between -180 and 180 degrees")
-
-        # Validate altitude for flight type
-        if self.flight_type == "line_of_sight" and self.planned_altitude_agl > 120:
-            raise ValidationError("VLOS operations typically limited to 120ft AGL")
-
-        # Validate range for VLOS
-        if self.flight_type == "line_of_sight" and self.maximum_range_from_pilot > 500:
-            raise ValidationError("VLOS operations limited to 500m from pilot")
-
-    @property
-    def is_completed(self):
-        """Check if flight is completed"""
-        return self.status == "completed"
-
-    @property
-    def actual_flight_duration(self):
-        """Calculate actual flight duration"""
-        if self.actual_departure_time and self.actual_landing_time:
-            return self.actual_landing_time - self.actual_departure_time
-        return None
-
-    def save(self, *args, **kwargs):
-        """Auto-generate flight plan ID if not provided"""
-        if not self.flight_plan_id:
-            year = timezone.now().year
-            last_plan = (
-                FlightPlan.objects.filter(flight_plan_id__startswith=f"FPL-{year}-")
-                .order_by("flight_plan_id")
-                .last()
-            )
-
-            if last_plan:
-                last_seq = int(last_plan.flight_plan_id[-6:])
-                next_seq = last_seq + 1
-            else:
-                next_seq = 1
-
-            self.flight_plan_id = f"FPL-{year}-{next_seq:06d}"
-
-        super().save(*args, **kwargs)
-
-
 class FlightLog(models.Model):
     """
     Flight Log Entry for completed flights
@@ -1890,12 +1812,23 @@ class FlightLog(models.Model):
         ],
     )
 
-    # Related Objects
-    flight_plan = models.OneToOneField(
-        FlightPlan,
+    # Related Objects - Updated for dual flight plan architecture
+    aircraft_flight_plan = models.OneToOneField(
+        "AircraftFlightPlan",
         on_delete=models.CASCADE,
-        verbose_name="Flight Plan",
-        help_text="Associated flight plan",
+        null=True,
+        blank=True,
+        verbose_name="Aircraft Flight Plan",
+        help_text="Associated aircraft flight plan",
+    )
+
+    drone_flight_plan = models.OneToOneField(
+        "DroneFlightPlan",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="Drone Flight Plan",
+        help_text="Associated drone flight plan",
     )
 
     # Flight Performance
@@ -2046,7 +1979,14 @@ class FlightLog(models.Model):
         ordering = ["-takeoff_time"]
 
     def __str__(self):
-        return f"{self.log_id} - {self.flight_plan.aircraft.registration_mark} ({self.takeoff_time.strftime('%d/%m/%Y')})"
+        aircraft_reg = "Unknown"
+        if self.aircraft_flight_plan:
+            aircraft_reg = self.aircraft_flight_plan.aircraft.registration_mark
+        elif self.drone_flight_plan:
+            aircraft_reg = self.drone_flight_plan.drone.registration_mark
+        return (
+            f"{self.log_id} - {aircraft_reg} ({self.takeoff_time.strftime('%d/%m/%Y')})"
+        )
 
     def clean(self):
         """Validate flight log parameters"""

@@ -122,45 +122,58 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    const operationTypeSelect = $('#operation-type-select');
-    const createButton = $('#create-flight-plan-btn');
-    const cards = $('.operation-type-card');
+document.addEventListener('DOMContentLoaded', function() {
+    const operationTypeSelect = document.getElementById('operation-type-select');
+    const createButton = document.getElementById('create-flight-plan-btn');
+    const cards = document.querySelectorAll('.operation-type-card');
     
     // Handle card clicks
-    cards.on('click', function() {
-        const type = $(this).data('type');
-        
-        // Update select value
-        operationTypeSelect.val(type);
-        
-        // Update card selection
-        cards.removeClass('selected');
-        $(this).addClass('selected');
-        
-        // Enable create button
-        createButton.prop('disabled', false);
+    cards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            
+            // Update select value
+            operationTypeSelect.value = type;
+            
+            // Update card selection
+            cards.forEach(function(c) {
+                c.classList.remove('selected');
+            });
+            this.classList.add('selected');
+            
+            // Enable create button
+            createButton.disabled = false;
+        });
     });
     
     // Handle select change
-    operationTypeSelect.on('change', function() {
-        const selectedType = $(this).val();
+    operationTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
         
         // Update card selection
-        cards.removeClass('selected');
+        cards.forEach(function(card) {
+            card.classList.remove('selected');
+        });
+        
         if (selectedType) {
-            $(`.operation-type-card[data-type="${selectedType}"]`).addClass('selected');
-            createButton.prop('disabled', false);
+            const selectedCard = document.querySelector('.operation-type-card[data-type="' + selectedType + '"]');
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            createButton.disabled = false;
         } else {
-            createButton.prop('disabled', true);
+            createButton.disabled = true;
         }
     });
     
     // Initialize if value already selected
-    if (operationTypeSelect.val()) {
-        const initialType = operationTypeSelect.val();
-        $(`.operation-type-card[data-type="${initialType}"]`).addClass('selected');
-        createButton.prop('disabled', false);
+    if (operationTypeSelect.value) {
+        const initialType = operationTypeSelect.value;
+        const initialCard = document.querySelector('.operation-type-card[data-type="' + initialType + '"]');
+        if (initialCard) {
+            initialCard.classList.add('selected');
+        }
+        createButton.disabled = false;
     }
 });
 </script>

@@ -212,6 +212,16 @@
                             <div class="form-text">Leave empty for internal missions</div>
                         </div>
                         <div class="mb-3">
+                            <label for="{{ form.mission_commander.id_for_label }}" class="form-label">Mission Commander *</label>
+                            {{ form.mission_commander }}
+                            {% if form.mission_commander.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.mission_commander.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Staff member responsible for mission oversight</div>
+                        </div>
+                        <div class="mb-3">
                             <label for="{{ form.assigned_pilot.id_for_label }}" class="form-label">Assigned Pilot</label>
                             {{ form.assigned_pilot }}
                             {% if form.assigned_pilot.errors %}

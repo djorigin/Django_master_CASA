@@ -1,0 +1,168 @@
+{% extends 'aircraft/base.html' %}
+{% load static %}
+
+{% block title %}Drone Flight Plan - {{ flight_plan.flight_plan_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-helicopter"></i> Drone Flight Plan</h2>
+                    <p class="text-muted mb-0">{{ flight_plan.flight_plan_id }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Mission
+                    </a>
+                    <a href="{% url 'flight_operations:drone_flight_plan_update' flight_plan.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Flight Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Flight Plan Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Flight Plan Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Flight Plan ID:</strong> {{ flight_plan.flight_plan_id }}</p>
+                            <p><strong>Mission:</strong> 
+                                <a href="{% url 'flight_operations:mission_detail' flight_plan.mission.pk %}">{{ flight_plan.mission.name }}</a>
+                            </p>
+                            <p><strong>Flight Type:</strong> {{ flight_plan.get_flight_type_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                <span class="badge badge-secondary">{{ flight_plan.get_status_display|default:"Draft" }}</span>
+                            </p>
+                            <p><strong>Created:</strong> {{ flight_plan.created_at|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Updated:</strong> {{ flight_plan.updated_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drone and Crew -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-helicopter"></i> Drone and Crew</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Drone:</strong> {{ flight_plan.drone }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Remote Pilot:</strong> {{ flight_plan.remote_pilot }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Visual Observer:</strong> {{ flight_plan.visual_observer|default:"Not Required" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operating Area -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-map-marker-alt"></i> Operating Area</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Takeoff Location:</strong> {{ flight_plan.takeoff_location }}</p>
+                            <p><strong>Landing Location:</strong> {{ flight_plan.landing_location }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Maximum Altitude:</strong> {{ flight_plan.maximum_altitude_agl }}ft AGL</p>
+                            <p><strong>Maximum Range:</strong> {{ flight_plan.maximum_range_from_pilot }}m</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timing -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock"></i> Flight Timing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Planned Departure:</strong><br>
+                            {{ flight_plan.planned_departure_time|date:"d/m/Y H:i" }}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Planned Arrival:</strong><br>
+                            {{ flight_plan.planned_arrival_time|date:"d/m/Y H:i"|default:"TBD" }}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Estimated Duration:</strong><br>
+                            {{ flight_plan.estimated_flight_time|default:"TBD" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Flight Plan Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Drone flight plan for {{ flight_plan.mission.name }}
+                    </p>
+                    
+                    <h6><i class="fas fa-battery-half"></i> Battery Info</h6>
+                    <p><strong>Capacity:</strong> {{ flight_plan.battery_capacity|default:"TBD" }} mAh</p>
+                    <p><strong>Estimated Usage:</strong> {{ flight_plan.estimated_battery_consumption|default:"TBD" }}%</p>
+                    
+                    <h6><i class="fas fa-shield-alt"></i> Compliance</h6>
+                    <p><strong>NOTAM Checked:</strong> 
+                        {% if flight_plan.notam_checked %}
+                            <i class="fas fa-check text-success"></i> Yes
+                        {% else %}
+                            <i class="fas fa-times text-danger"></i> No
+                        {% endif %}
+                    </p>
+                    <p><strong>No-Fly Zones:</strong>
+                        {% if flight_plan.no_fly_zones_checked %}
+                            <i class="fas fa-check text-success"></i> Checked
+                        {% else %}
+                            <i class="fas fa-times text-danger"></i> Not Checked
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-tasks"></i> Mission Context</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Mission:</strong> {{ flight_plan.mission.name }}</p>
+                    <p><strong>Type:</strong> {{ flight_plan.mission.get_mission_type_display }}</p>
+                    <p><strong>Client:</strong> {{ flight_plan.mission.client }}</p>
+                    <p><strong>Commander:</strong> {{ flight_plan.mission.mission_commander }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
