@@ -412,13 +412,24 @@ def flight_log_create(request):
     initial_data = {}
 
     if flight_plan_id:
+        # Try to find either aircraft or drone flight plan
+        from .models import AircraftFlightPlan, DroneFlightPlan
+
         try:
-            flight_plan = FlightPlan.objects.get(pk=flight_plan_id)
-            initial_data["flight_plan"] = flight_plan
+            # First try aircraft flight plan
+            flight_plan = AircraftFlightPlan.objects.get(pk=flight_plan_id)
+            initial_data["aircraft_flight_plan"] = flight_plan
             initial_data["aircraft"] = flight_plan.aircraft
             initial_data["remote_pilot"] = flight_plan.pilot_in_command
-        except FlightPlan.DoesNotExist:
-            pass
+        except AircraftFlightPlan.DoesNotExist:
+            try:
+                # Then try drone flight plan
+                flight_plan = DroneFlightPlan.objects.get(pk=flight_plan_id)
+                initial_data["drone_flight_plan"] = flight_plan
+                initial_data["aircraft"] = flight_plan.drone
+                initial_data["remote_pilot"] = flight_plan.remote_pilot
+            except DroneFlightPlan.DoesNotExist:
+                pass
 
     if request.method == "POST":
         form = FlightLogForm(request.POST)
